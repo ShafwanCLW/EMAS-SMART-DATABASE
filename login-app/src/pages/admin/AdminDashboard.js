@@ -1,0 +1,6283 @@
+// Import Firebase service for user management
+import { FirebaseAuthService } from '../../services/frontend/FirebaseAuthService.js';
+// Note: Firebase functions are dynamically imported in the code
+
+// Admin dashboard creation functions
+export function createAdminSidebar(user) {
+  return `
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="admin-profile">
+          <div class="profile-picture">
+            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='20' fill='%23e2e8f0'/%3E%3Ccircle cx='20' cy='16' r='6' fill='%236366f1'/%3E%3Cpath d='M8 32c0-6.627 5.373-12 12-12s12 5.373 12 12' fill='%236366f1'/%3E%3C/svg%3E" alt="Admin Profile" />
+          </div>
+          <h2 class="sidebar-title">Admin Panel</h2>
+        </div>
+      </div>
+      
+      <nav class="sidebar-nav">
+        <a href="#" class="nav-item active" data-section="dashboard">
+          <span class="nav-icon">📊</span>
+          Dashboard
+        </a>
+        <a href="#" class="nav-item" data-section="user-management">
+          <span class="nav-icon">👥</span>
+          User Management
+        </a>
+        <a href="#" class="nav-item" data-section="senarai-kir">
+          <span class="nav-icon">📋</span>
+          Senarai KIR
+        </a>
+        <a href="#" class="nav-item" data-section="cipta-kir">
+          <span class="nav-icon">➕</span>
+          Cipta KIR
+        </a>
+        <a href="#" class="nav-item" data-section="program-kehadiran">
+          <span class="nav-icon">📅</span>
+          Program & Kehadiran
+        </a>
+        <a href="#" class="nav-item" data-section="financial-tracking">
+            <span class="nav-icon">💰</span>
+            Financial Tracking
+        </a>
+        <a href="#" class="nav-item" data-section="reports">
+          <span class="nav-icon">📈</span>
+          Laporan
+        </a>
+        <a href="#" class="nav-item" data-section="settings">
+          <span class="nav-icon">⚙️</span>
+          Settings
+        </a>
+        <a href="#" class="nav-item logout-nav-item" id="logoutBtn">
+          <span class="nav-icon">🚪</span>
+          Logout
+        </a>
+      </nav>
+    </aside>
+  `;
+}
+
+export function createAdminMainContent() {
+  return `
+    <style>
+    /* Modal Styles */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0, 0, 0, 0.4);
+    }
+    
+    .modal-content {
+      background-color: #fefefe;
+      margin: 5% auto;
+      padding: 0;
+      border: 1px solid #888;
+      border-radius: 8px;
+      width: 80%;
+      max-width: 900px;
+    }
+    
+    /* Primary Action Button Styles */
+    .action-btn.primary-action {
+      background-color: #6366f1;
+      color: black;
+      font-weight: bold;
+      font-size: 1.1em;
+      padding: 12px 20px;
+      margin-right: 15px;
+      margin-bottom: 15px;
+    }
+    
+    .action-btn.primary-action:hover {
+      background-color: #4f46e5;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Action Button Styles */
+    .action-btn {
+      margin-right: 15px;
+      margin-bottom: 20px;
+      padding: 12px 18px;
+    }
+    
+    /* Back Button Styles */
+    .back-btn {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 8px 12px;
+      background-color: #f0f0f0;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s ease;
+    }
+    
+    .back-btn:hover {
+      background-color: #e0e0e0;
+      transform: translateX(-2px);
+    }
+    
+    .modal-content {
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      max-height: 80vh;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .modal-header {
+      padding: 15px 20px;
+      background-color: #f8f9fa;
+      border-bottom: 1px solid #e9ecef;
+      border-radius: 8px 8px 0 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .modal-header h2 {
+      margin: 0;
+      font-size: 1.5rem;
+      color: #333;
+    }
+    
+    .close-modal {
+      color: #aaa;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    
+    .close-modal:hover,
+    .close-modal:focus {
+      color: #333;
+      text-decoration: none;
+    }
+    
+    .modal-body {
+      padding: 20px;
+      overflow-y: auto;
+      flex: 1;
+    }
+    
+    /* Transactions Styles */
+    .transactions-container {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    
+    .transactions-filters {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+      flex-wrap: wrap;
+    }
+    
+    .transactions-filters select,
+    .transactions-filters input {
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    
+    .transactions-filters button {
+      padding: 8px 12px;
+      background-color: #f0f0f0;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    
+    .transactions-filters button:hover {
+      background-color: #e0e0e0;
+    }
+    
+    .transactions-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    
+    .transaction-item {
+      display: flex;
+      padding: 15px;
+      border-radius: 8px;
+      background-color: #fff;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      gap: 15px;
+      transition: transform 0.2s;
+    }
+    
+    .transaction-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    .income-transaction {
+      border-left: 4px solid #28a745;
+    }
+    
+    .expense-transaction {
+      border-left: 4px solid #dc3545;
+    }
+    
+    .transaction-icon {
+      font-size: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      background-color: #f8f9fa;
+      border-radius: 50%;
+    }
+    
+    .transaction-details {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    
+    .transaction-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+    
+    .transaction-header h4 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 600;
+      color: #333;
+    }
+    
+    .transaction-date {
+      font-size: 14px;
+      color: #666;
+    }
+    
+    .transaction-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .transaction-category {
+      font-size: 14px;
+      color: #666;
+      background-color: #f0f0f0;
+      padding: 2px 8px;
+      border-radius: 12px;
+    }
+    
+    .transaction-amount {
+      font-weight: 600;
+      font-size: 16px;
+    }
+    
+    .income-transaction .transaction-amount {
+      color: #28a745;
+    }
+    
+    .expense-transaction .transaction-amount {
+      color: #dc3545;
+    }
+    
+    .loading-text, .error-text, .empty-text {
+      text-align: center;
+      padding: 20px;
+      color: #666;
+    }
+    
+    .error-text {
+      color: #dc3545;
+    }
+    </style>
+    
+    <div id="dashboard-content" class="content-section active">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-header">
+            <h3 class="stat-title">Total Users</h3>
+            <span class="stat-icon">👥</span>
+          </div>
+          <p class="stat-value">1,234</p>
+        </div>
+        <div class="stat-card">
+          <div class="stat-header">
+            <h3 class="stat-title">Active KIRs</h3>
+            <span class="stat-icon">📋</span>
+          </div>
+          <p class="stat-value">567</p>
+        </div>
+        <div class="stat-card">
+          <div class="stat-header">
+            <h3 class="stat-title">Pending Reviews</h3>
+            <span class="stat-icon">⏳</span>
+          </div>
+          <p class="stat-value">89</p>
+        </div>
+        <div class="stat-card">
+          <div class="stat-header">
+            <h3 class="stat-title">System Health</h3>
+            <span class="stat-icon">💚</span>
+          </div>
+          <p class="stat-value">98%</p>
+        </div>
+      </div>
+      
+      <div class="quick-actions">
+        <h3 class="section-title">Quick Actions</h3>
+        <div class="action-buttons">
+          <button class="action-btn" data-section="user-management">
+            <span>👥</span>
+            Manage Users
+          </button>
+          <button class="action-btn" data-section="cipta-kir">
+            <span>➕</span>
+            Create KIR
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <div id="user-management-content" class="content-section">
+      <div class="section-header">
+        <h3 class="section-title">User Management</h3>
+        <button class="btn btn-primary" id="addUserBtn">
+          <span class="btn-icon">➕</span>
+          Add User
+        </button>
+      </div>
+      
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th>Last Login</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="usersTableBody">
+            <!-- Users will be loaded here -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+    <div id="cipta-kir-content" class="content-section">
+      <div class="section-header">
+        <h3 class="section-title">Cipta KIR Baru</h3>
+        <p class="section-description">Create a new KIR record with comprehensive information</p>
+      </div>
+      
+      <div class="wizard-container">
+        <div class="wizard-progress">
+          <div class="progress-step active" data-step="1" data-slug="maklumat-asas">
+            <div class="step-number">1</div>
+            <div class="step-label">Maklumat Asas</div>
+          </div>
+          <div class="progress-step" data-step="2" data-slug="maklumat-keluarga">
+            <div class="step-number">2</div>
+            <div class="step-label">Maklumat Keluarga</div>
+          </div>
+          <div class="progress-step" data-step="3" data-slug="kafa">
+            <div class="step-number">3</div>
+            <div class="step-label">Pendidikan Agama (KAFA)</div>
+          </div>
+          <div class="progress-step" data-step="4" data-slug="pendidikan">
+            <div class="step-number">4</div>
+            <div class="step-label">Pendidikan</div>
+          </div>
+          <div class="progress-step" data-step="5" data-slug="pekerjaan">
+            <div class="step-number">5</div>
+            <div class="step-label">Maklumat Pekerjaan</div>
+          </div>
+          <div class="progress-step" data-step="6" data-slug="kesihatan">
+            <div class="step-number">6</div>
+            <div class="step-label">Maklumat Kesihatan</div>
+          </div>
+          <div class="progress-step" data-step="7" data-slug="ekonomi">
+            <div class="step-number">7</div>
+            <div class="step-label">Ekonomi</div>
+          </div>
+          <div class="progress-step" data-step="8" data-slug="semak">
+            <div class="step-number">8</div>
+            <div class="step-label">Semakan & Pengesahan</div>
+          </div>
+        </div>
+        
+        <form id="ciptaKIRForm" class="wizard-form">
+          <!-- Step 1: Maklumat Asas -->
+          <div class="wizard-step active" data-step="1">
+            <div class="info-card">
+              <div class="section-header">
+                <div class="section-icon">
+                  <i class="fas fa-user"></i>
+                </div>
+                <span>Maklumat Peribadi</span>
+              </div>
+              
+              <div class="form-grid">
+                <div class="form-group full-width">
+                  <label for="gambar_profil">Gambar Profil (Opsional)</label>
+                  <input type="file" id="gambar_profil" name="gambar_profil" accept="image/*">
+                </div>
+                
+                <div class="form-group">
+                  <label for="nama_penuh">Nama Penuh *</label>
+                  <input type="text" id="nama_penuh" name="nama_penuh" required>
+                </div>
+                
+                <div class="form-group">
+                  <label for="no_kp">No. KP *</label>
+                  <input type="text" id="no_kp" name="no_kp" required pattern="[0-9]{12}" placeholder="123456789012" maxlength="12">
+                </div>
+                
+                <div class="form-group">
+                  <label for="tarikh_lahir">Tarikh Lahir *</label>
+                  <input type="date" id="tarikh_lahir" name="tarikh_lahir" required>
+                </div>
+                
+                <div class="form-group">
+                  <label for="umur">Umur</label>
+                  <input type="number" id="umur" name="umur" readonly>
+                </div>
+                
+                <div class="form-group">
+                  <label for="jantina">Jantina *</label>
+                  <select id="jantina" name="jantina" required>
+                    <option value="">Pilih Jantina</option>
+                    <option value="Lelaki">Lelaki</option>
+                    <option value="Perempuan">Perempuan</option>
+                  </select>
+                </div>
+                
+                <div class="form-group">
+                  <label for="bangsa">Bangsa *</label>
+                  <select id="bangsa" name="bangsa" required>
+                    <option value="">Pilih Bangsa</option>
+                    <option value="Melayu">Melayu</option>
+                    <option value="Cina">Cina</option>
+                    <option value="India">India</option>
+                    <option value="Lain-lain">Lain-lain</option>
+                  </select>
+                </div>
+                
+                <div class="form-group">
+                  <label for="agama">Agama *</label>
+                  <select id="agama" name="agama" required>
+                    <option value="">Pilih Agama</option>
+                    <option value="Islam">Islam</option>
+                    <option value="Kristian">Kristian</option>
+                    <option value="Buddha">Buddha</option>
+                    <option value="Hindu">Hindu</option>
+                    <option value="Lain-lain">Lain-lain</option>
+                  </select>
+                </div>
+                
+
+                
+                <div class="form-group">
+                  <label for="telefon_utama">Telefon Utama *</label>
+                  <input type="tel" id="telefon_utama" name="telefon_utama" required pattern="[0-9+\-\s]+">
+                </div>
+                
+                <div class="form-group">
+                  <label for="telefon_kecemasan">Telefon Kecemasan</label>
+                  <input type="tel" id="telefon_kecemasan" name="telefon_kecemasan" pattern="[0-9+\-\s]+">
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label for="alamat">Alamat *</label>
+                <textarea id="alamat" name="alamat" rows="3" required></textarea>
+              </div>
+              
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="poskod">Poskod *</label>
+                  <input type="text" id="poskod" name="poskod" required>
+                </div>
+                
+                <div class="form-group">
+                  <label for="bandar">Bandar *</label>
+                  <input type="text" id="bandar" name="bandar" required>
+                </div>
+              </div>
+              
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="negeri">Negeri *</label>
+                  <select id="negeri" name="negeri" required>
+                    <option value="">Pilih Negeri</option>
+                    <option value="Johor">Johor</option>
+                    <option value="Kedah">Kedah</option>
+                    <option value="Kelantan">Kelantan</option>
+                    <option value="Melaka">Melaka</option>
+                    <option value="Negeri Sembilan">Negeri Sembilan</option>
+                    <option value="Pahang">Pahang</option>
+                    <option value="Perak">Perak</option>
+                    <option value="Perlis">Perlis</option>
+                    <option value="Pulau Pinang">Pulau Pinang</option>
+                    <option value="Sabah">Sabah</option>
+                    <option value="Sarawak">Sarawak</option>
+                    <option value="Selangor">Selangor</option>
+                    <option value="Terengganu">Terengganu</option>
+                    <option value="Wilayah Persekutuan Kuala Lumpur">Wilayah Persekutuan Kuala Lumpur</option>
+                    <option value="Wilayah Persekutuan Labuan">Wilayah Persekutuan Labuan</option>
+                    <option value="Wilayah Persekutuan Putrajaya">Wilayah Persekutuan Putrajaya</option>
+                  </select>
+                </div>
+                
+                <div class="form-group">
+                  <label for="tempat_lahir">Tempat Lahir</label>
+                  <input type="text" id="tempat_lahir" name="tempat_lahir">
+                </div>
+              </div>
+            </div>
+            
+            <div class="form-section">
+              <h3>Maklumat Keluarga</h3>
+              <div class="form-group">
+                <label for="bilangan_adik_beradik">Bilangan Adik Beradik</label>
+                <input type="number" id="bilangan_adik_beradik" name="bilangan_adik_beradik" min="0">
+              </div>
+              
+              <h5>Senarai Adik Beradik (Opsional)</h5>
+              <div id="adik-beradik-container">
+                <div class="adik-beradik-item form-grid">
+                  <div class="form-group">
+                    <label>Nama</label>
+                    <input type="text" name="senarai_adik_beradik[0][nama]">
+                  </div>
+                  <div class="form-group">
+                    <label>Umur</label>
+                    <input type="number" name="senarai_adik_beradik[0][umur]">
+                  </div>
+                  <div class="form-group">
+                    <label>Status</label>
+                    <select name="senarai_adik_beradik[0][status]">
+                      <option value="">Pilih Status</option>
+                      <option value="Hidup">Hidup</option>
+                      <option value="Meninggal">Meninggal</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <button type="button" id="add-adik-beradik" class="btn-secondary">Tambah Adik Beradik</button>
+            </div>
+            
+            <div class="form-section">
+              <h3>Maklumat Ibu Bapa</h3>
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="ibu_nama">Nama Ibu</label>
+                <input type="text" id="ibu_nama" name="ibu_nama">
+              </div>
+              
+              <div class="form-group">
+                <label for="ibu_negeri">Negeri Ibu</label>
+                <select id="ibu_negeri" name="ibu_negeri">
+                  <option value="">Pilih Negeri</option>
+                  <option value="Johor">Johor</option>
+                  <option value="Kedah">Kedah</option>
+                  <option value="Kelantan">Kelantan</option>
+                  <option value="Melaka">Melaka</option>
+                  <option value="Negeri Sembilan">Negeri Sembilan</option>
+                  <option value="Pahang">Pahang</option>
+                  <option value="Perak">Perak</option>
+                  <option value="Perlis">Perlis</option>
+                  <option value="Pulau Pinang">Pulau Pinang</option>
+                  <option value="Sabah">Sabah</option>
+                  <option value="Sarawak">Sarawak</option>
+                  <option value="Selangor">Selangor</option>
+                  <option value="Terengganu">Terengganu</option>
+                  <option value="WP Kuala Lumpur">WP Kuala Lumpur</option>
+                  <option value="WP Labuan">WP Labuan</option>
+                  <option value="WP Putrajaya">WP Putrajaya</option>
+                </select>
+              </div>
+              
+              <div class="form-group">
+                <label for="ayah_nama">Nama Ayah</label>
+                <input type="text" id="ayah_nama" name="ayah_nama">
+              </div>
+              
+              <div class="form-group">
+                <label for="ayah_negeri">Negeri Ayah</label>
+                <select id="ayah_negeri" name="ayah_negeri">
+                  <option value="">Pilih Negeri</option>
+                  <option value="Johor">Johor</option>
+                  <option value="Kedah">Kedah</option>
+                  <option value="Kelantan">Kelantan</option>
+                  <option value="Melaka">Melaka</option>
+                  <option value="Negeri Sembilan">Negeri Sembilan</option>
+                  <option value="Pahang">Pahang</option>
+                  <option value="Perak">Perak</option>
+                  <option value="Perlis">Perlis</option>
+                  <option value="Pulau Pinang">Pulau Pinang</option>
+                  <option value="Sabah">Sabah</option>
+                  <option value="Sarawak">Sarawak</option>
+                  <option value="Selangor">Selangor</option>
+                  <option value="Terengganu">Terengganu</option>
+                  <option value="WP Kuala Lumpur">WP Kuala Lumpur</option>
+                  <option value="WP Labuan">WP Labuan</option>
+                  <option value="WP Putrajaya">WP Putrajaya</option>
+                </select>
+              </div>
+              
+              <div class="form-group">
+                <label for="no_kwsp">No. KWSP</label>
+                <input type="text" id="no_kwsp" name="no_kwsp">
+              </div>
+              
+              <div class="form-group">
+                <label for="no_perkeso">No. PERKESO</label>
+                <input type="text" id="no_perkeso" name="no_perkeso">
+              </div>
+            </div>
+            </div>
+          </div>
+          
+          <!-- Step 2: Maklumat Keluarga -->
+          <div class="wizard-step" data-step="2">
+            <h4 class="step-title">Maklumat Keluarga</h4>
+            
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="status_perkahwinan">Status Perkahwinan *</label>
+                <select id="status_perkahwinan" name="status_perkahwinan" required>
+                  <option value="">Pilih Status</option>
+                  <option value="Bujang">Bujang</option>
+                  <option value="Berkahwin">Berkahwin</option>
+                  <option value="Bercerai">Bercerai</option>
+                  <option value="Balu/Duda">Balu/Duda</option>
+                </select>
+              </div>
+            </div>
+            
+            <!-- A. Ringkasan Pasangan (PKIR) -->
+            <div id="ringkasan-pasangan-section" style="display: none;">
+              <div class="form-section">
+                <h5>A. Ringkasan Pasangan (PKIR)</h5>
+                <p class="form-help">Wajib jika Berkahwin. Maklumat ringkas untuk cipta/validasi hubungan. Profil penuh pasangan akan diurus di Profil KIR → PKIR.</p>
+                
+                <div class="form-grid">
+                  <div class="form-group">
+                    <label for="nama_pasangan">Nama Pasangan *</label>
+                    <input type="text" id="nama_pasangan" name="nama_pasangan">
+                  </div>
+                  
+                  <div class="form-group">
+                    <label for="pasangan_no_kp">No. KP Pasangan *</label>
+                    <input type="text" id="pasangan_no_kp" name="pasangan_no_kp" pattern="[0-9]{12}" maxlength="12" placeholder="123456789012">
+                  </div>
+                  
+                  <div class="form-group">
+                    <label for="pasangan_status">Status Pasangan *</label>
+                    <select id="pasangan_status" name="pasangan_status">
+                      <option value="">Pilih Status</option>
+                      <option value="Hidup">Hidup</option>
+                      <option value="Meninggal">Meninggal</option>
+                    </select>
+                  </div>
+                  
+                  <div class="form-group">
+                    <label for="tarikh_nikah">Tarikh Nikah *</label>
+                    <input type="date" id="tarikh_nikah" name="tarikh_nikah">
+                  </div>
+                  
+                  <div class="form-group">
+                    <label for="tarikh_cerai">Tarikh Cerai</label>
+                    <input type="date" id="tarikh_cerai" name="tarikh_cerai">
+                    <small class="form-help">Jika berkenaan; mesti ≥ Tarikh Nikah</small>
+                  </div>
+                </div>
+                
+                <div class="form-group full-width">
+                  <label for="pasangan_alamat">Alamat Pasangan</label>
+                  <textarea id="pasangan_alamat" name="pasangan_alamat" rows="3" placeholder="Jika berasingan dari alamat KIR"></textarea>
+                  <small class="form-help">Opsional - isi jika alamat pasangan berbeza dari alamat KIR</small>
+                </div>
+              </div>
+            </div>
+            
+            <!-- B. Ahli Isi Rumah (Ringkas) -->
+            <div id="ahli-isi-rumah-section" style="display: block;">
+              <div class="form-section">
+                <div class="section-header-with-action">
+                  <h5>B. Ahli Isi Rumah (Ringkas)</h5>
+                  <button type="button" id="toggle-air-section" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-plus"></i> Tambah AIR (Ringkas)
+                  </button>
+                </div>
+                <p class="form-help">Opsional. Maklumat ringkas ahli isi rumah. Butiran penuh boleh diurus kemudian di Profil KIR.</p>
+                
+                <div id="air-container" style="display: block;">
+                  <style>
+                    .air-grid-header {
+                      display: grid;
+                      grid-template-columns: 1.5fr 2fr 1fr 1.2fr 1.2fr 0.8fr 1.5fr 0.8fr;
+                      gap: 10px;
+                      padding: 10px;
+                      background-color: #f8f9fa;
+                      border: 1px solid #dee2e6;
+                      font-weight: bold;
+                      margin-bottom: 5px;
+                    }
+                    .air-grid-row {
+                      display: grid;
+                      grid-template-columns: 1.5fr 2fr 1fr 1.2fr 1.2fr 0.8fr 1.5fr 0.8fr;
+                      gap: 10px;
+                      padding: 10px;
+                      border: 1px solid #dee2e6;
+                      margin-bottom: 5px;
+                      background-color: white;
+                    }
+                    .air-cell {
+                      display: flex;
+                      flex-direction: column;
+                      gap: 2px;
+                    }
+                    .air-cell input, .air-cell select {
+                      width: 100%;
+                      padding: 5px;
+                      border: 1px solid #ccc;
+                      border-radius: 3px;
+                      font-size: 12px;
+                    }
+                    .air-remove-btn {
+                      background-color: #dc3545;
+                      color: white;
+                      border: none;
+                      padding: 5px 8px;
+                      border-radius: 3px;
+                      cursor: pointer;
+                      font-size: 12px;
+                    }
+                    .air-remove-btn:hover {
+                      background-color: #c82333;
+                    }
+                  </style>
+                  <div class="air-header">
+                    <div class="air-grid-header">
+                      <span>Nama *</span>
+                      <span>No. KP / Tarikh Lahir *</span>
+                      <span>Jantina *</span>
+                      <span>Hubungan *</span>
+                      <span>Status *</span>
+                      <span>OKU</span>
+                      <span>Pendapatan/Sekolah</span>
+                      <span>Tindakan</span>
+                    </div>
+                  </div>
+                  
+                  <div id="air-rows">
+                    <!-- Dynamic AIR rows will be added here -->
+                  </div>
+                  
+                  <button type="button" id="add-air-row" class="btn btn-outline-primary btn-sm">
+                    <i class="fas fa-plus"></i> Tambah Ahli
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            <div class="info-note">
+              <p><strong>Nota:</strong> Maklumat ini akan disimpan sementara sehingga KIR dicipta. Selepas itu, maklumat akan dipindahkan ke jadual yang sesuai.</p>
+            </div>
+          </div>
+          
+          <!-- Step 3: Pendidikan Agama (KAFA) -->
+          <div class="wizard-step" data-step="3">
+            <h4 class="step-title">Pendidikan Agama (KAFA)</h4>
+            
+            <div class="form-section">
+              <div class="form-group">
+                <label for="sumber_pengetahuan">Sumber Pengetahuan Agama</label>
+                <textarea id="sumber_pengetahuan" name="sumber_pengetahuan" rows="3" placeholder="Nyatakan sumber pengetahuan agama seperti sekolah agama, kelas mengaji, dll."></textarea>
+              </div>
+              
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="tahap_iman">Tahap Iman *</label>
+                  <select id="tahap_iman" name="tahap_iman" required>
+                    <option value="">Pilih Tahap</option>
+                    <option value="1">1 - Sangat Lemah</option>
+                    <option value="2">2 - Lemah</option>
+                    <option value="3">3 - Sederhana</option>
+                    <option value="4">4 - Baik</option>
+                    <option value="5">5 - Sangat Baik</option>
+                  </select>
+                </div>
+                
+                <div class="form-group">
+                  <label for="tahap_islam">Tahap Islam *</label>
+                  <select id="tahap_islam" name="tahap_islam" required>
+                    <option value="">Pilih Tahap</option>
+                    <option value="1">1 - Sangat Lemah</option>
+                    <option value="2">2 - Lemah</option>
+                    <option value="3">3 - Sederhana</option>
+                    <option value="4">4 - Baik</option>
+                    <option value="5">5 - Sangat Baik</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="tahap_fatihah">Tahap Al-Fatihah</label>
+                  <select id="tahap_fatihah" name="tahap_fatihah">
+                    <option value="">Pilih Tahap</option>
+                    <option value="1">1 - Sangat Lemah</option>
+                    <option value="2">2 - Lemah</option>
+                    <option value="3">3 - Sederhana</option>
+                    <option value="4">4 - Baik</option>
+                    <option value="5">5 - Sangat Baik</option>
+                  </select>
+                </div>
+                
+                <div class="form-group">
+                  <label for="tahap_taharah_wuduk_solat">Tahap Taharah/Wuduk/Solat</label>
+                  <select id="tahap_taharah_wuduk_solat" name="tahap_taharah_wuduk_solat">
+                    <option value="">Pilih Tahap</option>
+                    <option value="1">1 - Sangat Lemah</option>
+                    <option value="2">2 - Lemah</option>
+                    <option value="3">3 - Sederhana</option>
+                    <option value="4">4 - Baik</option>
+                    <option value="5">5 - Sangat Baik</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="tahap_puasa_fidyah_zakat">Tahap Puasa/Fidyah/Zakat</label>
+                  <select id="tahap_puasa_fidyah_zakat" name="tahap_puasa_fidyah_zakat">
+                    <option value="">Pilih Tahap</option>
+                    <option value="1">1 - Sangat Lemah</option>
+                    <option value="2">2 - Lemah</option>
+                    <option value="3">3 - Sederhana</option>
+                    <option value="4">4 - Baik</option>
+                    <option value="5">5 - Sangat Baik</option>
+                  </select>
+                </div>
+                
+                <div class="form-group">
+                  <label for="kafa_skor">Skor KAFA (Auto-calculated)</label>
+                  <input type="number" id="kafa_skor" name="kafa_skor" readonly min="0" max="5" step="0.01" placeholder="Akan dikira secara automatik">
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Step 4: Pendidikan -->
+          <div class="wizard-step" data-step="4">
+            <h4 class="step-title">Pendidikan</h4>
+            
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="tahap_pendidikan">Tahap Pendidikan</label>
+                <select id="tahap_pendidikan" name="tahap_pendidikan">
+                  <option value="">Pilih Tahap</option>
+                  <option value="Tidak Bersekolah">Tidak Bersekolah</option>
+                  <option value="Sekolah Rendah">Sekolah Rendah</option>
+                  <option value="Sekolah Menengah">Sekolah Menengah</option>
+                  <option value="SPM/SPMV">SPM/SPMV</option>
+                  <option value="STPM/Diploma">STPM/Diploma</option>
+                  <option value="Ijazah Sarjana Muda">Ijazah Sarjana Muda</option>
+                  <option value="Ijazah Sarjana">Ijazah Sarjana</option>
+                  <option value="PhD">PhD</option>
+                </select>
+              </div>
+              
+              <div class="form-group">
+                <label for="nama_sekolah">Nama Sekolah/Institusi</label>
+                <input type="text" id="nama_sekolah" name="nama_sekolah">
+              </div>
+              
+              <div class="form-group">
+                <label for="tahun_tamat">Tahun Tamat</label>
+                <input type="number" id="tahun_tamat" name="tahun_tamat" min="1950" max="2030" placeholder="YYYY">
+              </div>
+              
+              <div class="form-group">
+                <label for="bidang_pengajian">Bidang Pengajian</label>
+                <input type="text" id="bidang_pengajian" name="bidang_pengajian">
+              </div>
+            </div>
+          </div>
+          
+          <!-- Step 5: Maklumat Pekerjaan -->
+          <div class="wizard-step" data-step="5">
+            <h4 class="step-title">Maklumat Pekerjaan</h4>
+            
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="status_pekerjaan">Status Pekerjaan</label>
+                <select id="status_pekerjaan" name="status_pekerjaan">
+                  <option value="">Pilih Status</option>
+                  <option value="Bekerja">Bekerja</option>
+                  <option value="Tidak Bekerja">Tidak Bekerja</option>
+                  <option value="Bersara">Bersara</option>
+                  <option value="OKU">OKU</option>
+                </select>
+              </div>
+              
+              <div class="form-group" id="jenis_pekerjaan_group">
+                <label for="jenis_pekerjaan">Jenis Pekerjaan</label>
+                <input type="text" id="jenis_pekerjaan" name="jenis_pekerjaan">
+              </div>
+              
+              <div class="form-group" id="nama_majikan_group">
+                <label for="nama_majikan">Nama Majikan</label>
+                <input type="text" id="nama_majikan" name="nama_majikan">
+              </div>
+              
+              <div class="form-group" id="gaji_bulanan_group">
+                <label for="gaji_bulanan">Gaji Bulanan (RM)</label>
+                <input type="number" id="gaji_bulanan" name="gaji_bulanan" step="0.01" min="0">
+              </div>
+              
+              <div class="form-group" id="alamat_kerja_group">
+                <label for="alamat_kerja">Alamat Kerja</label>
+                <textarea id="alamat_kerja" name="alamat_kerja" rows="3"></textarea>
+              </div>
+              
+              <div class="form-group">
+                <label for="pengalaman_kerja">Pengalaman Kerja (Tahun)</label>
+                <input type="number" id="pengalaman_kerja" name="pengalaman_kerja" min="0">
+              </div>
+              
+              <div class="form-group full-width">
+                <label for="kemahiran">Kemahiran</label>
+                <textarea id="kemahiran" name="kemahiran" rows="3" placeholder="Senaraikan kemahiran yang dimiliki"></textarea>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Step 6: Maklumat Kesihatan -->
+          <div class="wizard-step" data-step="6">
+            <h4 class="step-title">Maklumat Kesihatan</h4>
+            
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="ringkasan_kesihatan">Ringkasan Kesihatan</label>
+                <select id="ringkasan_kesihatan" name="ringkasan_kesihatan">
+                  <option value="">Pilih Status Kesihatan</option>
+                  <option value="Sihat">Sihat</option>
+                  <option value="Kurang Sihat">Kurang Sihat</option>
+                  <option value="Sakit Kronik">Sakit Kronik</option>
+                </select>
+              </div>
+              
+              <div class="form-group">
+                <label for="kumpulan_darah">Kumpulan Darah</label>
+                <select id="kumpulan_darah" name="kumpulan_darah">
+                  <option value="">Pilih Kumpulan Darah</option>
+                  <option value="A+">A+</option>
+                  <option value="A-">A-</option>
+                  <option value="B+">B+</option>
+                  <option value="B-">B-</option>
+                  <option value="AB+">AB+</option>
+                  <option value="AB-">AB-</option>
+                  <option value="O+">O+</option>
+                  <option value="O-">O-</option>
+                </select>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label>Penyakit Kronik</label>
+              <div class="checkbox-group">
+                <label class="checkbox-item">
+                  <input type="checkbox" name="penyakit_kronik" value="Diabetes">
+                  <span>Diabetes</span>
+                </label>
+                <label class="checkbox-item">
+                  <input type="checkbox" name="penyakit_kronik" value="Hipertensi">
+                  <span>Hipertensi</span>
+                </label>
+                <label class="checkbox-item">
+                  <input type="checkbox" name="penyakit_kronik" value="Penyakit Jantung">
+                  <span>Penyakit Jantung</span>
+                </label>
+                <label class="checkbox-item">
+                  <input type="checkbox" name="penyakit_kronik" value="Asma">
+                  <span>Asma</span>
+                </label>
+                <label class="checkbox-item">
+                  <input type="checkbox" name="penyakit_kronik" value="Penyakit Buah Pinggang">
+                  <span>Penyakit Buah Pinggang</span>
+                </label>
+                <label class="checkbox-item">
+                  <input type="checkbox" name="penyakit_kronik" value="Lain-lain">
+                  <span>Lain-lain</span>
+                </label>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label for="catatan_kesihatan">Catatan Kesihatan</label>
+              <textarea id="catatan_kesihatan" name="catatan_kesihatan" rows="4" placeholder="Catatan tambahan mengenai kesihatan..."></textarea>
+            </div>
+          </div>
+          
+          <!-- Step 7: Ekonomi -->
+          <div class="wizard-step" data-step="7">
+            <h4 class="step-title">Ekonomi (Pendapatan/Perbelanjaan/Bantuan)</h4>
+            
+            <h5>A) Pendapatan Tetap</h5>
+            <div id="pendapatan-tetap-container">
+              <div class="pendapatan-tetap-item form-grid">
+                <div class="form-group">
+                  <label>Sumber</label>
+                  <input type="text" name="pendapatan_tetap[0][sumber]">
+                </div>
+                <div class="form-group">
+                  <label>Jumlah (RM)</label>
+                  <input type="number" name="pendapatan_tetap[0][jumlah]" step="0.01" min="0">
+                </div>
+                <div class="form-group">
+                  <label>Catatan</label>
+                  <input type="text" name="pendapatan_tetap[0][catatan]">
+                </div>
+              </div>
+            </div>
+            <button type="button" id="add-pendapatan-tetap" class="btn-secondary">Tambah Pendapatan Tetap</button>
+            
+            <h5>B) Pendapatan Tidak Tetap</h5>
+            <div id="pendapatan-tidak-tetap-container">
+              <div class="pendapatan-tidak-tetap-item form-grid">
+                <div class="form-group">
+                  <label>Sumber</label>
+                  <input type="text" name="pendapatan_tidak_tetap[0][sumber]">
+                </div>
+                <div class="form-group">
+                  <label>Jumlah (RM)</label>
+                  <input type="number" name="pendapatan_tidak_tetap[0][jumlah]" step="0.01" min="0">
+                </div>
+                <div class="form-group">
+                  <label>Catatan</label>
+                  <input type="text" name="pendapatan_tidak_tetap[0][catatan]">
+                </div>
+              </div>
+            </div>
+            <button type="button" id="add-pendapatan-tidak-tetap" class="btn-secondary">Tambah Pendapatan Tidak Tetap</button>
+            
+            <div class="total-display">
+              <strong>Jumlah Pendapatan: RM <span id="jumlah-pendapatan">0.00</span></strong>
+            </div>
+            
+            <h5>C) Perbelanjaan</h5>
+            <div id="perbelanjaan-container">
+              <div class="perbelanjaan-item form-grid">
+                <div class="form-group">
+                  <label>Kategori</label>
+                  <select name="perbelanjaan[0][kategori]">
+                    <option value="">Pilih Kategori</option>
+                    <option value="Utiliti-Air">Utiliti-Air</option>
+                    <option value="Utiliti-Elektrik">Utiliti-Elektrik</option>
+                    <option value="Sewa">Sewa</option>
+                    <option value="Ansuran">Ansuran</option>
+                    <option value="Makanan">Makanan</option>
+                    <option value="Sekolah-Anak">Sekolah-Anak</option>
+                    <option value="Rawatan">Rawatan</option>
+                    <option value="Lain-lain">Lain-lain</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Jumlah (RM)</label>
+                  <input type="number" name="perbelanjaan[0][jumlah]" step="0.01" min="0">
+                </div>
+                <div class="form-group">
+                  <label>Catatan</label>
+                  <input type="text" name="perbelanjaan[0][catatan]">
+                </div>
+              </div>
+            </div>
+            <button type="button" id="add-perbelanjaan" class="btn-secondary">Tambah Perbelanjaan</button>
+            
+            <div class="total-display">
+              <strong>Jumlah Perbelanjaan: RM <span id="jumlah-perbelanjaan">0.00</span></strong>
+            </div>
+            
+            <h5>D) Bantuan Bulanan</h5>
+            <div id="bantuan-bulanan-container">
+              <div class="bantuan-bulanan-item form-grid">
+                <div class="form-group">
+                  <label>Tarikh Mula</label>
+                  <input type="date" name="bantuan_bulanan[0][tarikh_mula]">
+                </div>
+                <div class="form-group">
+                  <label>Agensi</label>
+                  <input type="text" name="bantuan_bulanan[0][agensi]">
+                </div>
+                <div class="form-group">
+                  <label>Kadar (RM)</label>
+                  <input type="number" name="bantuan_bulanan[0][kadar]" step="0.01" min="0">
+                </div>
+                <div class="form-group">
+                  <label>Kekerapan</label>
+                  <select name="bantuan_bulanan[0][kekerapan]">
+                    <option value="">Pilih Kekerapan</option>
+                    <option value="Bulanan">Bulanan</option>
+                    <option value="Mingguan">Mingguan</option>
+                    <option value="Harian">Harian</option>
+                    <option value="Suku-Tahunan">Suku-Tahunan</option>
+                    <option value="Tahunan">Tahunan</option>
+                    <option value="Sekali">Sekali</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Cara Terima</label>
+                  <input type="text" name="bantuan_bulanan[0][cara_terima]">
+                </div>
+                <div class="form-group">
+                  <label>Catatan</label>
+                  <input type="text" name="bantuan_bulanan[0][catatan]">
+                </div>
+              </div>
+            </div>
+            <button type="button" id="add-bantuan-bulanan" class="btn-secondary">Tambah Bantuan Bulanan</button>
+            
+            <div class="total-display">
+              <strong>Anggaran Bulanan: RM <span id="anggaran-bulanan">0.00</span></strong>
+            </div>
+          </div>
+          
+          <!-- Step 8: Semakan & Pengesahan -->
+          <div class="wizard-step" data-step="8">
+            <h4 class="step-title">Semakan & Pengesahan</h4>
+            
+            <div class="review-section">
+              <div class="completion-status">
+                <h5>Status Kelengkapan: <span id="completion-percentage">0%</span></h5>
+                <div class="progress-bar">
+                  <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+                </div>
+              </div>
+              
+              <div class="review-grid" id="reviewContent">
+                <!-- Review content will be populated by JavaScript -->
+              </div>
+              
+              <div class="form-group">
+                <label class="checkbox-label">
+                  <input type="checkbox" id="confirm_accuracy" name="confirm_accuracy" required>
+                  Saya mengesahkan bahawa semua maklumat yang diberikan adalah tepat dan benar.
+                </label>
+              </div>
+            </div>
+          </div>
+          
+          <div class="wizard-navigation">
+            <button type="button" id="prevBtn" class="btn btn-secondary" style="display: none;">Sebelumnya</button>
+            <button type="button" id="nextBtn" class="btn btn-primary">Seterusnya</button>
+            <button type="button" id="saveAsDraftBtn" class="btn btn-outline">Simpan Draf</button>
+            <button type="submit" id="submitBtn" class="btn btn-success" style="display: none;">Hantar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+    
+    <div id="senarai-kir-content" class="content-section">
+      <div class="section-header">
+        <h3 class="section-title">Senarai KIR</h3>
+        <p class="section-description">View and manage all KIR records</p>
+      </div>
+      
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>KIR ID</th>
+              <th>Name</th>
+              <th>IC Number</th>
+              <th>Status</th>
+              <th>Created Date</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="senariKirTableBody">
+            <!-- KIRs will be loaded here -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+
+    
+    <div id="program-kehadiran-content" class="content-section">
+      <div class="section-header">
+        <h3 class="section-title">Program & Kehadiran</h3>
+        <p class="section-description">Manage programs and attendance records</p>
+      </div>
+      
+      <!-- Main Program & Kehadiran Overview -->
+      <div id="program-kehadiran-overview" class="sub-content-section active">
+        <div class="program-kehadiran-grid">
+          <div class="program-card">
+            <div class="program-header">
+              <h4>Program Management</h4>
+              <span class="program-icon">📅</span>
+            </div>
+            <p class="program-description">Create and manage community programs</p>
+            <button class="btn btn-primary" id="manage-programs-btn">Manage Programs</button>
+          </div>
+          <div class="program-card">
+            <div class="program-header">
+              <h4>Attendance Tracking</h4>
+              <span class="program-icon">✅</span>
+            </div>
+            <p class="program-description">Track participant attendance</p>
+            <button class="btn btn-primary" id="view-attendance-btn">View Attendance</button>
+          </div>
+          <div class="program-card">
+            <div class="program-header">
+              <h4>Program Reports</h4>
+              <span class="program-icon">📊</span>
+            </div>
+            <p class="program-description">Generate program participation reports</p>
+            <button class="btn btn-primary" id="generate-reports-btn">Generate Reports</button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Program Management Sub-section -->
+      <div id="program-management-content" class="sub-content-section">
+        <div class="section-header">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <button class="back-btn" id="program-management-back-btn">
+              <span>⬅️</span>
+              Back to Overview
+            </button>
+            <h3 class="section-title">Program Management</h3>
+          </div>
+          <p class="section-description">Create, edit, and manage community programs</p>
+        </div>
+        
+        <div class="action-bar">
+          <button class="btn btn-secondary" id="create-test-program-btn">
+            <span>🧪</span> Create Test Program
+          </button>
+          <button class="btn btn-primary" id="add-program-btn">
+            <span>➕</span> Add New Program
+          </button>
+        </div>
+        
+        <div class="table-container">
+          <table class="data-table" id="programs-table">
+            <thead>
+              <tr>
+                <th>Program Name</th>
+                <th>Description</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+                <th>Category</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="programs-table-body">
+              <!-- Programs will be loaded here -->
+              <tr>
+                <td colspan="7" class="loading-text">Loading programs...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      
+      <!-- Attendance Tracking Sub-section -->
+      <div id="attendance-tracking-content" class="sub-content-section">
+        <div class="section-header">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <button class="back-btn" id="attendance-tracking-back-btn">
+              <span>⬅️</span>
+              Back to Overview
+            </button>
+            <h3 class="section-title">Attendance Tracking</h3>
+          </div>
+          <p class="section-description">Track attendance for all participants</p>
+        </div>
+        
+        <div class="filters-container">
+          <div class="filter-group">
+            <label for="program-filter">Program:</label>
+            <select id="program-filter" class="form-select">
+              <option value="">All Programs</option>
+              <!-- Programs will be loaded here -->
+            </select>
+          </div>
+          
+          <div class="filter-group">
+            <label for="attendance-date-filter">Date:</label>
+            <input type="date" id="attendance-date-filter" class="form-input">
+          </div>
+          
+          <button class="btn btn-secondary" id="apply-attendance-filters">
+            Apply Filters
+          </button>
+          
+          <button class="btn btn-outline" id="reset-attendance-filters">
+            Reset
+          </button>
+        </div>
+        
+        <div class="table-container">
+          <table class="data-table" id="attendance-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>ID</th>
+                <th>Type</th>
+                <th>Present</th>
+                <th>Notes</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="attendance-table-body">
+              <!-- Attendance records will be loaded here -->
+              <tr>
+                <td colspan="6" class="loading-text">Loading attendance records...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      
+      <!-- Program Reports Sub-section -->
+      <div id="program-reports-content" class="sub-content-section">
+        <div class="section-header">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <button class="back-btn" id="program-reports-back-btn">
+              <span>⬅️</span>
+              Back to Overview
+            </button>
+            <h3 class="section-title">Program Reports</h3>
+          </div>
+          <p class="section-description">View attendance statistics and reports</p>
+        </div>
+        
+        <div class="reports-grid">
+          <div class="report-card">
+            <div class="report-header">
+              <h4>Attendance Summary</h4>
+              <span class="report-icon">📊</span>
+            </div>
+            <div class="report-content" id="attendance-summary-report">
+              <p class="loading-text">Loading attendance summary...</p>
+            </div>
+          </div>
+          
+          <div class="report-card">
+            <div class="report-header">
+              <h4>Top Participants</h4>
+              <span class="report-icon">🏆</span>
+            </div>
+            <div class="report-content" id="top-participants-report">
+              <p class="loading-text">Loading top participants...</p>
+            </div>
+          </div>
+          
+          <div class="report-card">
+            <div class="report-header">
+              <h4>Program Participation</h4>
+              <span class="report-icon">👥</span>
+            </div>
+            <div class="report-content" id="program-participation-report">
+              <p class="loading-text">Loading program participation data...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div id="reports-content" class="content-section">
+      <div class="section-header">
+        <h3 class="section-title">Laporan</h3>
+        <p class="section-description">Generate and view system reports</p>
+      </div>
+      
+      <div class="reports-grid">
+        <div class="report-card">
+          <div class="report-header">
+            <h4>KIR Summary Report</h4>
+            <span class="report-icon">📊</span>
+          </div>
+          <p class="report-description">Overview of all KIR records and statistics</p>
+          <button class="btn btn-primary">Generate Report</button>
+        </div>
+        <div class="report-card">
+          <div class="report-header">
+            <h4>User Activity Report</h4>
+            <span class="report-icon">👥</span>
+          </div>
+          <p class="report-description">User login and activity statistics</p>
+          <button class="btn btn-primary">Generate Report</button>
+        </div>
+        <div class="report-card">
+          <div class="report-header">
+            <h4>System Health Report</h4>
+            <span class="report-icon">💚</span>
+          </div>
+          <p class="report-description">System performance and health metrics</p>
+          <button class="btn btn-primary">Generate Report</button>
+        </div>
+      </div>
+    </div>
+    
+    <div id="settings-content" class="content-section">
+      <div class="section-header">
+        <h3 class="section-title">System Settings</h3>
+        <p class="section-description">Configure system preferences and options</p>
+      </div>
+      
+      <div class="settings-grid">
+        <div class="setting-card">
+          <div class="setting-header">
+            <h4>General Settings</h4>
+            <span class="setting-icon">⚙️</span>
+          </div>
+          <div class="setting-options">
+            <label class="setting-option">
+              <input type="checkbox" checked>
+              <span>Enable email notifications</span>
+            </label>
+            <label class="setting-option">
+              <input type="checkbox">
+              <span>Auto-backup data</span>
+            </label>
+            <label class="setting-option">
+              <input type="checkbox" checked>
+              <span>Enable audit logging</span>
+            </label>
+          </div>
+        </div>
+        <div class="setting-card">
+          <div class="setting-header">
+            <h4>Security Settings</h4>
+            <span class="setting-icon">🔒</span>
+          </div>
+          <div class="setting-options">
+            <label class="setting-option">
+              <input type="checkbox" checked>
+              <span>Require strong passwords</span>
+            </label>
+            <label class="setting-option">
+              <input type="checkbox" checked>
+              <span>Enable two-factor authentication</span>
+            </label>
+            <label class="setting-option">
+              <input type="checkbox">
+              <span>Auto-logout after inactivity</span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div id="financial-tracking-content" class="content-section">
+      <div class="section-header">
+        <h3 class="section-title">Financial Tracking</h3>
+        <p class="section-description">Monitor and analyze financial data across all KIR records</p>
+      </div>
+      
+      <!-- Financial Overview Sub-tab -->
+      <div id="financial-overview-content" class="sub-content-section active spacing">
+        <div class="financial-stats-grid">
+          <div class="stat-card financial-card">
+            <div class="stat-header">
+              <h3 class="stat-title">Jumlah Terkumpul</h3>
+              <span class="stat-icon">💵</span>
+            </div>
+            <p class="stat-value" id="total-income">RM 0.00</p>
+            <p class="stat-change positive">+5.2% from last month</p>
+          
+          </div>
+          <div class="stat-card financial-card">
+            <div class="stat-header">
+              <h3 class="stat-title">Baki Semasa</h3>
+              <span class="stat-icon">💸</span>
+            </div>
+            <p class="stat-value" id="total-expenses">RM 0.00</p>
+            <p class="stat-change negative">+2.1% from last month</p>
+          </div>
+          <!-- Transaksi Terkini card removed as requested -->
+          <div class="stat-card financial-card" style="display: none;">
+            <div class="stat-header">
+              <h3 class="stat-title">Pending Income</h3>
+              <span class="stat-icon">⚖️</span>
+            </div>
+            <p class="stat-value" id="net-balance">RM 0.00</p>
+            <p class="stat-change" id="balance-change">Calculated automatically</p>
+          </div>
+        </div>
+        
+        <!-- Financial charts container removed as requested -->
+        
+        <div class="financial-actions">
+          <div class="action-buttons" style="display: flex; flex-wrap: wrap; gap: 25px; margin: 30px 0;">
+            <button class="action-btn primary-action" id="money-in-btn">
+              <span>💵</span>
+              Money In
+            </button>
+            <button class="action-btn primary-action" id="money-out-btn">
+              <span>💸</span>
+              Money Out
+            </button>
+            
+            <div style="width: 100%; height: 15px;"></div>
+            
+            <button class="action-btn" id="generate-income-report">
+              <span>📊</span>
+              Generate Income Report
+            </button>
+            <button class="action-btn" id="generate-expense-report">
+              <span>📈</span>
+              Generate Expense Report
+            </button>
+            
+            <button class="action-btn" id="export-financial-data">
+              <span>📤</span>
+              Export Financial Data
+            </button>
+            <button class="action-btn" id="show-all-transactions">
+              <span>📋</span>
+              Show All Transactions
+            </button>
+          </div>
+        </div>
+        
+        <!-- All Transactions Modal -->
+        <div id="all-transactions-modal" class="modal">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h2>All Transactions</h2>
+              <span class="close-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+              <div class="transactions-container">
+                <div class="transactions-filters">
+                  <select id="transaction-type-filter">
+                    <option value="all">All Transactions</option>
+                    <option value="income">Income Only</option>
+                    <option value="expense">Expenses Only</option>
+                  </select>
+                  <input type="date" id="transaction-date-filter">
+                  <button id="reset-transaction-filters">Reset Filters</button>
+                </div>
+                <div class="transactions-list" id="all-transactions-list">
+                  <p class="loading-text">Loading transactions...</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Money In Sub-tab -->
+      <div id="financial-money-in-content" class="sub-content-section">
+        <div class="section-header">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <button class="back-btn" id="money-in-back-btn">
+              <span>⬅️</span>
+              Back to Overview
+            </button>
+            <h3 class="section-title">Money In - Add Income Entry</h3>
+          </div>
+          <p class="section-description">Record new income sources and amounts</p>
+        </div>
+        
+        <div class="form-container">
+          <form id="income-entry-form" class="income-form">
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="income-date" class="form-label">Date</label>
+                <input type="date" id="income-date" name="date" class="form-input" required>
+              </div>
+              
+              <div class="form-group">
+                <label for="income-source" class="form-label">Income Source</label>
+                <input type="text" id="income-source" name="source" class="form-input" 
+                       placeholder="e.g., Client Name, Government Grant, etc." required>
+              </div>
+              
+              <div class="form-group">
+                <label for="income-category" class="form-label">Category</label>
+                <select id="income-category" name="category" class="form-select" required>
+                  <option value="">Select Category</option>
+                  <option value="sales-revenue">Sales Revenue</option>
+                  <option value="service-income">Service Income</option>
+                  <option value="grants-funding">Grants & Funding</option>
+                  <option value="donations">Donations</option>
+                  <option value="investment-returns">Investment Returns</option>
+                  <option value="other-revenue">Other Revenue</option>
+                </select>
+              </div>
+              
+              <div class="form-group">
+                <label for="income-amount" class="form-label">Amount (RM)</label>
+                <input type="number" id="income-amount" name="amount" class="form-input" 
+                       placeholder="0.00" step="0.01" min="0" required>
+              </div>
+              
+              <div class="form-group full-width">
+                <label for="income-description" class="form-label">Description</label>
+                <textarea id="income-description" name="description" class="form-textarea" 
+                          placeholder="Additional details about this income entry..." rows="3"></textarea>
+              </div>
+              
+              <div class="form-group">
+                <label for="income-reference" class="form-label">Reference Number (Optional)</label>
+                <input type="text" id="income-reference" name="reference" class="form-input" 
+                       placeholder="Invoice/Receipt number">
+              </div>
+              
+              <div class="form-group">
+                <label for="income-payment-method" class="form-label">Payment Method</label>
+                <select id="income-payment-method" name="paymentMethod" class="form-select" required>
+                  <option value="">Select Payment Method</option>
+                  <option value="bank-transfer">Bank Transfer</option>
+                  <option value="cash">Cash</option>
+                  <option value="cheque">Cheque</option>
+                  <option value="online-payment">Online Payment</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+            </div>
+            
+            <div class="form-actions">
+              <button type="button" id="clear-form-btn" class="btn btn-secondary">
+                <span class="btn-icon">🔄</span>
+                Clear Form
+              </button>
+              <button type="submit" id="submit-income-btn" class="btn btn-primary">
+                <span class="btn-icon">💾</span>
+                Save Income Entry
+              </button>
+            </div>
+          </form>
+          
+          <div id="form-message" class="form-message" style="display: none;"></div>
+        </div>
+      </div>
+      
+      <!-- Money Out Sub-tab -->
+      <div id="financial-money-out-content" class="sub-content-section">
+        <div class="section-header">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <button class="back-btn" id="money-out-back-btn">
+              <span>⬅️</span>
+              Back to Overview
+            </button>
+            <h3 class="section-title">Money Out - Add Expense Entry</h3>
+          </div>
+          <p class="section-description">Record new company expenses and outgoing payments</p>
+        </div>
+        
+        <div class="form-container">
+          <form id="expense-entry-form" class="expense-form">
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="expense-date" class="form-label">Date</label>
+                <input type="date" id="expense-date" name="date" class="form-input" required>
+              </div>
+              
+              <div class="form-group">
+                <label for="expense-vendor" class="form-label">Vendor/Payee</label>
+                <input type="text" id="expense-vendor" name="vendor" class="form-input" 
+                       placeholder="e.g., Office Supplies Co, TNB, Staff Member" required>
+              </div>
+              
+              <div class="form-group">
+                <label for="expense-category" class="form-label">Category</label>
+                <select id="expense-category" name="category" class="form-select" required>
+                  <option value="">Select Category</option>
+                  <option value="operating-expenses">Operating Expenses</option>
+                  <option value="staff-salaries">Staff Salaries</option>
+                  <option value="equipment-supplies">Equipment & Supplies</option>
+                  <option value="marketing-advertising">Marketing & Advertising</option>
+                  <option value="utilities">Utilities</option>
+                  <option value="rent-facilities">Rent & Facilities</option>
+                  <option value="professional-services">Professional Services</option>
+                  <option value="travel-transport">Travel & Transport</option>
+                  <option value="maintenance-repairs">Maintenance & Repairs</option>
+                  <option value="insurance">Insurance</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              
+              <div class="form-group">
+                <label for="expense-amount" class="form-label">Amount (RM)</label>
+                <input type="number" id="expense-amount" name="amount" class="form-input" 
+                       step="0.01" min="0" placeholder="0.00" required>
+              </div>
+              
+              <div class="form-group full-width">
+                <label for="expense-description" class="form-label">Description</label>
+                <textarea id="expense-description" name="description" class="form-textarea" 
+                          rows="3" placeholder="Additional details about this expense..."></textarea>
+              </div>
+              
+              <div class="form-group">
+                <label for="expense-reference" class="form-label">Reference Number</label>
+                <input type="text" id="expense-reference" name="reference" class="form-input" 
+                       placeholder="Invoice/Receipt number">
+              </div>
+              
+              <div class="form-group">
+                <label for="expense-payment-method" class="form-label">Payment Method</label>
+                <select id="expense-payment-method" name="paymentMethod" class="form-select" required>
+                  <option value="">Select Payment Method</option>
+                  <option value="bank-transfer">Bank Transfer</option>
+                  <option value="cash">Cash</option>
+                  <option value="cheque">Cheque</option>
+                  <option value="credit-card">Credit Card</option>
+                  <option value="online-payment">Online Payment</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+            </div>
+            
+            <div class="form-actions">
+              <button type="button" id="clear-expense-form-btn" class="btn btn-secondary">
+                <span class="btn-icon">🔄</span>
+                Clear Form
+              </button>
+              <button type="submit" id="submit-expense-btn" class="btn btn-primary">
+                <span class="btn-icon">💾</span>
+                Save Expense Entry
+              </button>
+            </div>
+          </form>
+          
+          <div id="expense-form-message" class="form-message" style="display: none;"></div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Income Entry Modal -->
+    <div id="income-modal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Add New Revenue Entry</h3>
+          <span class="close-modal" id="close-income-modal">&times;</span>
+        </div>
+        <form id="income-form" class="modal-form">
+          <div class="form-group">
+            <label for="income-date">Date *</label>
+            <input type="date" id="income-date" name="date" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="income-source">Revenue Source *</label>
+            <input type="text" id="income-source" name="source" placeholder="e.g., Client Payment, Product Sales, Service Contract" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="income-category">Category *</label>
+            <select id="income-category" name="category" required>
+              <option value="">Select Category</option>
+              <option value="sales-revenue">Sales Revenue</option>
+              <option value="service-income">Service Income</option>
+              <option value="consulting-fees">Consulting Fees</option>
+              <option value="grants-funding">Grants & Funding</option>
+              <option value="investment-returns">Investment Returns</option>
+              <option value="rental-income">Rental Income</option>
+              <option value="partnership-income">Partnership Income</option>
+              <option value="licensing-fees">Licensing Fees</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="income-amount">Amount (RM) *</label>
+            <input type="number" id="income-amount" name="amount" step="0.01" min="0" placeholder="0.00" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="income-description">Description</label>
+            <textarea id="income-description" name="description" rows="3" placeholder="Additional details about this revenue..."></textarea>
+          </div>
+          
+          <div class="form-group">
+            <label for="income-recurring">Recurring Revenue</label>
+            <select id="income-recurring" name="recurring">
+              <option value="no">One-time</option>
+              <option value="weekly">Weekly</option>
+              <option value="monthly">Monthly</option>
+              <option value="quarterly">Quarterly</option>
+              <option value="yearly">Yearly</option>
+            </select>
+          </div>
+          
+          <div class="modal-actions">
+            <button type="button" class="btn btn-secondary" id="cancel-income">Cancel</button>
+            <button type="submit" class="btn btn-primary">Add Revenue</button>
+          </div>
+        </form>
+      </div>
+    </div>
+    
+    <!-- Expense Entry Modal -->
+    <div id="expense-modal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Add New Expense Entry</h3>
+          <span class="close-modal" id="close-expense-modal">&times;</span>
+        </div>
+        <form id="expense-form" class="modal-form">
+          <div class="form-group">
+            <label for="expense-date">Date *</label>
+            <input type="date" id="expense-date" name="date" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="expense-vendor">Vendor/Payee *</label>
+            <input type="text" id="expense-vendor" name="vendor" placeholder="e.g., Office Supplies Co, Utility Company, Staff Member" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="expense-category">Category *</label>
+            <select id="expense-category" name="category" required>
+              <option value="">Select Category</option>
+              <option value="operating-expenses">Operating Expenses</option>
+              <option value="staff-salaries">Staff Salaries</option>
+              <option value="equipment-supplies">Equipment & Supplies</option>
+              <option value="marketing-advertising">Marketing & Advertising</option>
+              <option value="utilities">Utilities</option>
+              <option value="rent-facilities">Rent & Facilities</option>
+              <option value="professional-services">Professional Services</option>
+              <option value="travel-transport">Travel & Transport</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="expense-amount">Amount (RM) *</label>
+            <input type="number" id="expense-amount" name="amount" step="0.01" min="0" placeholder="0.00" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="expense-description">Description</label>
+            <textarea id="expense-description" name="description" rows="3" placeholder="Additional details about this expense..."></textarea>
+          </div>
+          
+          <div class="form-group">
+            <label for="expense-recurring">Recurring Expense</label>
+            <select id="expense-recurring" name="recurring">
+              <option value="no">One-time</option>
+              <option value="weekly">Weekly</option>
+              <option value="monthly">Monthly</option>
+              <option value="quarterly">Quarterly</option>
+              <option value="yearly">Yearly</option>
+            </select>
+          </div>
+          
+          <div class="modal-actions">
+            <button type="button" class="btn btn-secondary" id="cancel-expense">Cancel</button>
+            <button type="submit" class="btn btn-primary">Add Expense</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  `;
+}
+
+export function createAdminDashboard(user) {
+  const sidebar = createAdminSidebar(user);
+  const mainContent = createAdminMainContent();
+  
+  return `
+    <div class="admin-layout">
+      <button class="mobile-menu-toggle" id="mobileMenuToggle">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
+      ${sidebar}
+      
+      <main class="main-content">
+        <div class="content-header">
+          <h1 class="content-title">Admin Dashboard</h1>
+          <p class="content-subtitle">Welcome, ${user.name} - Manage users, KIRs, and system operations</p>
+        </div>
+        
+        ${mainContent}
+      </main>
+    </div>
+  `;
+}
+
+// User Management functionality
+export async function initializeUserManagement() {
+  const usersTableBody = document.getElementById('usersTableBody');
+  
+  // Load users from Firebase
+  let users = [];
+  try {
+    users = await FirebaseAuthService.getAllUsers();
+    // Format the data for display
+    users = users.map(user => ({
+      id: user.id,
+      name: user.name || 'Unknown',
+      email: user.email || 'No email',
+      role: user.role || 'user',
+      status: user.status || 'active',
+      lastLogin: user.lastLogin ? formatLastLogin(user.lastLogin) : 'Never'
+    }));
+  } catch (error) {
+    console.error('Error loading users:', error);
+    // Fallback to mock data if Firebase fails
+    users = [
+      { id: 1, name: 'Administrator', email: 'admin@example.com', role: 'admin', status: 'active', lastLogin: '2 hours ago' },
+      { id: 2, name: 'Regular User', email: 'user@example.com', role: 'user', status: 'active', lastLogin: '1 day ago' },
+      { id: 3, name: 'John Smith', email: 'john.smith@example.com', role: 'moderator', status: 'inactive', lastLogin: '1 week ago' },
+      { id: 4, name: 'Sarah Johnson', email: 'sarah.johnson@example.com', role: 'user', status: 'pending', lastLogin: 'Never' },
+      { id: 5, name: 'Mike Wilson', email: 'mike.wilson@example.com', role: 'user', status: 'active', lastLogin: '3 days ago' }
+    ];
+    showUserManagementError('Failed to load users from database. Showing sample data.');
+  }
+
+  // Helper function to format last login date
+  function formatLastLogin(date) {
+    if (!date) return 'Never';
+    const now = new Date();
+    const loginDate = date.toDate ? date.toDate() : new Date(date);
+    const diffMs = now - loginDate;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+    
+    if (diffMins < 60) return `${diffMins} minutes ago`;
+    if (diffHours < 24) return `${diffHours} hours ago`;
+    if (diffDays < 7) return `${diffDays} days ago`;
+    return loginDate.toLocaleDateString();
+  }
+
+  // Helper function to show error messages
+  function showUserManagementError(message) {
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'user-management-error';
+    errorDiv.style.cssText = 'background: #fee; color: #c53030; padding: 10px; border-radius: 5px; margin-bottom: 15px; border: 1px solid #feb2b2;';
+    errorDiv.textContent = message;
+    
+    const userManagementSection = document.getElementById('users-content');
+    if (userManagementSection) {
+      userManagementSection.insertBefore(errorDiv, userManagementSection.firstChild);
+      setTimeout(() => errorDiv.remove(), 5000);
+    }
+  }
+  
+  function renderUsers(filteredUsers = users) {
+    if (!usersTableBody) return;
+    
+    usersTableBody.innerHTML = filteredUsers.map(user => `
+      <tr class="user-row">
+        <td>
+          <div class="user-info">
+            <div class="user-avatar">${user.name.charAt(0).toUpperCase()}</div>
+            <span class="user-name">${user.name}</span>
+          </div>
+        </td>
+        <td class="user-email">${user.email}</td>
+        <td><span class="role-badge ${user.role}">${user.role.charAt(0).toUpperCase() + user.role.slice(1)}</span></td>
+        <td><span class="status-badge ${user.status}">${user.status.charAt(0).toUpperCase() + user.status.slice(1)}</span></td>
+        <td class="last-login">${user.lastLogin}</td>
+        <td>
+          <div class="action-menu">
+            <button class="action-menu-btn" title="Edit User">✏️</button>
+            <button class="action-menu-btn" title="View Details">👁️</button>
+            <button class="action-menu-btn danger" title="Delete User">🗑️</button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+    
+    // Update table info
+    const tableInfo = document.querySelector('.table-info');
+    if (tableInfo) {
+      const total = filteredUsers.length;
+      tableInfo.innerHTML = `<span>Showing <strong>${total}</strong> of <strong>${users.length}</strong> users</span>`;
+    }
+  }
+  
+  function filterUsers() {
+    const searchTerm = document.getElementById('userSearch').value.toLowerCase();
+    const statusFilter = document.getElementById('statusFilter').value;
+    
+    const filteredUsers = users.filter(user => {
+      const matchesSearch = user.name.toLowerCase().includes(searchTerm) || 
+                          user.email.toLowerCase().includes(searchTerm);
+      const matchesStatus = statusFilter === 'all' || user.status.toLowerCase() === statusFilter.toLowerCase();
+      
+      return matchesSearch && matchesStatus;
+    });
+    
+    renderUsers(filteredUsers);
+  }
+  
+  // Add event listeners for search and filter
+  const searchInput = document.getElementById('userSearch');
+  const statusFilterSelect = document.getElementById('statusFilter');
+  
+  if (searchInput) {
+    searchInput.addEventListener('input', filterUsers);
+  }
+  
+  if (statusFilterSelect) {
+    statusFilterSelect.addEventListener('change', filterUsers);
+  }
+  
+  // Initialize
+  renderUsers();
+}
+
+// Import KIR Service
+import { KIRService } from '../../services/backend/KIRService.js';
+
+// KIR Management functionality
+export function initializeKIRManagement(tableBodyId = 'kirTableBody') {
+  const kirTableBody = document.getElementById(tableBodyId);
+  
+  // State management
+  let currentKIRData = [];
+  let currentPage = 1;
+  let pageSize = 10;
+  let totalRecords = 0;
+  let currentFilters = {
+    search: '',
+    status: 'all',
+    negeri: 'all',
+    nama: '',
+    nokp: ''
+  };
+  
+  // Debug state
+  let debugState = {
+    lastError: null,
+    lastParams: null,
+    hasNextCursor: false,
+    hasPrevCursor: false,
+    isDebugVisible: false
+  };
+  
+  async function loadKIRData() {
+    try {
+      showLoadingState();
+      
+      const params = {
+        search: currentFilters.search,
+        status: currentFilters.status === 'all' ? '' : mapStatusToDatabase(currentFilters.status),
+        daerah: currentFilters.negeri === 'all' ? '' : currentFilters.negeri,
+        pageCursor: null, // For now, we'll implement simple pagination
+        pageSize: pageSize
+      };
+      
+      // Store params for debug
+      debugState.lastParams = { ...params };
+      debugState.lastError = null;
+      
+      const result = await KIRService.getKIRList(params);
+      
+      currentKIRData = result.items || [];
+      totalRecords = result.items ? result.items.length : 0; // Approximate total for now
+      
+      // Update debug cursor state
+      debugState.hasNextCursor = result.hasMore || false;
+      debugState.hasPrevCursor = currentPage > 1;
+      
+      renderKIRTable();
+      await updateSummaryCardsWithRealData();
+      updatePagination(result);
+      updateDebugBar();
+      
+    } catch (error) {
+      console.error('Error loading KIR data:', error);
+      
+      // Store error for debug
+      debugState.lastError = {
+        message: error.message,
+        code: error.code,
+        timestamp: new Date().toISOString()
+      };
+      
+      // Handle specific Firestore permission errors
+      if (error.code === 'permission-denied' || error.message?.includes('permission-denied')) {
+        showErrorMessage('Akses ditolak: sila semak peranan dan peraturan pangkalan data.');
+      } else {
+        showErrorMessage('Ralat memuatkan data KIR. Sila cuba lagi.');
+      }
+      
+      updateDebugBar();
+    } finally {
+      hideLoadingState();
+    }
+  }
+  
+  function renderKIRTable() {
+    if (!kirTableBody) return;
+    
+    // Show empty state hint box if no data
+    const tableContainer = document.querySelector('.kir-table-container');
+    let hintBox = document.querySelector('.empty-state-hint');
+    
+    if (currentKIRData.length === 0) {
+      // Create hint box if it doesn't exist
+      if (!hintBox) {
+        hintBox = document.createElement('div');
+        hintBox.className = 'empty-state-hint';
+        tableContainer.insertBefore(hintBox, tableContainer.firstChild);
+      }
+      
+      hintBox.innerHTML = `
+        <div class="hint-content">
+          <h4>📋 Tiada data KIR dijumpai</h4>
+          <p>Beberapa tips untuk menyelesaikan masalah ini:</p>
+          <ul>
+            <li>🔍 Kosongkan penapis carian dan cuba lagi</li>
+            <li>🔒 Semak peraturan Firestore untuk akses data</li>
+            <li>📁 Pastikan nama koleksi 'kir' adalah betul</li>
+            <li>🌐 Periksa sambungan internet anda</li>
+          </ul>
+        </div>
+      `;
+      hintBox.style.display = 'block';
+      
+      kirTableBody.innerHTML = `
+        <tr>
+          <td colspan="7" style="text-align: center; padding: 2rem; color: #64748b;">
+            Tiada data KIR dijumpai.
+          </td>
+        </tr>
+      `;
+      return;
+    } else {
+      // Hide hint box if data exists
+      if (hintBox) {
+        hintBox.style.display = 'none';
+      }
+    }
+    
+    kirTableBody.innerHTML = currentKIRData.map(kir => `
+      <tr class="kir-row">
+        <td>
+          <div class="user-info">
+            <div class="user-avatar">${(kir.nama_penuh || 'N').charAt(0).toUpperCase()}</div>
+            <div class="user-details">
+              <span class="user-name">${kir.nama_penuh || 'Tiada Nama'}</span>
+              <span class="user-email">${kir.email || 'Tiada Email'}</span>
+            </div>
+          </div>
+        </td>
+        <td class="nokp">${kir.no_kp || 'Tiada No. KP'}</td>
+        <td class="daerah">${kir.negeri || 'Tiada Daerah'}</td>
+        <td><span class="status-badge ${mapDatabaseStatusToUI(kir.status_rekod)}">${getStatusText(kir.status_rekod)}</span></td>
+        <td class="date">${formatDate(kir.tarikh_cipta)}</td>
+        <td class="date">${formatDate(kir.tarikh_kemas_kini)}</td>
+        <td>
+          <div class="action-menu">
+            <button class="action-menu-btn" title="Lihat Maklumat" data-action="view" data-id="${kir.id}">👁️</button>
+            <button class="action-menu-btn" title="Edit KIR" data-action="edit" data-id="${kir.id}">✏️</button>
+            <button class="action-menu-btn" title="Padam KIR" data-action="delete" data-id="${kir.id}">🗑️</button>
+            <button class="action-menu-btn" title="Tambah AIR" data-action="add-air" data-id="${kir.id}">📋</button>
+            <button class="action-menu-btn" title="Kemas Kini Kesihatan" data-action="update-health" data-id="${kir.id}">🏥</button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+    
+    // Update table info
+    const tableInfo = document.querySelector('#senarai-kir-content .table-info');
+    if (tableInfo) {
+      const startIndex = (currentPage - 1) * pageSize + 1;
+      const endIndex = Math.min(currentPage * pageSize, totalRecords);
+      tableInfo.innerHTML = `<span>Menunjukkan <strong>${startIndex}-${endIndex}</strong> daripada <strong>${totalRecords}</strong> rekod KIR</span>`;
+    }
+    
+    // Add action listeners
+    addKIRActionListeners();
+  }
+  
+  // Centralized status mapping - keep all status mappings in one place
+  const STATUS_MAPPINGS = {
+    // Database status to UI status mapping
+    DB_TO_UI: {
+      'Draf': 'pending',
+      'Dihantar': 'pending', 
+      'Disahkan': 'aktif',
+      'Tidak Aktif': 'tidak-aktif'
+    },
+    // UI status to database status mapping
+    UI_TO_DB: {
+      'aktif': 'Disahkan',
+      'pending': 'Dihantar',
+      'tidak-aktif': 'Tidak Aktif',
+      'expired': 'Tidak Aktif'
+    },
+    // Status display text mapping
+    DISPLAY_TEXT: {
+      'Draf': 'Draf',
+      'Dihantar': 'Dihantar',
+      'Disahkan': 'Disahkan', 
+      'Tidak Aktif': 'Tidak Aktif',
+      'aktif': 'Aktif',
+      'pending': 'Menunggu',
+      'expired': 'Tamat Tempoh',
+      'tidak-aktif': 'Tidak Aktif'
+    }
+  };
+  
+  function getStatusText(status) {
+    return STATUS_MAPPINGS.DISPLAY_TEXT[status] || status;
+  }
+  
+  function mapDatabaseStatusToUI(dbStatus) {
+    return STATUS_MAPPINGS.DB_TO_UI[dbStatus] || 'pending';
+  }
+  
+  function mapStatusToDatabase(uiStatus) {
+    return STATUS_MAPPINGS.UI_TO_DB[uiStatus] || uiStatus;
+  }
+  
+  function formatDate(timestamp) {
+    if (!timestamp) return 'Tiada Tarikh';
+    
+    let date;
+    if (timestamp.toDate) {
+      // Firestore timestamp
+      date = timestamp.toDate();
+    } else if (timestamp instanceof Date) {
+      date = timestamp;
+    } else {
+      date = new Date(timestamp);
+    }
+    
+    return date.toLocaleDateString('ms-MY', {
+      day: '2-digit',
+      month: '2-digit', 
+      year: 'numeric'
+    });
+  }
+  
+  function filterKIRData() {
+    const searchTerm = document.getElementById('kirSearch')?.value || '';
+    const statusFilter = document.getElementById('statusKirFilter')?.value || 'all';
+    const negeriFilter = document.getElementById('negeriFilter')?.value || 'all';
+    const namaFilter = document.getElementById('namaFilter')?.value || '';
+    const nokpFilter = document.getElementById('nokpFilter')?.value || '';
+    
+    currentFilters = {
+      search: searchTerm,
+      status: statusFilter,
+      negeri: negeriFilter,
+      nama: namaFilter,
+      nokp: nokpFilter
+    };
+    
+    currentPage = 1; // Reset to first page when filtering
+    loadKIRData();
+  }
+  
+  function addKIRActionListeners() {
+    const actionButtons = document.querySelectorAll('#senarai-kir-content .action-menu-btn');
+    actionButtons.forEach(button => {
+      button.addEventListener('click', (e) => {
+        const action = e.target.getAttribute('data-action');
+        const id = e.target.getAttribute('data-id');
+        handleKIRAction(action, id);
+      });
+    });
+  }
+  
+  // Debug Bar Functions
+  function updateDebugBar() {
+    if (!debugState.isDebugVisible) return;
+    
+    // Update filters info
+    const debugFilters = document.getElementById('debugFilters');
+    if (debugFilters) {
+      debugFilters.innerHTML = `
+        <div><strong>Search:</strong> "${currentFilters.search || '(empty)'}"</div>
+        <div><strong>Status:</strong> ${currentFilters.status}</div>
+        <div><strong>Negeri:</strong> ${currentFilters.negeri}</div>
+        <div><strong>Nama Filter:</strong> "${currentFilters.nama || '(empty)'}"</div>
+        <div><strong>No. KP Filter:</strong> "${currentFilters.nokp || '(empty)'}"</div>
+        <div><strong>Params sent to KIRService:</strong></div>
+        <pre>${JSON.stringify(debugState.lastParams, null, 2)}</pre>
+      `;
+    }
+    
+    // Update cursor state
+    const debugCursor = document.getElementById('debugCursor');
+    if (debugCursor) {
+      debugCursor.innerHTML = `
+        <div><strong>Has Next Cursor:</strong> ${debugState.hasNextCursor ? '✅ Yes' : '❌ No'}</div>
+        <div><strong>Has Prev Cursor:</strong> ${debugState.hasPrevCursor ? '✅ Yes' : '❌ No'}</div>
+        <div><strong>Current Page:</strong> ${currentPage}</div>
+        <div><strong>Page Size:</strong> ${pageSize}</div>
+      `;
+    }
+    
+    // Update data state
+    const debugData = document.getElementById('debugData');
+    if (debugData) {
+      debugData.innerHTML = `
+        <div><strong>Items Rendered:</strong> ${currentKIRData.length}</div>
+        <div><strong>Total Records:</strong> ${totalRecords}</div>
+        <div><strong>Last Updated:</strong> ${new Date().toLocaleTimeString()}</div>
+      `;
+    }
+    
+    // Update error state
+    const debugError = document.getElementById('debugError');
+    if (debugError) {
+      if (debugState.lastError) {
+        debugError.innerHTML = `
+          <div style="color: #ef4444;"><strong>Error:</strong> ${debugState.lastError.message}</div>
+          <div><strong>Code:</strong> ${debugState.lastError.code || 'N/A'}</div>
+          <div><strong>Time:</strong> ${new Date(debugState.lastError.timestamp).toLocaleString()}</div>
+        `;
+      } else {
+        debugError.innerHTML = '<div style="color: #10b981;">No errors</div>';
+      }
+    }
+  }
+  
+  function toggleDebugBar() {
+    const debugBar = document.getElementById('debugBar');
+    const debugToggle = document.getElementById('debugToggle');
+    
+    if (debugBar && debugToggle) {
+      debugState.isDebugVisible = !debugState.isDebugVisible;
+      debugBar.style.display = debugState.isDebugVisible ? 'block' : 'none';
+      debugToggle.classList.toggle('active', debugState.isDebugVisible);
+      
+      if (debugState.isDebugVisible) {
+        updateDebugBar();
+      }
+    }
+  }
+  
+  function resetFilters() {
+    // Reset all filter inputs
+    const kirSearch = document.getElementById('kirSearch');
+    const statusKirFilter = document.getElementById('statusKirFilter');
+    const negeriFilter = document.getElementById('negeriFilter');
+    const namaFilter = document.getElementById('namaFilter');
+    const nokpFilter = document.getElementById('nokpFilter');
+    
+    if (kirSearch) kirSearch.value = '';
+    if (statusKirFilter) statusKirFilter.value = 'all';
+    if (negeriFilter) negeriFilter.value = 'all';
+    if (namaFilter) namaFilter.value = '';
+    if (nokpFilter) nokpFilter.value = '';
+    
+    // Reset state
+    currentFilters = {
+      search: '',
+      status: 'all',
+      negeri: 'all',
+      nama: '',
+      nokp: ''
+    };
+    
+    currentPage = 1;
+    loadKIRData();
+  }
+  
+  // Enhanced Summary Cards with Real Data
+  async function updateSummaryCardsWithRealData() {
+    try {
+      // Fetch data for each status to get real counts
+      const [aktifResult, menungguResult, draftResult] = await Promise.all([
+        KIRService.getKIRList({ status: 'Disahkan', pageSize: 1 }),
+        KIRService.getKIRList({ status: 'Dihantar', pageSize: 1 }),
+        KIRService.getKIRList({ status: 'Draf', pageSize: 1 })
+      ]);
+      
+      // Calculate counts
+      const aktifCount = aktifResult.total || 0;
+      const menungguCount = (menungguResult.total || 0) + (draftResult.total || 0);
+      const tamatTempohCount = 0; // Set to 0 as requested
+      const jumlahCount = totalRecords || (aktifCount + menungguCount);
+      
+      // Update summary cards
+      const summaryCards = document.querySelectorAll('#senarai-kir-content .summary-card');
+      if (summaryCards.length >= 4) {
+        summaryCards[0].querySelector('.summary-count').textContent = aktifCount;
+        summaryCards[1].querySelector('.summary-count').textContent = menungguCount;
+        summaryCards[2].querySelector('.summary-count').textContent = tamatTempohCount;
+        summaryCards[3].querySelector('.summary-count').textContent = jumlahCount;
+      }
+      
+    } catch (error) {
+      console.error('Error updating summary cards:', error);
+      // Fallback to showing subset indicator
+      const summaryCards = document.querySelectorAll('#senarai-kir-content .summary-card');
+      summaryCards.forEach(card => {
+        const countElement = card.querySelector('.summary-count');
+        if (countElement && !countElement.textContent.includes('(subset)')) {
+          countElement.textContent += ' (subset)';
+        }
+      });
+    }
+  }
+  
+  async function handleKIRAction(action, id) {
+    const kir = currentKIRData.find(k => k.id === id);
+    if (!kir) {
+      showErrorMessage('KIR tidak dijumpai.');
+      return;
+    }
+    
+    switch (action) {
+      case 'view':
+      case 'edit':
+        // Log URL before navigation for debugging
+        const viewUrl = `/admin/kir/${id}${action === 'edit' ? '?mode=edit' : ''}`;
+        console.log('🔗 Navigating to KIR Profile:', viewUrl);
+        navigateToKIRProfile(id, action === 'edit');
+        break;
+      case 'delete':
+        await handleDeleteKIR(kir);
+        break;
+      case 'add-air':
+        // Log URL before navigation for debugging
+        const airUrl = `/admin/kir/${id}?tab=air`;
+        console.log('🔗 Navigating to KIR AIR tab:', airUrl);
+        navigateToKIRProfile(id, false, 'air');
+        break;
+      case 'update-health':
+        // Log URL before navigation for debugging
+        const healthUrl = `/admin/kir/${id}?tab=kesihatan`;
+        console.log('🔗 Navigating to KIR Health tab:', healthUrl);
+        navigateToKIRProfile(id, false, 'kesihatan');
+        break;
+    }
+  }
+  
+  function navigateToKIRProfile(kirId, editMode = false, tab = 'maklumat-asas') {
+    // Map tab parameter for KIR Profile route
+    let profileTab = 'maklumat-asas';
+    if (tab === 'air') {
+      profileTab = 'air';
+    } else if (tab === 'kesihatan') {
+      profileTab = 'kesihatan';
+    } else if (['maklumat-asas', 'kafa', 'pendidikan', 'pekerjaan', 'kekeluargaan', 'pkir'].includes(tab)) {
+      profileTab = tab;
+    }
+    
+    // Navigate to KIR Profile route
+    window.location.hash = `#/admin/kir/${kirId}?tab=${profileTab}`;
+  }
+  
+  async function handleDeleteKIR(kir) {
+    const confirmMessage = `Adakah anda pasti ingin memadam KIR untuk:\n\nNama: ${kir.nama_penuh}\nNo. KP: ${kir.no_kp}\n\nTindakan ini tidak boleh dibatalkan.`;
+    
+    if (!confirm(confirmMessage)) {
+      return;
+    }
+    
+    try {
+      showLoadingState();
+      await KIRService.deleteKIR(kir.id);
+      showSuccessMessage(`KIR untuk ${kir.nama_penuh} telah berjaya dipadam.`);
+      
+      // Refresh the table
+      await loadKIRData();
+    } catch (error) {
+      console.error('Error deleting KIR:', error);
+      
+      // Handle specific Firestore permission errors
+      if (error.code === 'permission-denied' || error.message?.includes('permission-denied')) {
+        showErrorMessage('Akses ditolak: sila semak peranan dan peraturan pangkalan data.');
+      } else {
+        showErrorMessage('Ralat memadam KIR. Sila cuba lagi.');
+      }
+    } finally {
+      hideLoadingState();
+    }
+  }
+  
+  // Helper functions for UI states
+  function showLoadingState() {
+    if (kirTableBody) {
+      // Add CSS animation if not already present
+      if (!document.querySelector('#loading-spinner-style')) {
+        const style = document.createElement('style');
+        style.id = 'loading-spinner-style';
+        style.textContent = `
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `;
+        document.head.appendChild(style);
+      }
+      
+      kirTableBody.innerHTML = `
+        <tr>
+          <td colspan="7" style="text-align: center; padding: 2rem;">
+            <div style="display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+              <div style="width: 20px; height: 20px; border: 2px solid #e5e7eb; border-top: 2px solid #3b82f6; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+              Memuatkan data KIR...
+            </div>
+          </td>
+        </tr>
+      `;
+    }
+  }
+  
+  function hideLoadingState() {
+    // Loading state will be replaced by renderKIRTable()
+  }
+  
+  function showErrorMessage(message) {
+    showMessage(message, 'error');
+  }
+  
+  function showSuccessMessage(message) {
+    showMessage(message, 'success');
+  }
+  
+  function showMessage(message, type = 'info') {
+    // Create or update message element
+    let messageEl = document.querySelector('.kir-message');
+    if (!messageEl) {
+      messageEl = document.createElement('div');
+      messageEl.className = 'kir-message';
+      const kirHeader = document.querySelector('.senarai-kir-header');
+      if (kirHeader) {
+        kirHeader.appendChild(messageEl);
+      }
+    }
+    
+    messageEl.className = `kir-message ${type}`;
+    messageEl.textContent = message;
+    messageEl.style.cssText = `
+      padding: 1rem;
+      margin: 1rem 0;
+      border-radius: 8px;
+      font-weight: 500;
+      ${type === 'success' ? 'background: #d4edda; color: #155724; border: 1px solid #c3e6cb;' : ''}
+      ${type === 'error' ? 'background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb;' : ''}
+      ${type === 'info' ? 'background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb;' : ''}
+    `;
+    
+    // Auto-hide after 5 seconds
+    setTimeout(() => {
+      if (messageEl && messageEl.parentNode) {
+        messageEl.parentNode.removeChild(messageEl);
+      }
+    }, 5000);
+  }
+  
+  async function updateSummaryCards() {
+    // Update summary cards with real data
+    try {
+      const statusCounts = {
+        aktif: 0,
+        pending: 0,
+        expired: 0,
+        total: totalRecords
+      };
+      
+      currentKIRData.forEach(kir => {
+        const uiStatus = mapDatabaseStatusToUI(kir.status_rekod);
+        if (uiStatus === 'aktif') statusCounts.aktif++;
+        else if (uiStatus === 'pending') statusCounts.pending++;
+        else if (uiStatus === 'expired' || uiStatus === 'tidak-aktif') statusCounts.expired++;
+      });
+      
+      // Update summary card counts
+      const summaryCards = document.querySelectorAll('.summary-card .summary-count');
+      if (summaryCards.length >= 4) {
+        summaryCards[0].textContent = statusCounts.aktif;
+        summaryCards[1].textContent = statusCounts.pending;
+        summaryCards[2].textContent = statusCounts.expired;
+        summaryCards[3].textContent = statusCounts.total;
+      }
+    } catch (error) {
+      console.error('Error updating summary cards:', error);
+    }
+  }
+  
+  function updatePagination(result) {
+    const paginationInfo = document.querySelector('#senarai-kir-content .pagination-info');
+    const prevBtn = document.querySelector('#senarai-kir-content .pagination-btn:first-child');
+    const nextBtn = document.querySelector('#senarai-kir-content .pagination-btn:last-child');
+    
+    if (paginationInfo) {
+      paginationInfo.textContent = `Halaman ${currentPage} daripada ${result.totalPages || 1}`;
+    }
+    
+    if (prevBtn) {
+      prevBtn.disabled = currentPage <= 1;
+      prevBtn.onclick = () => {
+        if (currentPage > 1) {
+          currentPage--;
+          loadKIRData();
+        }
+      };
+    }
+    
+    if (nextBtn) {
+      nextBtn.disabled = currentPage >= (result.totalPages || 1);
+      nextBtn.onclick = () => {
+        if (currentPage < (result.totalPages || 1)) {
+          currentPage++;
+          loadKIRData();
+        }
+      };
+    }
+  }
+  
+  // Add event listeners for filters - ensure all filter input IDs match DOM
+  const filterInputs = [
+    'kirSearch', 'statusKirFilter', 'negeriFilter', 'namaFilter', 'nokpFilter'
+  ];
+  
+  filterInputs.forEach(inputId => {
+    const input = document.getElementById(inputId);
+    if (input) {
+      // Use debounce for text inputs, immediate for select inputs
+      if (input.type === 'text') {
+        input.addEventListener('input', debounce(filterKIRData, 500));
+      } else {
+        input.addEventListener('change', filterKIRData);
+      }
+    }
+  });
+  
+  // Debounce function for search input
+  function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+      const later = () => {
+        clearTimeout(timeout);
+        func(...args);
+      };
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+    };
+  }
+  
+  // Add Cipta KIR button listener
+  const ciptaKIRBtn = document.getElementById('ciptaKIRBtn');
+  if (ciptaKIRBtn) {
+    ciptaKIRBtn.addEventListener('click', () => {
+      // Navigate to Cipta KIR tab
+      const ciptaKIRNav = document.querySelector('[data-section="cipta-kir"]');
+      if (ciptaKIRNav) {
+        ciptaKIRNav.click();
+      }
+    });
+  }
+  
+  // Add debug functionality event listeners
+  const debugToggle = document.getElementById('debugToggle');
+  if (debugToggle) {
+    debugToggle.addEventListener('click', toggleDebugBar);
+  }
+  
+  const resetFiltersBtn = document.getElementById('resetFiltersBtn');
+  if (resetFiltersBtn) {
+    resetFiltersBtn.addEventListener('click', resetFilters);
+  }
+  
+  const reloadDataBtn = document.getElementById('reloadDataBtn');
+  if (reloadDataBtn) {
+    reloadDataBtn.addEventListener('click', () => {
+      loadKIRData();
+    });
+  }
+  
+  // Initialize table
+  loadKIRData();
+  
+  // Expose loadKIRData globally for other components
+  window.loadKIRData = loadKIRData;
+  
+  // Listen for custom refresh events from other components
+  window.addEventListener('kirListNeedsRefresh', (event) => {
+    console.log('KIR list refresh requested:', event.detail);
+    loadKIRData();
+  });
+}
+
+// Initialize user management when users section is activated
+export function setupUserManagementListeners() {
+  const userManagementNav = document.querySelector('[data-section="users"]');
+  if (userManagementNav) {
+    userManagementNav.addEventListener('click', () => {
+      setTimeout(async () => {
+        await initializeUserManagement();
+      }, 100);
+    });
+  }
+}
+
+// Setup listeners for new sidebar sections
+export function setupSenariKIRListeners() {
+  const senariKirNav = document.querySelector('[data-section="senarai-kir"]');
+  if (senariKirNav) {
+    senariKirNav.addEventListener('click', () => {
+      setTimeout(() => {
+        // Initialize KIR management for Senarai KIR section
+        const senariKirTableBody = document.getElementById('senariKirTableBody');
+        if (senariKirTableBody) {
+          // Use the same KIR management functionality but with different table
+          initializeKIRManagement('senariKirTableBody');
+        }
+      }, 100);
+    });
+  }
+}
+
+export function setupReportsListeners() {
+  const reportsNav = document.querySelector('[data-section="reports"]');
+  if (reportsNav) {
+    reportsNav.addEventListener('click', () => {
+      console.log('Reports section activated');
+      // Add reports initialization logic here
+    });
+  }
+}
+
+export function setupSettingsListeners() {
+  const settingsNav = document.querySelector('[data-section="settings"]');
+  if (settingsNav) {
+    settingsNav.addEventListener('click', () => {
+      console.log('Settings section activated');
+      // Add settings initialization logic here
+    });
+  }
+}
+
+// Initialize KIR management when senarai-kir section is activated
+export function setupKIRManagementListeners() {
+  const senariKIRNav = document.querySelector('[data-section="senarai-kir"]');
+  if (senariKIRNav) {
+    senariKIRNav.addEventListener('click', () => {
+      setTimeout(() => {
+        initializeKIRManagement();
+      }, 100);
+    });
+  }
+}
+
+// Initialize Cipta KIR wizard when cipta-kir section is activated
+export function setupCiptaKIRListeners() {
+  const ciptaKIRNav = document.querySelector('[data-section="cipta-kir"]');
+  if (ciptaKIRNav) {
+    ciptaKIRNav.addEventListener('click', () => {
+      console.log('Cipta KIR nav clicked, waiting for DOM...');
+      setTimeout(() => {
+        // Clear any existing draft data to start fresh
+        localStorage.removeItem('ciptaKIR_draft');
+        localStorage.removeItem('wizardKirId');
+        
+        // Initialize wizard when form elements are ready
+        initializeBasicWizard();
+      }, 300); // Increased timeout to ensure DOM is ready
+    });
+  }
+}
+
+// Initialize KIR Sync Dashboard when kir-sync section is activated
+
+
+// Setup event listeners for Program & Kehadiran overview buttons
+function setupProgramKehadiranOverviewListeners() {
+  const manageBtn = document.getElementById('manage-programs-btn');
+  const attendanceBtn = document.getElementById('view-attendance-btn');
+  const reportsBtn = document.getElementById('generate-reports-btn');
+  
+  if (manageBtn) {
+    manageBtn.addEventListener('click', () => {
+      showProgramSubSection('program-management-content');
+    });
+  }
+  
+  if (attendanceBtn) {
+    attendanceBtn.addEventListener('click', () => {
+      showProgramSubSection('attendance-tracking-content');
+    });
+  }
+  
+  if (reportsBtn) {
+    reportsBtn.addEventListener('click', () => {
+      showProgramSubSection('program-reports-content');
+    });
+  }
+}
+
+// Setup event listeners for Program Management section
+async function setupProgramManagementListeners(programService) {
+  const createTestProgramBtn = document.getElementById('create-test-program-btn');
+  const addProgramBtn = document.getElementById('add-program-btn');
+  const backBtn = document.getElementById('program-management-back-btn');
+  
+  if (createTestProgramBtn) {
+    createTestProgramBtn.addEventListener('click', async () => {
+      try {
+        // Create a test program with unique timestamp to avoid duplicates
+        const timestamp = new Date().toISOString();
+        const testProgram = {
+          nama_program: `Test Program ${timestamp}`,
+          deskripsi: 'This is a test program created automatically',
+          tarikh_mula: new Date().toISOString().split('T')[0],
+          tarikh_tamat: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          kategori: 'Test',
+          status: 'Upcoming',
+          env: 'production'
+        };
+        
+        await programService.createProgram(testProgram);
+        showNotification('Test program created successfully!', 'success');
+        // Reload programs table if it exists
+        // loadPrograms();
+      } catch (error) {
+        console.error('Error creating test program:', error);
+        showNotification(error.message || 'Failed to create test program', 'error');
+      }
+    });
+  }
+  
+  if (addProgramBtn) {
+    addProgramBtn.addEventListener('click', () => {
+      // Show program form modal or navigate to program creation page
+      alert('Add Program feature coming soon!');
+    });
+  }
+  
+  if (backBtn) {
+    backBtn.addEventListener('click', () => {
+      showProgramSubSection('program-kehadiran-overview');
+    });
+  }
+}
+
+// Setup Program & Kehadiran navigation listener
+export function setupProgramKehadiranListeners() {
+  const programNav = document.querySelector('[data-section="program-kehadiran"]');
+  if (programNav) {
+    programNav.addEventListener('click', () => {
+      console.log('Program & Kehadiran nav clicked, loading page...');
+      setTimeout(async () => {
+        await initializeProgramKehadiran();
+      }, 100);
+    });
+    
+    // Also initialize if this section is currently active
+    if (document.getElementById('program-kehadiran-content').classList.contains('active')) {
+      console.log('Program & Kehadiran section is active on load, initializing...');
+      setTimeout(async () => {
+        await initializeProgramKehadiran();
+      }, 100);
+    }
+  }
+}
+
+// Setup Financial Tracking navigation listener
+export function setupFinancialTrackingListeners() {
+  const financialNav = document.querySelector('[data-section="financial-tracking"]');
+  
+  // Handle main financial tracking nav click
+  if (financialNav) {
+    financialNav.addEventListener('click', (e) => {
+      e.preventDefault();
+      console.log('Financial Tracking nav clicked');
+      
+      // Show overview by default when clicking on Financial Tracking
+      setTimeout(() => {
+        showFinancialSubTab('overview');
+      }, 100);
+    });
+  }
+  
+  // Setup Money In and Money Out button listeners
+  const moneyInBtn = document.getElementById('money-in-btn');
+  const moneyOutBtn = document.getElementById('money-out-btn');
+  
+  if (moneyInBtn) {
+    moneyInBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      console.log('Money In button clicked');
+      showFinancialSubTab('money-in');
+    });
+  }
+  
+  if (moneyOutBtn) {
+    moneyOutBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      console.log('Money Out button clicked');
+      showFinancialSubTab('money-out');
+    });
+  }
+  
+  // Setup Back buttons for Money In and Money Out pages
+  const moneyInBackBtn = document.getElementById('money-in-back-btn');
+  const moneyOutBackBtn = document.getElementById('money-out-back-btn');
+  
+  if (moneyInBackBtn) {
+    moneyInBackBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      console.log('Money In Back button clicked');
+      showFinancialSubTab('overview');
+    });
+  }
+  
+  if (moneyOutBackBtn) {
+    moneyOutBackBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      console.log('Money Out Back button clicked');
+      showFinancialSubTab('overview');
+    });
+  }
+}
+
+// Show specific financial sub-tab content
+function showFinancialSubTab(subTab) {
+  console.log(`Showing financial sub-tab: ${subTab}`);
+  
+  // Hide all sub-content sections
+  const subContentSections = document.querySelectorAll('.sub-content-section');
+  subContentSections.forEach(section => section.classList.remove('active'));
+  
+  // Show the selected sub-tab content
+  let targetSection;
+  switch(subTab) {
+    case 'overview':
+      targetSection = document.getElementById('financial-overview-content');
+      initializeFinancialOverview();
+      break;
+    case 'money-in':
+      targetSection = document.getElementById('financial-money-in-content');
+      initializeMoneyIn();
+      break;
+    case 'money-out':
+      targetSection = document.getElementById('financial-money-out-content');
+      initializeMoneyOut();
+      break;
+    default:
+      targetSection = document.getElementById('financial-overview-content');
+      initializeFinancialOverview();
+  }
+  
+  if (targetSection) {
+    targetSection.classList.add('active');
+  }
+}
+
+// Initialize Financial Overview (main dashboard)
+function initializeFinancialOverview() {
+  console.log('Initializing Financial Overview...');
+  
+  // Load financial data and update summary cards
+  loadFinancialSummary();
+  
+  // Setup event listeners for financial reports
+  setupFinancialReportListeners();
+  
+  // Setup chart controls
+  setupChartControls();
+}
+
+// Initialize Money In sub-tab
+function initializeMoneyIn() {
+  console.log('Initializing Money In Form...');
+  
+  // Set today's date as default
+  const today = new Date().toISOString().split('T')[0];
+  const dateInput = document.getElementById('income-date');
+  if (dateInput) {
+    dateInput.value = today;
+  }
+  
+  // Setup form event listeners
+  setupIncomeFormListeners();
+}
+
+// Initialize Money Out sub-tab
+function initializeMoneyOut() {
+  console.log('Initializing Money Out Form...');
+  
+  // Set today's date as default
+  const today = new Date().toISOString().split('T')[0];
+  const dateInput = document.getElementById('expense-date');
+  if (dateInput) {
+    dateInput.value = today;
+  }
+  
+  // Setup form event listeners
+  setupExpenseFormListeners();
+}
+
+// Load and display financial summary data
+async function loadFinancialSummary() {
+  try {
+    // Import Firebase functions
+    const { collection, getDocs, query } = await import('firebase/firestore');
+    const { db } = await import('../../services/database/firebase.js');
+    const { COLLECTIONS, createEnvFilter } = await import('../../services/database/collections.js');
+    
+    // Initialize totals
+    let totalIncome = 0;
+    let currentBalance = 0;
+    
+    // Fetch all income data (for total collected amount)
+    try {
+      const incomeQuery = query(
+        collection(db, COLLECTIONS.FINANCIAL_INCOME),
+        createEnvFilter()
+      );
+      const incomeSnapshot = await getDocs(incomeQuery);
+      totalIncome = incomeSnapshot.docs.reduce((sum, doc) => {
+        const data = doc.data();
+        return sum + (parseFloat(data.amount) || 0);
+      }, 0);
+    } catch (error) {
+      console.log('No income data found:', error.message);
+    }
+    
+    // Fetch expense data (for current balance calculation)
+    try {
+      const expenseQuery = query(
+        collection(db, COLLECTIONS.FINANCIAL_EXPENSES),
+        createEnvFilter()
+      );
+      const expenseSnapshot = await getDocs(expenseQuery);
+      const totalExpenses = expenseSnapshot.docs.reduce((sum, doc) => {
+        const data = doc.data();
+        return sum + (parseFloat(data.amount) || 0);
+      }, 0);
+      
+      // Calculate current balance (income minus expenses)
+      currentBalance = totalIncome - totalExpenses;
+    } catch (error) {
+      console.log('No expense data found:', error.message);
+      // If no expenses, current balance equals total income
+      currentBalance = totalIncome;
+    }
+    
+    // Today's transactions section removed as requested
+  
+  // Update summary cards
+  const totalIncomeEl = document.getElementById('total-income');
+  const totalExpensesEl = document.getElementById('total-expenses');
+  const netBalanceEl = document.getElementById('net-balance');
+  const balanceChangeEl = document.getElementById('balance-change');
+  
+  // Jumlah Terkumpul = total income (all money received)
+  if (totalIncomeEl) totalIncomeEl.textContent = `RM ${totalIncome.toLocaleString('en-MY', {minimumFractionDigits: 2})}`;
+  
+  // Baki Semasa = current balance (income minus expenses)
+  if (totalExpensesEl) totalExpensesEl.textContent = `RM ${currentBalance.toLocaleString('en-MY', {minimumFractionDigits: 2})}`;
+  
+  // Remove Pending Income (not needed anymore)
+  if (netBalanceEl) netBalanceEl.style.display = 'none';
+  if (document.querySelector('.stat-card:last-child')) {
+    document.querySelector('.stat-card:last-child').style.display = 'none';
+  }
+  
+  if (balanceChangeEl) {
+    if (currentBalance > 0) {
+      balanceChangeEl.textContent = 'Positive balance';
+      balanceChangeEl.className = 'stat-change positive';
+    } else if (currentBalance < 0) {
+      balanceChangeEl.textContent = 'Negative balance';
+      balanceChangeEl.className = 'stat-change negative';
+    } else {
+      balanceChangeEl.textContent = 'Balanced';
+      balanceChangeEl.className = 'stat-change neutral';
+    }
+  }
+  
+  } catch (error) {
+    console.error('Error loading financial summary:', error);
+    
+    // Fallback to RM0 values on error
+    const totalIncomeEl = document.getElementById('total-income');
+    const totalExpensesEl = document.getElementById('total-expenses');
+    const netBalanceEl = document.getElementById('net-balance');
+    const balanceChangeEl = document.getElementById('balance-change');
+    
+    if (totalIncomeEl) totalIncomeEl.textContent = 'RM 0.00';
+    if (totalExpensesEl) totalExpensesEl.textContent = 'RM 0.00';
+    
+    // Hide the Pending Income card
+    if (netBalanceEl) netBalanceEl.style.display = 'none';
+    if (document.querySelector('.stat-card:last-child')) {
+      document.querySelector('.stat-card:last-child').style.display = 'none';
+    }
+    
+    if (balanceChangeEl) {
+      balanceChangeEl.textContent = 'No data available';
+      balanceChangeEl.className = 'stat-change neutral';
+    }
+  }
+}
+
+// Setup event listeners for financial report buttons
+function setupFinancialReportListeners() {
+  const generateIncomeBtn = document.getElementById('generate-income-report');
+  const generateExpenseBtn = document.getElementById('generate-expense-report');
+  const exportDataBtn = document.getElementById('export-financial-data');
+  const showAllTransactionsBtn = document.getElementById('show-all-transactions');
+  
+  if (generateIncomeBtn) {
+    generateIncomeBtn.addEventListener('click', () => {
+      alert('Income report generation feature coming soon!');
+    });
+  }
+  
+  if (generateExpenseBtn) {
+    generateExpenseBtn.addEventListener('click', () => {
+      alert('Expense report generation feature coming soon!');
+    });
+  }
+  
+  if (showAllTransactionsBtn) {
+    showAllTransactionsBtn.addEventListener('click', () => {
+      showAllTransactionsModal();
+    });
+  }
+  
+  // Setup modal close button
+  const closeModalBtn = document.querySelector('.close-modal');
+  if (closeModalBtn) {
+    closeModalBtn.addEventListener('click', () => {
+      const modal = document.getElementById('all-transactions-modal');
+      if (modal) modal.style.display = 'none';
+    });
+  }
+  
+  // Setup transaction filters
+  const typeFilter = document.getElementById('transaction-type-filter');
+  const dateFilter = document.getElementById('transaction-date-filter');
+  const resetFiltersBtn = document.getElementById('reset-transaction-filters');
+  
+  if (typeFilter) {
+    typeFilter.addEventListener('change', filterTransactions);
+  }
+  
+  if (dateFilter) {
+    dateFilter.addEventListener('change', filterTransactions);
+  }
+  
+  if (resetFiltersBtn) {
+    resetFiltersBtn.addEventListener('click', () => {
+      if (typeFilter) typeFilter.value = 'all';
+      if (dateFilter) dateFilter.value = '';
+      filterTransactions();
+    });
+  }
+  
+  if (exportDataBtn) {
+    exportDataBtn.addEventListener('click', () => {
+      alert('Financial data export feature coming soon!');
+    });
+  }
+}
+
+// Setup chart controls
+function setupChartControls() {
+  const trendPeriodSelect = document.getElementById('trend-period');
+  
+  if (trendPeriodSelect) {
+    trendPeriodSelect.addEventListener('change', (e) => {
+      console.log('Chart period changed to:', e.target.value);
+      // In a real app, this would update the chart data
+      alert(`Chart updated for period: ${e.target.value}`);
+    });
+  }
+}
+
+// Show all transactions modal
+async function showAllTransactionsModal() {
+  const modal = document.getElementById('all-transactions-modal');
+  if (!modal) return;
+  
+  modal.style.display = 'block';
+  
+  // Load all transactions
+  await loadAllTransactions();
+}
+
+// Load all transactions from Firestore
+async function loadAllTransactions() {
+  const transactionsList = document.getElementById('all-transactions-list');
+  if (!transactionsList) return;
+  
+  transactionsList.innerHTML = '<p class="loading-text">Loading transactions...</p>';
+  
+  try {
+    // Import Firebase functions
+    const { collection, getDocs, query } = await import('firebase/firestore');
+    const { db } = await import('../../services/database/firebase.js');
+    const { COLLECTIONS, createEnvFilter } = await import('../../services/database/collections.js');
+    
+    // Fetch all income transactions
+    const incomeQuery = query(
+      collection(db, COLLECTIONS.FINANCIAL_INCOME),
+      createEnvFilter()
+      // Note: orderBy removed as it's causing issues
+    );
+    const incomeSnapshot = await getDocs(incomeQuery);
+    const incomeTransactions = incomeSnapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        type: 'income',
+        amount: parseFloat(data.amount) || 0,
+        description: data.description || '',
+        category: data.category || '',
+        date: data.date ? new Date(data.date) : new Date(),
+        formattedDate: data.date ? new Date(data.date).toLocaleDateString('en-MY') : 'Unknown date'
+      };
+    });
+    
+    // Fetch all expense transactions
+    const expenseQuery = query(
+      collection(db, COLLECTIONS.FINANCIAL_EXPENSES),
+      createEnvFilter()
+      // Note: orderBy removed as it's causing issues
+    );
+    const expenseSnapshot = await getDocs(expenseQuery);
+    const expenseTransactions = expenseSnapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        type: 'expense',
+        amount: parseFloat(data.amount) || 0,
+        description: data.description || '',
+        category: data.category || '',
+        date: data.date ? new Date(data.date) : new Date(),
+        formattedDate: data.date ? new Date(data.date).toLocaleDateString('en-MY') : 'Unknown date'
+      };
+    });
+    
+    // Combine and sort all transactions by date (newest first)
+    const allTransactions = [...incomeTransactions, ...expenseTransactions];
+    allTransactions.sort((a, b) => b.date - a.date);
+    
+    // Store transactions in a global variable for filtering
+    window.allTransactionsData = allTransactions;
+    
+    // Display transactions
+    displayTransactions(allTransactions);
+    
+  } catch (error) {
+    console.error('Error loading transactions:', error);
+    transactionsList.innerHTML = '<p class="error-text">Error loading transactions. Please try again.</p>';
+  }
+}
+
+// Display transactions in the modal
+function displayTransactions(transactions) {
+  const transactionsList = document.getElementById('all-transactions-list');
+  if (!transactionsList) return;
+  
+  if (transactions.length === 0) {
+    transactionsList.innerHTML = '<p class="empty-text">No transactions found.</p>';
+    return;
+  }
+  
+  let html = '';
+  
+  transactions.forEach(transaction => {
+    const amountFormatted = transaction.amount.toLocaleString('en-MY', {minimumFractionDigits: 2});
+    const typeClass = transaction.type === 'income' ? 'income-transaction' : 'expense-transaction';
+    const typeIcon = transaction.type === 'income' ? '💵' : '💸';
+    
+    html += `
+      <div class="transaction-item ${typeClass}" data-id="${transaction.id}" data-type="${transaction.type}" data-date="${transaction.date.toISOString()}">
+        <div class="transaction-icon">${typeIcon}</div>
+        <div class="transaction-details">
+          <div class="transaction-header">
+            <h4>${transaction.description}</h4>
+            <span class="transaction-date">${transaction.formattedDate}</span>
+          </div>
+          <div class="transaction-info">
+            <span class="transaction-category">${transaction.category}</span>
+            <span class="transaction-amount">RM ${amountFormatted}</span>
+          </div>
+        </div>
+      </div>
+    `;
+  });
+  
+  transactionsList.innerHTML = html;
+}
+
+// Filter transactions based on selected filters
+function filterTransactions() {
+  if (!window.allTransactionsData) return;
+  
+  const typeFilter = document.getElementById('transaction-type-filter');
+  const dateFilter = document.getElementById('transaction-date-filter');
+  
+  const typeValue = typeFilter ? typeFilter.value : 'all';
+  const dateValue = dateFilter ? dateFilter.value : '';
+  
+  let filteredTransactions = [...window.allTransactionsData];
+  
+  // Filter by type
+  if (typeValue !== 'all') {
+    filteredTransactions = filteredTransactions.filter(t => t.type === typeValue);
+  }
+  
+  // Filter by date
+  if (dateValue) {
+    const filterDate = new Date(dateValue);
+    filterDate.setHours(0, 0, 0, 0);
+    
+    filteredTransactions = filteredTransactions.filter(t => {
+      const transactionDate = new Date(t.date);
+      transactionDate.setHours(0, 0, 0, 0);
+      return transactionDate.getTime() === filterDate.getTime();
+    });
+  }
+  
+  // Display filtered transactions
+  displayTransactions(filteredTransactions);
+}
+
+// Load income data for Money In sub-tab
+async function loadIncomeData() {
+  console.log('Loading income data...');
+  
+  try {
+    // Import Firebase functions
+    const { collection, getDocs, query } = await import('firebase/firestore');
+    const { db } = await import('../../services/database/firebase.js');
+      const { COLLECTIONS, createEnvFilter } = await import('../../services/database/collections.js');
+    
+    let totalIncome = 0;
+    
+    // Fetch income data from Firebase
+    try {
+      const incomeQuery = query(
+        collection(db, COLLECTIONS.FINANCIAL_INCOME),
+        createEnvFilter()
+      );
+      const incomeSnapshot = await getDocs(incomeQuery);
+      totalIncome = incomeSnapshot.docs.reduce((sum, doc) => {
+        const data = doc.data();
+        return sum + (parseFloat(data.amount) || 0);
+      }, 0);
+    } catch (error) {
+      console.log('No income data found:', error.message);
+    }
+    
+    const incomeData = {
+      totalIncome: totalIncome,
+      monthlyIncome: 0,
+      incomeGrowth: 0,
+      topSources: []
+    };
+    
+    // Update income summary cards
+    updateIncomeCards(incomeData);
+  } catch (error) {
+    console.error('Error loading income data:', error);
+    
+    // Fallback to RM0 values
+    const incomeData = {
+      totalIncome: 0,
+      monthlyIncome: 0,
+      incomeGrowth: 0,
+      topSources: []
+    };
+    updateIncomeCards(incomeData);
+  }
+}
+
+// Load expense data for Money Out sub-tab
+async function loadExpenseData() {
+  console.log('Loading expense data...');
+  
+  try {
+    // Import Firebase functions
+    const { collection, getDocs, query } = await import('firebase/firestore');
+    const { db } = await import('../../services/database/firebase.js');
+    const { COLLECTIONS, createEnvFilter } = await import('../../services/database/collections.js');
+    
+    let totalExpenses = 0;
+    
+    // Fetch expense data from Firebase
+    try {
+      const expenseQuery = query(
+        collection(db, COLLECTIONS.FINANCIAL_EXPENSES),
+        createEnvFilter()
+      );
+      const expenseSnapshot = await getDocs(expenseQuery);
+      totalExpenses = expenseSnapshot.docs.reduce((sum, doc) => {
+        const data = doc.data();
+        return sum + (parseFloat(data.amount) || 0);
+      }, 0);
+    } catch (error) {
+      console.log('No expense data found:', error.message);
+    }
+    
+    const expenseData = {
+      totalExpenses: totalExpenses,
+      monthlyExpenses: 0,
+      expenseGrowth: 0,
+      topCategories: []
+    };
+    
+    // Update expense summary cards
+    updateExpenseCards(expenseData);
+  } catch (error) {
+    console.error('Error loading expense data:', error);
+    
+    // Fallback to RM0 values
+    const expenseData = {
+      totalExpenses: 0,
+      monthlyExpenses: 0,
+      expenseGrowth: 0,
+      topCategories: []
+    };
+    updateExpenseCards(expenseData);
+  }
+}
+
+// Update income summary cards
+function updateIncomeCards(data) {
+  const totalIncomeEl = document.querySelector('#financial-money-in-content .stat-value');
+  if (totalIncomeEl) {
+    totalIncomeEl.textContent = `RM ${data.totalIncome.toLocaleString()}`;
+  }
+}
+
+// Update expense summary cards
+function updateExpenseCards(data) {
+  const totalExpenseEl = document.querySelector('#financial-money-out-content .stat-value');
+  if (totalExpenseEl) {
+    totalExpenseEl.textContent = `RM ${data.totalExpenses.toLocaleString()}`;
+  }
+}
+
+// Setup income-specific event listeners
+function setupIncomeFormListeners() {
+  console.log('Setting up income form listeners...');
+  
+  const incomeForm = document.getElementById('income-entry-form');
+  const clearFormBtn = document.getElementById('clear-form-btn');
+  const submitBtn = document.getElementById('submit-income-btn');
+  const messageDiv = document.getElementById('form-message');
+  
+  // Check if listeners are already attached to prevent duplicates
+  if (incomeForm && incomeForm.dataset.listenersAttached === 'true') {
+    console.log('Income form listeners already attached, skipping...');
+    return;
+  }
+  
+  // Form submission
+  if (incomeForm) {
+    incomeForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      await handleIncomeFormSubmission();
+    });
+    // Mark listeners as attached
+    incomeForm.dataset.listenersAttached = 'true';
+  }
+  
+  // Clear form button
+  if (clearFormBtn) {
+    clearFormBtn.addEventListener('click', () => {
+      resetIncomeForm();
+      showFormMessage('Form cleared successfully.', 'success');
+    });
+  }
+  
+  // Real-time validation
+  const amountInput = document.getElementById('income-amount');
+  if (amountInput) {
+    amountInput.addEventListener('input', (e) => {
+      const value = parseFloat(e.target.value);
+      if (value < 0) {
+        e.target.value = 0;
+      }
+    });
+  }
+  
+  // Auto-format amount on blur
+  if (amountInput) {
+    amountInput.addEventListener('blur', (e) => {
+      const value = parseFloat(e.target.value);
+      if (!isNaN(value)) {
+        e.target.value = value.toFixed(2);
+      }
+    });
+  }
+}
+
+// Reset income form to default state
+function resetIncomeForm() {
+  const form = document.getElementById('income-entry-form');
+  if (form) {
+    form.reset();
+    // Set today's date as default
+    const today = new Date().toISOString().split('T')[0];
+    const dateInput = document.getElementById('income-date');
+    if (dateInput) {
+      dateInput.value = today;
+    }
+    // Clear any validation messages
+    const errorMessages = form.querySelectorAll('.error-message');
+    errorMessages.forEach(msg => msg.remove());
+  }
+}
+
+// Handle income form submission
+async function handleIncomeFormSubmission() {
+  const form = document.getElementById('income-entry-form');
+  const submitBtn = document.getElementById('submit-income-btn');
+  
+  try {
+    // Disable submit button to prevent double submission
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span class="btn-icon">⏳</span> Saving...';
+    }
+    
+    const formData = new FormData(form);
+    
+    // Get form values
+    const incomeData = {
+      date: formData.get('date'),
+      source: formData.get('source').trim(),
+      category: formData.get('category'),
+      amount: parseFloat(formData.get('amount')),
+      description: formData.get('description')?.trim() || '',
+      reference: formData.get('reference')?.trim() || '',
+      paymentMethod: formData.get('paymentMethod')
+    };
+    
+    // Validate form data
+    if (!validateIncomeData(incomeData)) {
+      return;
+    }
+    
+    // Import Firebase functions
+    const { collection, addDoc } = await import('firebase/firestore');
+    const { db } = await import('../../services/database/firebase.js');
+      const { COLLECTIONS, addStandardFields } = await import('../../services/database/collections.js');
+    
+    // Prepare document for Firebase
+    const docData = addStandardFields({
+      ...incomeData,
+      type: 'income',
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
+    
+    // Save to Firebase
+    await addDoc(collection(db, COLLECTIONS.FINANCIAL_INCOME), docData);
+    
+    console.log('Income entry saved successfully:', incomeData);
+    
+    // Reset form and show success message
+    resetIncomeForm();
+    showFormMessage('Income entry saved successfully! ✅', 'success');
+    
+  } catch (error) {
+    console.error('Error saving income entry:', error);
+    showFormMessage('Error saving income entry. Please try again. ❌', 'error');
+  } finally {
+    // Re-enable submit button
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = '<span class="btn-icon">💾</span> Save Income Entry';
+    }
+  }
+}
+
+// Show form message
+function showFormMessage(message, type) {
+  const messageDiv = document.getElementById('form-message');
+  if (messageDiv) {
+    messageDiv.textContent = message;
+    messageDiv.className = `form-message ${type}`;
+    messageDiv.style.display = 'block';
+    
+    // Auto-hide after 5 seconds
+    setTimeout(() => {
+      messageDiv.style.display = 'none';
+    }, 5000);
+  }
+}
+
+// Validate income form data
+function validateIncomeData(data) {
+  const errors = [];
+  
+  // Required field validation
+  if (!data.date) {
+    errors.push('Date is required');
+  }
+  
+  if (!data.source || data.source.length < 2) {
+    errors.push('Income source must be at least 2 characters');
+  }
+  
+  if (!data.category) {
+    errors.push('Category is required');
+  }
+  
+  if (!data.amount || data.amount <= 0) {
+    errors.push('Amount must be greater than 0');
+  }
+  
+  if (!data.paymentMethod) {
+    errors.push('Payment method is required');
+  }
+  
+  // Date validation (not in future)
+  const selectedDate = new Date(data.date);
+  const today = new Date();
+  today.setHours(23, 59, 59, 999); // End of today
+  
+  if (selectedDate > today) {
+    errors.push('Date cannot be in the future');
+  }
+  
+  // Show errors if any
+  if (errors.length > 0) {
+    showFormMessage(errors.join('. '), 'error');
+    return false;
+  }
+  
+  return true;
+}
+
+// Setup expense-specific event listeners
+function setupExpenseFormListeners() {
+  console.log('Setting up expense form listeners...');
+  
+  const expenseForm = document.getElementById('expense-entry-form');
+  const clearFormBtn = document.getElementById('clear-expense-form-btn');
+  const submitBtn = document.getElementById('submit-expense-btn');
+  const messageDiv = document.getElementById('expense-form-message');
+  
+  // Check if listeners are already attached to prevent duplicates
+  if (expenseForm && expenseForm.dataset.listenersAttached === 'true') {
+    console.log('Expense form listeners already attached, skipping...');
+    return;
+  }
+  
+  // Form submission
+  if (expenseForm) {
+    expenseForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      await handleExpenseFormSubmission();
+    });
+    // Mark listeners as attached
+    expenseForm.dataset.listenersAttached = 'true';
+  }
+  
+  // Clear form button
+  if (clearFormBtn) {
+    clearFormBtn.addEventListener('click', () => {
+      resetExpenseForm();
+      showExpenseFormMessage('Form cleared successfully.', 'success');
+    });
+  }
+  
+  // Real-time validation
+  const amountInput = document.getElementById('expense-amount');
+  if (amountInput) {
+    amountInput.addEventListener('input', (e) => {
+      const value = parseFloat(e.target.value);
+      if (value < 0) {
+        e.target.value = 0;
+      }
+    });
+  }
+  
+  // Auto-format amount on blur
+  if (amountInput) {
+    amountInput.addEventListener('blur', (e) => {
+      const value = parseFloat(e.target.value);
+      if (!isNaN(value)) {
+        e.target.value = value.toFixed(2);
+      }
+    });
+  }
+}
+
+// Reset expense form to default state
+function resetExpenseForm() {
+  const form = document.getElementById('expense-entry-form');
+  if (form) {
+    form.reset();
+    // Set today's date as default
+    const today = new Date().toISOString().split('T')[0];
+    const dateInput = document.getElementById('expense-date');
+    if (dateInput) {
+      dateInput.value = today;
+    }
+    // Clear any validation messages
+    const errorMessages = form.querySelectorAll('.error-message');
+    errorMessages.forEach(msg => msg.remove());
+  }
+}
+
+// Handle expense form submission
+async function handleExpenseFormSubmission() {
+  const form = document.getElementById('expense-entry-form');
+  const submitBtn = document.getElementById('submit-expense-btn');
+  
+  try {
+    // Disable submit button to prevent double submission
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span class="btn-icon">⏳</span> Saving...';
+    }
+    
+    const formData = new FormData(form);
+    
+    // Get form values
+    const expenseData = {
+      date: formData.get('date'),
+      vendor: formData.get('vendor').trim(),
+      category: formData.get('category'),
+      amount: parseFloat(formData.get('amount')),
+      description: formData.get('description')?.trim() || '',
+      reference: formData.get('reference')?.trim() || '',
+      paymentMethod: formData.get('paymentMethod')
+    };
+    
+    // Validate form data
+    if (!validateExpenseData(expenseData)) {
+      return;
+    }
+    
+    // Import Firebase functions
+    const { collection, addDoc } = await import('firebase/firestore');
+    const { db } = await import('../../services/database/firebase.js');
+    const { COLLECTIONS, addStandardFields } = await import('../../services/database/collections.js');
+    
+    // Prepare document for Firebase
+    const docData = addStandardFields({
+      ...expenseData,
+      type: 'expense',
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
+    
+    // Save to Firebase
+    await addDoc(collection(db, COLLECTIONS.FINANCIAL_EXPENSES), docData);
+    
+    console.log('Expense entry saved successfully:', expenseData);
+    
+    // Reset form and show success message
+    resetExpenseForm();
+    showExpenseFormMessage('Expense entry saved successfully! ✅', 'success');
+    
+  } catch (error) {
+    console.error('Error saving expense entry:', error);
+    showExpenseFormMessage('Error saving expense entry. Please try again. ❌', 'error');
+  } finally {
+    // Re-enable submit button
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = '<span class="btn-icon">💾</span> Save Expense Entry';
+    }
+  }
+}
+
+// Show expense form message
+function showExpenseFormMessage(message, type) {
+  const messageDiv = document.getElementById('expense-form-message');
+  if (messageDiv) {
+    messageDiv.textContent = message;
+    messageDiv.className = `form-message ${type}`;
+    messageDiv.style.display = 'block';
+    
+    // Auto-hide after 5 seconds
+    setTimeout(() => {
+      messageDiv.style.display = 'none';
+    }, 5000);
+  }
+}
+
+// Validate expense form data
+function validateExpenseData(data) {
+  const errors = [];
+  
+  // Required field validation
+  if (!data.date) {
+    errors.push('Date is required');
+  }
+  
+  if (!data.vendor || data.vendor.length < 2) {
+    errors.push('Vendor/Payee must be at least 2 characters');
+  }
+  
+  if (!data.category) {
+    errors.push('Category is required');
+  }
+  
+  if (!data.amount || data.amount <= 0) {
+    errors.push('Amount must be greater than 0');
+  }
+  
+  if (!data.paymentMethod) {
+    errors.push('Payment method is required');
+  }
+  
+  // Date validation (not in future)
+  const selectedDate = new Date(data.date);
+  const today = new Date();
+  today.setHours(23, 59, 59, 999); // End of today
+  
+  if (selectedDate > today) {
+    errors.push('Date cannot be in the future');
+  }
+  
+  // Show errors if any
+  if (errors.length > 0) {
+    showExpenseFormMessage(errors.join('. '), 'error');
+    return false;
+  }
+  
+  return true;
+}
+
+// Show field validation error
+function showFieldError(fieldId, message) {
+  const field = document.getElementById(fieldId);
+  if (field) {
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'error-message';
+    errorDiv.textContent = message;
+    errorDiv.style.color = '#e74c3c';
+    errorDiv.style.fontSize = '0.875rem';
+    errorDiv.style.marginTop = '0.25rem';
+    field.parentNode.appendChild(errorDiv);
+  }
+}
+
+// Add income entry to table
+function addIncomeToTable(incomeData) {
+  const tableBody = document.getElementById('income-table-body');
+  if (!tableBody) return;
+  
+  const row = document.createElement('tr');
+  row.innerHTML = `
+    <td>${formatDate(incomeData.date)}</td>
+    <td>${incomeData.source}</td>
+    <td>${formatCategory(incomeData.category)}</td>
+    <td>RM ${incomeData.amount.toFixed(2)}</td>
+    <td>${incomeData.description}</td>
+    <td>
+      <button class="btn-icon edit-btn" onclick="editIncomeEntry('${incomeData.id}')">✏️</button>
+      <button class="btn-icon delete-btn" onclick="deleteIncomeEntry('${incomeData.id}')">🗑️</button>
+    </td>
+  `;
+  
+  // Add to top of table
+  tableBody.insertBefore(row, tableBody.firstChild);
+}
+
+// Update income statistics
+function updateIncomeStats(incomeData) {
+  // Update total income (this would typically come from a database)
+  const totalIncomeEl = document.querySelector('#salary-income');
+  if (totalIncomeEl && incomeData.category === 'employment') {
+    const currentValue = parseFloat(totalIncomeEl.textContent.replace('RM ', '').replace(',', '')) || 0;
+    const newValue = currentValue + incomeData.amount;
+    totalIncomeEl.textContent = `RM ${newValue.toLocaleString()}`;
+  }
+}
+
+// Format date for display
+function formatDate(dateString) {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-MY');
+}
+
+// Format category for display
+function formatCategory(category) {
+  return category.split('-').map(word => 
+    word.charAt(0).toUpperCase() + word.slice(1)
+  ).join(' ');
+}
+
+// Show success message
+function showSuccessMessage(message) {
+  // Create success notification
+  const notification = document.createElement('div');
+  notification.className = 'success-notification';
+  notification.textContent = message;
+  notification.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #27ae60;
+    color: white;
+    padding: 1rem 1.5rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    z-index: 10000;
+    font-weight: 500;
+  `;
+  
+  document.body.appendChild(notification);
+  
+  // Remove after 3 seconds
+  setTimeout(() => {
+    notification.remove();
+  }, 3000);
+}
+
+
+
+
+
+// Note: Using existing showProgramSubSection function defined below
+
+// Show notification
+function showNotification(message, type = 'info') {
+  const notification = document.createElement('div');
+  notification.textContent = message;
+  
+  // Set background color based on notification type
+  let bgColor = '#4CAF50'; // Default success/info color
+  if (type === 'error') {
+    bgColor = '#f44336'; // Error color
+  } else if (type === 'warning') {
+    bgColor = '#ff9800'; // Warning color
+  } else if (type === 'info') {
+    bgColor = '#2196F3'; // Info color
+  }
+  
+  notification.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 10px 20px;
+    background-color: ${bgColor};
+    color: white;
+    border-radius: 4px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    z-index: 10000;
+    font-weight: 500;
+  `;
+  
+  document.body.appendChild(notification);
+  
+  // Remove after 3 seconds
+  setTimeout(() => {
+    notification.remove();
+  }, 3000);
+}
+
+// Initialize the Program & Kehadiran page
+export async function initializeProgramKehadiran() {
+  console.log('Initializing Program & Kehadiran page...');
+  
+  const container = document.getElementById('program-kehadiran-content');
+  if (!container) {
+    console.error('Program & Kehadiran container not found');
+    return;
+  }
+  
+  // Make sure the overview section is visible initially
+  showProgramSubSection('program-kehadiran-overview');
+
+  try {
+    // Import ProgramService for program management
+    const { ProgramService } = await import('../../services/backend/ProgramService.js');
+    const programService = new ProgramService();
+    
+    // Setup event listeners for Program & Kehadiran overview buttons
+    setupProgramKehadiranOverviewListeners();
+    
+    // Setup event listeners for Program Management section
+    setupProgramManagementListeners(programService);
+    
+    // Import the CSS styles
+    const styleElement = document.createElement('style');
+    styleElement.textContent = `
+      /* Program & Kehadiran Section Styles */
+      .program-kehadiran-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+        margin-top: 20px;
+      }
+      
+      .program-card {
+        background-color: #fff;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        display: flex;
+        flex-direction: column;
+      }
+      
+      .program-header {
+        display: flex;
+        justify-content: space-between;
+      }
+      
+      .program-title {
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 10px;
+      }
+      
+      .program-icon {
+        font-size: 24px;
+        color: #4a6cf7;
+      }
+      
+      .program-description {
+        color: #64748b;
+        margin-bottom: 15px;
+        flex-grow: 1;
+      }
+      
+      .program-action {
+        margin-top: auto;
+      }
+      
+      /* Sub-section styles */
+      .program-subsection {
+        display: none;
+      }
+      
+      .program-subsection.active {
+        display: block;
+      }
+      
+      /* Action bar styles */
+      .program-action-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+      }
+      
+      .program-filters {
+        display: flex;
+        gap: 10px;
+      }
+      
+      /* Table styles */
+      .program-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+      }
+      
+      .program-table th,
+      .program-table td {
+        padding: 12px 15px;
+        text-align: left;
+        border-bottom: 1px solid #e2e8f0;
+      }
+      
+      .program-table th {
+        background-color: #f8fafc;
+        font-weight: 600;
+      }
+      
+      .program-table tr:hover {
+        background-color: #f1f5f9;
+      }
+      
+      /* Status badge styles */
+      .status-badge {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 500;
+      }
+      
+      .status-badge.upcoming {
+        background-color: #e0f2fe;
+        color: #0369a1;
+      }
+      
+      .status-badge.active {
+        background-color: #dcfce7;
+        color: #15803d;
+      }
+      
+      .status-badge.completed {
+        background-color: #f1f5f9;
+        color: #64748b;
+      }
+      
+      .status-badge.cancelled {
+        background-color: #fee2e2;
+        color: #b91c1c;
+      }
+      
+      /* Report card styles */
+      .report-card {
+        background-color: #fff;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+      }
+      
+      .report-title {
+        font-size: 16px;
+        font-weight: 600;
+        margin-bottom: 15px;
+        color: #334155;
+      }
+      
+      .report-stats {
+        display: flex;
+        gap: 20px;
+      }
+      
+      .stat-card {
+        flex: 1;
+        background-color: #f8fafc;
+        border-radius: 6px;
+        padding: 15px;
+        text-align: center;
+      }
+      
+      .stat-value {
+        font-size: 24px;
+        font-weight: 700;
+        color: #4a6cf7;
+        margin-bottom: 5px;
+      }
+      
+      .stat-label {
+        font-size: 14px;
+        color: #64748b;
+      }
+      
+      .top-participants {
+        margin-top: 20px;
+      }
+      
+      .participant-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 0;
+        border-bottom: 1px solid #e2e8f0;
+      }
+      
+      .participant-name {
+        font-weight: 500;
+      }
+      
+      .participant-attendance {
+        color: #4a6cf7;
+        font-weight: 600;
+      }
+      
+      .program-participation {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 15px;
+      }
+      
+      .program-item {
+        background-color: #f8fafc;
+        border-radius: 6px;
+        padding: 15px;
+      }
+      
+      .program-dates {
+        font-size: 14px;
+        color: #64748b;
+        margin-bottom: 10px;
+      }
+      
+      .program-stats {
+        display: flex;
+        justify-content: space-between;
+      }
+    `;
+    document.head.appendChild(styleElement);
+    
+    console.log('Program & Kehadiran page loaded successfully');
+    
+    // Add event listeners for the main navigation buttons
+    const manageBtn = document.getElementById('manage-programs-btn');
+    const attendanceBtn = document.getElementById('view-attendance-btn');
+    const reportsBtn = document.getElementById('generate-reports-btn');
+    
+    console.log('Setting up Program & Kehadiran navigation buttons:', { 
+      manageBtn: !!manageBtn, 
+      attendanceBtn: !!attendanceBtn, 
+      reportsBtn: !!reportsBtn 
+    });
+    
+    if (manageBtn) {
+      manageBtn.addEventListener('click', () => {
+        console.log('Manage Programs button clicked');
+        showProgramSubSection('program-management-content');
+        loadPrograms();
+      });
+    } else {
+      console.error('Manage Programs button not found');
+    }
+    
+    if (attendanceBtn) {
+      attendanceBtn.addEventListener('click', () => {
+        console.log('View Attendance button clicked');
+        showProgramSubSection('attendance-tracking-content');
+        loadAttendanceData();
+      });
+    } else {
+      console.error('View Attendance button not found');
+    }
+    
+    if (reportsBtn) {
+      reportsBtn.addEventListener('click', () => {
+        console.log('Generate Reports button clicked');
+        showProgramSubSection('program-reports-content');
+        loadProgramReports();
+      });
+    } else {
+      console.error('Generate Reports button not found');
+    }
+    
+    // Add event listeners for back buttons
+    const programManagementBackBtn = document.getElementById('program-management-back-btn');
+    if (programManagementBackBtn) {
+      programManagementBackBtn.addEventListener('click', () => {
+        console.log('Program Management back button clicked');
+        showProgramSubSection('program-kehadiran-overview');
+      });
+    } else {
+      console.error('Program Management back button not found');
+    }
+    
+    const attendanceTrackingBackBtn = document.getElementById('attendance-tracking-back-btn');
+    if (attendanceTrackingBackBtn) {
+      attendanceTrackingBackBtn.addEventListener('click', () => {
+        console.log('Attendance Tracking back button clicked');
+        showProgramSubSection('program-kehadiran-overview');
+      });
+    } else {
+      console.error('Attendance Tracking back button not found');
+    }
+    
+    const programReportsBackBtn = document.getElementById('program-reports-back-btn');
+    if (programReportsBackBtn) {
+      programReportsBackBtn.addEventListener('click', () => {
+        console.log('Program Reports back button clicked');
+        showProgramSubSection('program-kehadiran-overview');
+      });
+    } else {
+      console.error('Program Reports back button not found');
+    }
+    
+    // Add event listener for adding a new program
+    const addProgramBtn = document.getElementById('add-program-btn');
+    if (addProgramBtn) {
+      addProgramBtn.addEventListener('click', () => {
+        console.log('Add Program button clicked');
+        openAddProgramModal();
+      });
+    } else {
+      console.error('Add Program button not found');
+    }
+    
+    // Add event listeners for attendance filters
+    const applyFiltersBtn = document.getElementById('apply-attendance-filters');
+    if (applyFiltersBtn) {
+      applyFiltersBtn.addEventListener('click', () => {
+        applyAttendanceFilters();
+      });
+    }
+    
+    const resetFiltersBtn = document.getElementById('reset-attendance-filters');
+    if (resetFiltersBtn) {
+      resetFiltersBtn.addEventListener('click', () => {
+        resetAttendanceFilters();
+      });
+    }
+    
+  } catch (error) {
+    console.error('Error loading Program & Kehadiran page:', error);
+    container.innerHTML = `
+      <div class="error-container">
+        <h3>Error Loading Program & Kehadiran</h3>
+        <p>Unable to load the Program & Kehadiran page. Please try again.</p>
+        <p class="error-details">${error.message}</p>
+      </div>
+    `;
+  }
+}
+
+// Function to show the selected sub-section and hide others
+function showProgramSubSection(sectionId) {
+  console.log(`Showing program sub-section: ${sectionId}`);
+  // Hide all sub-sections
+  const subSections = document.querySelectorAll('#program-kehadiran-content .sub-content-section');
+  subSections.forEach(section => {
+    section.classList.remove('active');
+  });
+  
+  // Show the selected sub-section
+  const targetSection = document.getElementById(sectionId);
+  if (targetSection) {
+    targetSection.classList.add('active');
+  } else {
+    console.error(`Sub-section with ID ${sectionId} not found`);
+  }
+}
+
+// Function to format program date for display
+function formatProgramDate(timestamp) {
+  if (!timestamp) return 'N/A';
+  
+  let date;
+  try {
+    if (timestamp.seconds) {
+      // Firestore timestamp
+      date = new Date(timestamp.seconds * 1000);
+    } else if (timestamp instanceof Date) {
+      date = timestamp;
+    } else if (typeof timestamp === 'string') {
+      // Handle string date format
+      date = new Date(timestamp);
+    } else if (typeof timestamp === 'number') {
+      // Handle numeric timestamp (milliseconds)
+      date = new Date(timestamp);
+    } else {
+      console.warn('Unknown timestamp format:', timestamp);
+      return 'Invalid Date';
+    }
+    
+    // Check if date is valid
+    if (isNaN(date.getTime())) {
+      console.warn('Invalid date from timestamp:', timestamp);
+      return 'Invalid Date';
+    }
+    
+    return date.toLocaleDateString('ms-MY', {
+      day: '2-digit',
+      month: '2-digit', 
+      year: 'numeric'
+    });
+  } catch (error) {
+    console.error('Error formatting date:', error, timestamp);
+    return 'Error';
+  }
+}
+
+// Function to create a test program for demonstration
+async function createTestProgram() {
+  try {
+    // Import the ProgramService dynamically
+      const { ProgramService } = await import('../../services/backend/ProgramService.js');
+    
+    // Create a test program
+    const startDate = new Date();
+    const endDate = new Date();
+    endDate.setDate(endDate.getDate() + 7); // End date is 7 days from now
+    
+    const testProgram = {
+      name: 'Test Program ' + new Date().toISOString().slice(0, 10),
+      description: 'This is a test program created for demonstration purposes',
+      startDate: startDate,
+      endDate: endDate,
+      category: 'Test',
+      status: 'Upcoming',
+      location: 'Test Location'
+    };
+    
+    const result = await ProgramService.createProgram(testProgram);
+    console.log('Test program created:', result);
+    
+    // Reload programs to show the new test program
+    await loadPrograms();
+    
+    return result;
+  } catch (error) {
+    console.error('Error creating test program:', error);
+    alert('Failed to create test program: ' + error.message);
+  }
+}
+
+// Function to load programs from the database
+async function loadPrograms() {
+  try {
+    const programsTableBody = document.getElementById('programs-table-body');
+    if (!programsTableBody) {
+      console.error('Programs table body not found');
+      return;
+    }
+    
+    programsTableBody.innerHTML = '<tr><td colspan="7" class="loading-text">Loading programs...</td></tr>';
+    
+    // Import the ProgramService dynamically
+      const { ProgramService } = await import('../../services/backend/ProgramService.js');
+    
+    // Get programs from the database
+    const programs = await ProgramService.listProgram();
+    console.log('Programs loaded:', programs);
+    
+    // Debug: Log the raw programs data
+    console.log('Raw programs data:', JSON.stringify(programs, null, 2));
+    
+    if (programs.length === 0) {
+      programsTableBody.innerHTML = `
+        <tr><td colspan="7" class="empty-text">
+          No programs found. 
+          <button id="create-test-program" class="btn btn-sm btn-primary">Create Test Program</button>
+        </td></tr>
+      `;
+      
+      // Add event listener to create test program button
+      document.getElementById('create-test-program').addEventListener('click', createTestProgram);
+      return;
+    }
+    
+    // Clear the loading message
+    programsTableBody.innerHTML = '';
+    
+    // Add each program to the table
+    programs.forEach(program => {
+      const row = document.createElement('tr');
+      
+      // Format dates - handle both tarikh and tarikh_mula fields
+      const startDate = formatProgramDate(program.tarikh_mula);
+      const endDate = formatProgramDate(program.tarikh_tamat);
+      
+      // Determine status based on dates if not explicitly set
+      let status = program.status || 'upcoming';
+      if (!program.status) {
+        const now = new Date();
+        const programStartDate = program.tarikh_mula;
+        const programEndDate = program.tarikh_tamat;
+        
+        if (programStartDate && programEndDate) {
+          let startDate, endDate;
+          
+          // Handle different timestamp formats
+          if (programStartDate.seconds) {
+            startDate = new Date(programStartDate.seconds * 1000);
+          } else {
+            startDate = new Date(programStartDate);
+          }
+          
+          if (programEndDate.seconds) {
+            endDate = new Date(programEndDate.seconds * 1000);
+          } else {
+            endDate = new Date(programEndDate);
+          }
+          
+          if (now > endDate) {
+            status = 'completed';
+          } else if (now >= startDate && now <= endDate) {
+            status = 'active';
+          } else {
+            status = 'upcoming';
+          }
+        }
+      }
+      
+      // Determine status class
+      let statusClass = 'status-badge ';
+      switch(status) {
+        case 'upcoming':
+          statusClass += 'upcoming';
+          break;
+        case 'active':
+          statusClass += 'active';
+          break;
+        case 'completed':
+          statusClass += 'completed';
+          break;
+        case 'cancelled':
+          statusClass += 'cancelled';
+          break;
+        default:
+          statusClass += 'upcoming';
+      }
+      
+      // Create the row content - handle both nama and nama_program fields
+      const programName = program.nama_program || program.nama || 'Unnamed Program';
+      const description = program.penerangan || program.deskripsi || 'No description';
+      
+      // Create the row content
+      row.innerHTML = `
+        <td>${programName}</td>
+        <td>${description}</td>
+        <td>${startDate}</td>
+        <td>${endDate}</td>
+        <td>${program.kategori || 'N/A'}</td>
+        <td><span class="${statusClass}">${status}</span></td>
+        <td>
+          <div class="action-buttons">
+            <button class="btn btn-sm btn-primary edit-program" data-id="${program.id}">Edit</button>
+            <button class="btn btn-sm btn-danger delete-program" data-id="${program.id}">Delete</button>
+          </div>
+        </td>
+      `;
+      
+      programsTableBody.appendChild(row);
+      
+      // Add event listeners for edit and delete buttons
+      row.querySelector('.edit-program').addEventListener('click', () => {
+        editProgram(program.id);
+      });
+      
+      row.querySelector('.delete-program').addEventListener('click', () => {
+        deleteProgram(program.id);
+      });
+    });
+    
+  } catch (error) {
+    console.error('Error loading programs:', error);
+    const programsTableBody = document.getElementById('programs-table-body');
+    if (programsTableBody) {
+      programsTableBody.innerHTML = `<tr><td colspan="7" class="error-text">Error loading programs: ${error.message}</td></tr>`;
+    }
+  }
+}
+
+// This function is implemented below
+
+// This function is implemented below
+
+// Function to show the add program form
+function showAddProgramForm() {
+  console.log('Opening add program form');
+  openAddProgramModal();
+}
+
+// Function to open the add program modal
+function openAddProgramModal() {
+  // Create modal HTML
+  const modalHTML = `
+    <div id="add-program-modal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Add New Program</h2>
+          <span class="close-modal">&times;</span>
+        </div>
+        <div class="modal-body">
+          <form id="add-program-form">
+            <div class="form-group">
+              <label for="program-name">Program Name</label>
+              <input type="text" id="program-name" class="form-input" required>
+            </div>
+            <div class="form-group">
+              <label for="program-description">Description</label>
+              <textarea id="program-description" class="form-input" rows="3" required></textarea>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="program-start-date">Start Date</label>
+                <input type="date" id="program-start-date" class="form-input" required>
+              </div>
+              <div class="form-group">
+                <label for="program-end-date">End Date</label>
+                <input type="date" id="program-end-date" class="form-input" required>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="program-category">Category</label>
+                <select id="program-category" class="form-select" required>
+                  <option value="">Select Category</option>
+                  <option value="Education">Education</option>
+                  <option value="Health">Health</option>
+                  <option value="Community">Community</option>
+                  <option value="Religious">Religious</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="program-status">Status</label>
+                <select id="program-status" class="form-select" required>
+                  <option value="">Select Status</option>
+                  <option value="Upcoming">Upcoming</option>
+                  <option value="Active">Active</option>
+                  <option value="Completed">Completed</option>
+                  <option value="Cancelled">Cancelled</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-actions">
+              <button type="button" class="btn btn-outline" id="cancel-add-program">Cancel</button>
+              <button type="submit" class="btn btn-primary">Save Program</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  // Add modal to the DOM
+  const modalContainer = document.createElement('div');
+  modalContainer.innerHTML = modalHTML;
+  document.body.appendChild(modalContainer.firstElementChild);
+  
+  // Show the modal
+  const modal = document.getElementById('add-program-modal');
+  modal.style.display = 'block';
+  
+  // Add event listener for closing the modal
+  document.querySelector('.close-modal').addEventListener('click', () => {
+    closeAddProgramModal();
+  });
+  
+  document.getElementById('cancel-add-program').addEventListener('click', () => {
+    closeAddProgramModal();
+  });
+  
+  // Add event listener for form submission
+  document.getElementById('add-program-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    await saveProgram();
+  });
+}
+
+// Function to close the add program modal
+function closeAddProgramModal() {
+  const modal = document.getElementById('add-program-modal');
+  if (modal) {
+    modal.style.display = 'none';
+    modal.remove();
+  }
+}
+
+// Function to save a new program
+async function saveProgram() {
+  try {
+    // Get form values
+    const name = document.getElementById('program-name').value;
+    const description = document.getElementById('program-description').value;
+    const startDate = document.getElementById('program-start-date').value;
+    const endDate = document.getElementById('program-end-date').value;
+    const category = document.getElementById('program-category').value;
+    const status = document.getElementById('program-status').value;
+    
+    // Validate form
+    if (!name || !description || !startDate || !endDate || !category || !status) {
+      alert('Please fill in all required fields.');
+      return;
+    }
+    
+    // Create program object
+    const program = {
+      name,
+      description,
+      startDate,
+      endDate,
+      category,
+      status,
+      location: ''
+    };
+    
+    // Import the ProgramService dynamically
+      const { ProgramService } = await import('../../services/backend/ProgramService.js');
+    
+    // Save program to the database
+    await ProgramService.createProgram(program);
+    
+    // Close the modal
+    closeAddProgramModal();
+    
+    // Reload programs
+    loadPrograms();
+    
+    // Show success message
+    alert('Program created successfully!');
+    
+  } catch (error) {
+    console.error('Error saving program:', error);
+    alert('Failed to save program. Please try again.');
+  }
+}
+
+// Function to edit a program
+async function editProgram(programId) {
+  try {
+    // Import the ProgramService dynamically
+    const { ProgramService } = await import('../../services/backend/ProgramService.js');
+    
+    // Get program from the database
+    const program = await ProgramService.getProgramById(programId);
+    
+    if (!program) {
+      alert('Program not found.');
+      return;
+    }
+    
+    // Create modal HTML
+    const modalHTML = `
+      <div id="edit-program-modal" class="modal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2>Edit Program</h2>
+            <span class="close-modal">&times;</span>
+          </div>
+          <div class="modal-body">
+            <form id="edit-program-form">
+              <input type="hidden" id="edit-program-id" value="${programId}">
+              <div class="form-group">
+                <label for="edit-program-name">Program Name</label>
+                <input type="text" id="edit-program-name" class="form-input" value="${program.nama_program}" required>
+              </div>
+              <div class="form-group">
+                <label for="edit-program-description">Description</label>
+                <textarea id="edit-program-description" class="form-input" rows="3" required>${program.penerangan}</textarea>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="edit-program-start-date">Start Date</label>
+                  <input type="date" id="edit-program-start-date" class="form-input" value="${program.tarikh_mula ? program.tarikh_mula.split('T')[0] : ''}" required>
+                </div>
+                <div class="form-group">
+                  <label for="edit-program-end-date">End Date</label>
+                  <input type="date" id="edit-program-end-date" class="form-input" value="${program.tarikh_tamat ? program.tarikh_tamat.split('T')[0] : ''}" required>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="edit-program-category">Category</label>
+                  <select id="edit-program-category" class="form-select" required>
+                    <option value="Education" ${program.kategori === 'Education' ? 'selected' : ''}>Education</option>
+                    <option value="Health" ${program.kategori === 'Health' ? 'selected' : ''}>Health</option>
+                    <option value="Community" ${program.kategori === 'Community' ? 'selected' : ''}>Community</option>
+                    <option value="Religious" ${program.kategori === 'Religious' ? 'selected' : ''}>Religious</option>
+                    <option value="Other" ${program.kategori === 'Other' ? 'selected' : ''}>Other</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="edit-program-status">Status</label>
+                  <select id="edit-program-status" class="form-select" required>
+                    <option value="Upcoming" ${program.status === 'Upcoming' ? 'selected' : ''}>Upcoming</option>
+                    <option value="Active" ${program.status === 'Active' ? 'selected' : ''}>Active</option>
+                    <option value="Completed" ${program.status === 'Completed' ? 'selected' : ''}>Completed</option>
+                    <option value="Cancelled" ${program.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-actions">
+                <button type="button" class="btn btn-outline" id="cancel-edit-program">Cancel</button>
+                <button type="submit" class="btn btn-primary">Update Program</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    // Add modal to the DOM
+    const modalContainer = document.createElement('div');
+    modalContainer.innerHTML = modalHTML;
+    document.body.appendChild(modalContainer.firstElementChild);
+    
+    // Show the modal
+    const modal = document.getElementById('edit-program-modal');
+    modal.style.display = 'block';
+    
+    // Add event listener for closing the modal
+    document.querySelector('.close-modal').addEventListener('click', () => {
+      closeEditProgramModal();
+    });
+    
+    document.getElementById('cancel-edit-program').addEventListener('click', () => {
+      closeEditProgramModal();
+    });
+    
+    // Add event listener for form submission
+    document.getElementById('edit-program-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      await updateProgram();
+    });
+    
+  } catch (error) {
+    console.error('Error editing program:', error);
+    alert('Failed to edit program. Please try again.');
+  }
+}
+
+// Function to close the edit program modal
+function closeEditProgramModal() {
+  const modal = document.getElementById('edit-program-modal');
+  if (modal) {
+    modal.style.display = 'none';
+    modal.remove();
+  }
+}
+
+// Function to update a program
+async function updateProgram() {
+  try {
+    // Get form values
+    const programId = document.getElementById('edit-program-id').value;
+    const name = document.getElementById('edit-program-name').value;
+    const description = document.getElementById('edit-program-description').value;
+    const startDate = document.getElementById('edit-program-start-date').value;
+    const endDate = document.getElementById('edit-program-end-date').value;
+    const category = document.getElementById('edit-program-category').value;
+    const status = document.getElementById('edit-program-status').value;
+    
+    // Validate form
+    if (!name || !description || !startDate || !endDate || !category || !status) {
+      alert('Please fill in all required fields.');
+      return;
+    }
+    
+    // Create program object
+    const program = {
+      id: programId,
+      name,
+      description,
+      startDate,
+      endDate,
+      category,
+      status,
+      location: ''
+    };
+    
+    // Import the ProgramService dynamically
+    const { ProgramService } = await import('../../services/backend/ProgramService.js');
+    // Using static methods
+    
+    // Update program in the database
+    await ProgramService.updateProgram(programId, program);
+    
+    // Close the modal
+    closeEditProgramModal();
+    
+    // Reload programs
+    loadPrograms();
+    
+    // Show success message
+    alert('Program updated successfully!');
+    
+  } catch (error) {
+    console.error('Error updating program:', error);
+    alert('Failed to update program. Please try again.');
+  }
+}
+
+// Function to delete a program
+async function deleteProgram(programId) {
+  try {
+    // Confirm deletion
+    if (!confirm('Are you sure you want to delete this program?')) {
+      return;
+    }
+    
+    // Import the ProgramService dynamically
+    const { ProgramService } = await import('../../services/backend/ProgramService.js');
+    // Using static methods
+    
+    // Delete program from the database
+    await ProgramService.deleteProgram(programId);
+    
+    // Reload programs
+    loadPrograms();
+    
+    // Show success message
+    alert('Program deleted successfully!');
+    
+  } catch (error) {
+    console.error('Error deleting program:', error);
+    alert('Failed to delete program. Please try again.');
+  }
+}
+
+// Function to load attendance data
+async function loadAttendanceData() {
+  try {
+    const attendanceTableBody = document.getElementById('attendance-table-body');
+    attendanceTableBody.innerHTML = '<tr><td colspan="6" class="loading-text">Loading attendance records...</td></tr>';
+    
+    // Import the ProgramService dynamically
+      const { ProgramService } = await import('../../services/backend/ProgramService.js');
+    // Using static methods
+    
+    // Load programs for the filter dropdown
+    const programs = await ProgramService.listProgram();
+    const programFilter = document.getElementById('program-filter');
+    
+    // Clear existing options except the first one
+    while (programFilter.options.length > 1) {
+      programFilter.remove(1);
+    }
+    
+    // Add program options to the filter
+    programs.forEach(program => {
+      const option = document.createElement('option');
+      option.value = program.id;
+      option.textContent = program.name;
+      programFilter.appendChild(option);
+    });
+    
+    // Get attendance records
+    const attendanceRecords = await ProgramService.listAllAttendance();
+    
+    if (attendanceRecords.length === 0) {
+      attendanceTableBody.innerHTML = '<tr><td colspan="6" class="empty-text">No attendance records found.</td></tr>';
+      return;
+    }
+    
+    // Clear the loading message
+    attendanceTableBody.innerHTML = '';
+    
+    // Add each attendance record to the table
+    attendanceRecords.forEach(record => {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${record.participantName}</td>
+        <td>${record.participantId}</td>
+        <td>${record.participantType}</td>
+        <td>
+          <input type="checkbox" class="attendance-checkbox" data-id="${record.id}" ${record.present ? 'checked' : ''}>
+        </td>
+        <td>${record.notes || '-'}</td>
+        <td>
+          <button class="btn btn-sm btn-edit-notes" data-id="${record.id}">Edit Notes</button>
+        </td>
+      `;
+      attendanceTableBody.appendChild(row);
+      
+      // Add event listener for attendance checkbox
+      row.querySelector('.attendance-checkbox').addEventListener('change', async (e) => {
+        await updateAttendanceStatus(record.id, e.target.checked);
+      });
+      
+      // Add event listener for edit notes button
+      row.querySelector('.btn-edit-notes').addEventListener('click', () => {
+        editAttendanceNotes(record.id);
+      });
+    });
+    
+  } catch (error) {
+    console.error('Error loading attendance data:', error);
+    const attendanceTableBody = document.getElementById('attendance-table-body');
+    attendanceTableBody.innerHTML = '<tr><td colspan="6" class="error-text">Failed to load attendance records. Please try again.</td></tr>';
+  }
+}
+
+// Function to apply attendance filters
+async function applyAttendanceFilters() {
+  try {
+    const programId = document.getElementById('program-filter').value;
+    const date = document.getElementById('attendance-date-filter').value;
+    
+    const attendanceTableBody = document.getElementById('attendance-table-body');
+    attendanceTableBody.innerHTML = '<tr><td colspan="6" class="loading-text">Filtering attendance records...</td></tr>';
+    
+    // Import the ProgramService dynamically
+      const { ProgramService } = await import('../../services/backend/ProgramService.js');
+    // Using static methods
+    
+    // Get filtered attendance records
+    const attendanceRecords = await ProgramService.listAttendanceByFilters(programId, date);
+    
+    if (attendanceRecords.length === 0) {
+      attendanceTableBody.innerHTML = '<tr><td colspan="6" class="empty-text">No attendance records found for the selected filters.</td></tr>';
+      return;
+    }
+    
+    // Clear the loading message
+    attendanceTableBody.innerHTML = '';
+    
+    // Add each attendance record to the table
+    attendanceRecords.forEach(record => {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${record.participantName}</td>
+        <td>${record.participantId}</td>
+        <td>${record.participantType}</td>
+        <td>
+          <input type="checkbox" class="attendance-checkbox" data-id="${record.id}" ${record.present ? 'checked' : ''}>
+        </td>
+        <td>${record.notes || '-'}</td>
+        <td>
+          <button class="btn btn-sm btn-edit-notes" data-id="${record.id}">Edit Notes</button>
+        </td>
+      `;
+      attendanceTableBody.appendChild(row);
+      
+      // Add event listener for attendance checkbox
+      row.querySelector('.attendance-checkbox').addEventListener('change', async (e) => {
+        await updateAttendanceStatus(record.id, e.target.checked);
+      });
+      
+      // Add event listener for edit notes button
+      row.querySelector('.btn-edit-notes').addEventListener('click', () => {
+        editAttendanceNotes(record.id);
+      });
+    });
+    
+  } catch (error) {
+    console.error('Error applying attendance filters:', error);
+    const attendanceTableBody = document.getElementById('attendance-table-body');
+    attendanceTableBody.innerHTML = '<tr><td colspan="6" class="error-text">Failed to filter attendance records. Please try again.</td></tr>';
+  }
+}
+
+// Function to reset attendance filters
+function resetAttendanceFilters() {
+  document.getElementById('program-filter').value = '';
+  document.getElementById('attendance-date-filter').value = '';
+  loadAttendanceData();
+}
+
+// Function to update attendance status
+async function updateAttendanceStatus(attendanceId, present) {
+  try {
+    // Import the ProgramService dynamically
+      const { ProgramService } = await import('../../services/backend/ProgramService.js');
+    // Using static methods
+    
+    // Update attendance status in the database
+    await ProgramService.updateAttendanceStatus(attendanceId, present);
+    
+    // Show success message
+    console.log('Attendance status updated successfully!');
+    
+  } catch (error) {
+    console.error('Error updating attendance status:', error);
+    alert('Failed to update attendance status. Please try again.');
+  }
+}
+
+// Function to edit attendance notes
+async function editAttendanceNotes(attendanceId) {
+  try {
+    // Import the ProgramService dynamically
+      const { ProgramService } = await import('../../services/backend/ProgramService.js');
+    // Using static methods
+    
+    // Get attendance record from the database
+    const attendanceRecord = await ProgramService.getAttendanceById(attendanceId);
+    
+    if (!attendanceRecord) {
+      alert('Attendance record not found.');
+      return;
+    }
+    
+    // Prompt for new notes
+    const newNotes = prompt('Enter notes for this attendance record:', attendanceRecord.notes || '');
+    
+    if (newNotes === null) {
+      // User cancelled
+      return;
+    }
+    
+    // Update notes in the database
+    await ProgramService.updateAttendanceNotes(attendanceId, newNotes);
+    
+    // Reload attendance data
+    loadAttendanceData();
+    
+    // Show success message
+    console.log('Attendance notes updated successfully!');
+    
+  } catch (error) {
+    console.error('Error editing attendance notes:', error);
+    alert('Failed to edit attendance notes. Please try again.');
+  }
+}
+
+// Function to load program reports
+async function loadProgramReports() {
+  try {
+    // Import the ProgramService dynamically
+      const { ProgramService } = await import('../../services/backend/ProgramService.js');
+    // Using static methods
+    
+    // Load attendance summary
+    const attendanceSummary = await ProgramService.getAttendanceSummary();
+    const attendanceSummaryReport = document.getElementById('attendance-summary-report');
+    
+    if (!attendanceSummary) {
+      attendanceSummaryReport.innerHTML = '<p class="empty-text">No attendance data available.</p>';
+    } else {
+      attendanceSummaryReport.innerHTML = `
+        <div class="summary-stats">
+          <div class="stat-item">
+            <span class="stat-label">Total Programs</span>
+            <span class="stat-value">${attendanceSummary.totalPrograms}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Total Participants</span>
+            <span class="stat-value">${attendanceSummary.totalParticipants}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Average Attendance</span>
+            <span class="stat-value">${attendanceSummary.averageAttendance}%</span>
+          </div>
+        </div>
+      `;
+    }
+    
+    // Load top participants
+    const topParticipants = await ProgramService.getTopParticipants(3);
+    const topParticipantsReport = document.getElementById('top-participants-report');
+    
+    if (topParticipants.length === 0) {
+      topParticipantsReport.innerHTML = '<p class="empty-text">No participant data available.</p>';
+    } else {
+      let topParticipantsHTML = '<div class="top-participants">';
+      
+      topParticipants.forEach((participant, index) => {
+        topParticipantsHTML += `
+          <div class="participant-item">
+            <div class="participant-rank">${index + 1}</div>
+            <div class="participant-info">
+              <h4>${participant.name}</h4>
+              <p>${participant.type} - ${participant.id}</p>
+            </div>
+            <div class="participant-stats">
+              <span class="attendance-count">${participant.attendanceCount}</span>
+              <span class="attendance-percentage">${participant.attendancePercentage}%</span>
+            </div>
+          </div>
+        `;
+      });
+      
+      topParticipantsHTML += '</div>';
+      topParticipantsReport.innerHTML = topParticipantsHTML;
+    }
+    
+    // Load program participation data
+    const programParticipation = await ProgramService.getProgramParticipation();
+    const programParticipationReport = document.getElementById('program-participation-report');
+    
+    if (programParticipation.length === 0) {
+      programParticipationReport.innerHTML = '<p class="empty-text">No program participation data available.</p>';
+    } else {
+      let programParticipationHTML = '<div class="program-participation">';
+      
+      programParticipation.forEach(program => {
+        programParticipationHTML += `
+          <div class="program-item">
+            <h4>${program.name}</h4>
+            <div class="program-dates">${formatProgramDate(program.startDate)} - ${formatProgramDate(program.endDate)}</div>
+            <div class="program-stats">
+              <div class="stat-item">
+                <span class="stat-label">Participants</span>
+                <span class="stat-value">${program.participantCount}</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-label">Attendance</span>
+                <span class="stat-value">${program.attendancePercentage}%</span>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+      
+      programParticipationHTML += '</div>';
+      programParticipationReport.innerHTML = programParticipationHTML;
+    }
+    
+  } catch (error) {
+    console.error('Error loading program reports:', error);
+    document.getElementById('attendance-summary-report').innerHTML = '<p class="error-text">Failed to load attendance summary. Please try again.</p>';
+    document.getElementById('top-participants-report').innerHTML = '<p class="error-text">Failed to load top participants. Please try again.</p>';
+    document.getElementById('program-participation-report').innerHTML = '<p class="error-text">Failed to load program participation data. Please try again.</p>';
+  }
+}
+
+// Helper function to format date for program section is already defined above
+
+
+
+// Removed redundant initializeCiptaKIRWizard function - using initializeBasicWizard directly
+
+// Enhanced 8-step wizard functionality
+function initializeBasicWizard() {
+  // Initialize 8-step wizard functionality
+  
+  // Check if wizard form exists
+  const wizardForm = document.getElementById('ciptaKIRForm');
+  if (!wizardForm) {
+    console.error('Cipta KIR form not found!');
+    return;
+  }
+  // Wizard form found, proceed with initialization
+  
+  let currentStep = 1;
+  const totalSteps = 8;
+  let kirId = null;
+  let autosaveTimeout = null;
+  let formData = {};
+  
+  // Step configuration
+  const stepConfig = {
+    1: { slug: 'maklumat-asas', label: 'Maklumat Asas', required: ['nama_penuh', 'no_kp', 'tarikh_lahir', 'telefon_utama', 'alamat'] },
+    2: { slug: 'maklumat-keluarga', label: 'Maklumat Keluarga', required: ['status_perkahwinan'] },
+    3: { slug: 'kafa', label: 'Pendidikan Agama (KAFA)', required: [] },
+    4: { slug: 'pendidikan', label: 'Pendidikan', required: [] },
+    5: { slug: 'pekerjaan', label: 'Maklumat Pekerjaan', required: ['status_pekerjaan'] },
+    6: { slug: 'kesihatan', label: 'Maklumat Kesihatan', required: [] },
+    7: { slug: 'ekonomi', label: 'Ekonomi', required: [] },
+    8: { slug: 'semak', label: 'Semakan & Pengesahan', required: ['confirm_accuracy'] }
+  };
+  
+  // Get wizard elements
+  const nextBtn = document.getElementById('nextBtn');
+  const prevBtn = document.getElementById('prevBtn');
+  const submitBtn = document.getElementById('submitBtn');
+  const saveBtn = document.getElementById('saveAsDraftBtn');
+  const form = document.getElementById('ciptaKIRForm');
+  
+  // Initialize URL routing
+  function initializeRouting() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const stepParam = urlParams.get('step');
+    
+    if (stepParam) {
+      const stepNumber = Object.keys(stepConfig).find(key => stepConfig[key].slug === stepParam);
+      if (stepNumber) {
+        currentStep = parseInt(stepNumber);
+      }
+    }
+    
+    // Load from localStorage if available (only if not cleared by navigation)
+    const savedData = localStorage.getItem('ciptaKIR_draft');
+    if (savedData) {
+      try {
+        const parsed = JSON.parse(savedData);
+        kirId = parsed.kirId;
+        currentStep = parsed.step || currentStep;
+        formData = parsed.data || {};
+        // Only populate if there's actual data
+        if (Object.keys(formData).length > 0) {
+          populateForm(formData);
+        }
+      } catch (error) {
+        console.error('Error loading saved data:', error);
+      }
+    } else {
+      // No saved data, ensure we start from step 1
+      currentStep = 1;
+      kirId = null;
+      formData = {};
+    }
+  }
+  
+  // Update URL and localStorage
+  function updatePersistence() {
+    const stepSlug = stepConfig[currentStep].slug;
+    const url = new URL(window.location);
+    url.searchParams.set('step', stepSlug);
+    window.history.replaceState({}, '', url);
+    
+    // Save to localStorage
+    const saveData = {
+      kirId,
+      step: currentStep,
+      data: collectFormData()
+    };
+    localStorage.setItem('ciptaKIR_draft', JSON.stringify(saveData));
+  }
+  
+  // Collect form data
+  function collectFormData() {
+    const data = {};
+    
+    // Collect data manually to avoid file input issues
+    const inputs = form.querySelectorAll('input, select, textarea');
+    inputs.forEach(input => {
+      // Skip file inputs as they cannot be serialized
+      if (input.type === 'file') return;
+      
+      const name = input.name;
+      if (!name) return;
+      
+      let value;
+      if (input.type === 'checkbox') {
+        value = input.checked;
+      } else {
+        value = input.value;
+      }
+      
+      if (name.includes('[')) {
+        // Handle array fields
+        const match = name.match(/(\w+)\[(\d+)\]\[(\w+)\]/);
+        if (match) {
+          const [, arrayName, index, fieldName] = match;
+          if (!data[arrayName]) data[arrayName] = [];
+          if (!data[arrayName][index]) data[arrayName][index] = {};
+          data[arrayName][index][fieldName] = value;
+        }
+      } else {
+        data[name] = value;
+      }
+    });
+    
+    // Map KAFA fields to expected database field names
+    const kafaFieldMapping = {
+      'sumber_pengetahuan': 'kafa_sumber',
+      'tahap_iman': 'kafa_iman',
+      'tahap_islam': 'kafa_islam',
+      'tahap_fatihah': 'kafa_fatihah',
+      'tahap_taharah_wuduk_solat': 'kafa_solat',
+      'tahap_puasa_fidyah_zakat': 'kafa_puasa',
+      'kafa_skor': 'kafa_skor'
+    };
+    
+    // Apply KAFA field mapping
+    Object.keys(kafaFieldMapping).forEach(formField => {
+      if (data[formField] !== undefined) {
+        data[kafaFieldMapping[formField]] = data[formField];
+        // Keep original field for form compatibility
+        // delete data[formField]; // Don't delete to maintain form functionality
+      }
+    });
+    
+    return data;
+  }
+  
+  // Populate form with data
+  function populateForm(data) {
+    if (!data || Object.keys(data).length === 0) return;
+    
+    Object.keys(data).forEach(key => {
+      // Skip empty values to avoid clearing existing form data
+      if (data[key] === '' || data[key] === null || data[key] === undefined) return;
+      
+      if (Array.isArray(data[key])) {
+        // Handle array data
+        data[key].forEach((item, index) => {
+          Object.keys(item).forEach(field => {
+            if (item[field] !== '' && item[field] !== null && item[field] !== undefined) {
+              const input = document.querySelector(`[name="${key}[${index}][${field}]"]`);
+              if (input) input.value = item[field];
+            }
+          });
+        });
+      } else {
+        const input = document.querySelector(`[name="${key}"]`);
+        if (input) {
+          // Skip file inputs as they cannot be programmatically set
+          if (input.type === 'file') {
+            return;
+          }
+          if (input.type === 'checkbox') {
+            input.checked = data[key] === 'on' || data[key] === true;
+          } else {
+            input.value = data[key];
+          }
+        }
+      }
+    });
+    
+    // Trigger marital status field visibility after data population
+    const statusPerkahwinanField = document.getElementById('status_perkahwinan');
+    if (statusPerkahwinanField && statusPerkahwinanField.value) {
+      statusPerkahwinanField.dispatchEvent(new Event('change'));
+    }
+  }
+  
+  // Age calculation
+  const tarikhLahir = document.getElementById('tarikh_lahir');
+  const umur = document.getElementById('umur');
+  if (tarikhLahir && umur) {
+    tarikhLahir.addEventListener('change', function() {
+      const birthDate = new Date(this.value);
+      const today = new Date();
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+      
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
+      
+      umur.value = age >= 0 ? age : '';
+      triggerAutosave();
+    });
+  }
+  
+  // KAFA scoring calculation
+  function updateKAFAScore() {
+    const tahapIman = document.getElementById('tahap_iman')?.value;
+    const tahapIslam = document.getElementById('tahap_islam')?.value;
+    const tahapFatihah = document.getElementById('tahap_fatihah')?.value;
+    const tahapTaharah = document.getElementById('tahap_taharah_wuduk_solat')?.value;
+    const tahapPuasa = document.getElementById('tahap_puasa_fidyah_zakat')?.value;
+    const skorField = document.getElementById('kafa_skor');
+    
+    if (skorField) {
+      const scores = [
+        parseInt(tahapIman) || 0,
+        parseInt(tahapIslam) || 0,
+        parseInt(tahapFatihah) || 0,
+        parseInt(tahapTaharah) || 0,
+        parseInt(tahapPuasa) || 0
+      ];
+      
+      const validScores = scores.filter(score => score > 0);
+      if (validScores.length > 0) {
+        const average = validScores.reduce((sum, score) => sum + score, 0) / validScores.length;
+        skorField.value = Math.round(average * 100) / 100; // Round to 2 decimal places
+      } else {
+        skorField.value = '';
+      }
+      triggerAutosave();
+    }
+  }
+  
+  // Employment status handler
+  const statusPekerjaan = document.getElementById('status_pekerjaan');
+  if (statusPekerjaan) {
+    statusPekerjaan.addEventListener('change', function() {
+      const employmentFields = ['jenis_pekerjaan_group', 'nama_majikan_group', 'gaji_bulanan_group', 'alamat_kerja_group'];
+      const isWorking = this.value === 'Bekerja';
+      
+      employmentFields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field) {
+          field.classList.toggle('employment-hidden', !isWorking);
+        }
+      });
+      
+      triggerAutosave();
+    });
+  }
+  
+  // Economic calculations
+  function updateEconomicTotals() {
+    // Calculate total income
+    let totalIncome = 0;
+    document.querySelectorAll('[name*="pendapatan_tetap"][name*="[jumlah]"], [name*="pendapatan_tidak_tetap"][name*="[jumlah]"]').forEach(input => {
+      totalIncome += parseFloat(input.value) || 0;
+    });
+    const incomeDisplay = document.getElementById('jumlah-pendapatan');
+    if (incomeDisplay) incomeDisplay.textContent = totalIncome.toFixed(2);
+    
+    // Calculate total expenses
+    let totalExpenses = 0;
+    document.querySelectorAll('[name*="perbelanjaan"][name*="[jumlah]"]').forEach(input => {
+      totalExpenses += parseFloat(input.value) || 0;
+    });
+    const expenseDisplay = document.getElementById('jumlah-perbelanjaan');
+    if (expenseDisplay) expenseDisplay.textContent = totalExpenses.toFixed(2);
+    
+    // Calculate monthly assistance
+    let monthlyAssistance = 0;
+    document.querySelectorAll('.bantuan-bulanan-item').forEach(item => {
+      const kadar = parseFloat(item.querySelector('[name*="[kadar]"]')?.value) || 0;
+      const kekerapan = item.querySelector('[name*="[kekerapan]"]')?.value;
+      
+      const factors = {
+        'Bulanan': 1,
+        'Mingguan': 4.33,
+        'Harian': 30,
+        'Suku-Tahunan': 1/3,
+        'Tahunan': 1/12,
+        'Sekali': 0
+      };
+      
+      monthlyAssistance += kadar * (factors[kekerapan] || 0);
+    });
+    const assistanceDisplay = document.getElementById('anggaran-bulanan');
+    if (assistanceDisplay) assistanceDisplay.textContent = monthlyAssistance.toFixed(2);
+  }
+  
+  // Dynamic field addition handlers
+  function initializeDynamicFields() {
+    const addButtons = {
+      'add-penyakit-kronik': 'penyakit-kronik-container',
+      'add-ubat-tetap': 'ubat-tetap-container',
+      'add-rawatan': 'rawatan-container',
+      'add-pembedahan': 'pembedahan-container',
+      'add-pendapatan-tetap': 'pendapatan-tetap-container',
+      'add-pendapatan-tidak-tetap': 'pendapatan-tidak-tetap-container',
+      'add-perbelanjaan': 'perbelanjaan-container',
+      'add-bantuan-bulanan': 'bantuan-bulanan-container'
+    };
+    
+    Object.keys(addButtons).forEach(buttonId => {
+      const button = document.getElementById(buttonId);
+      const container = document.getElementById(addButtons[buttonId]);
+      
+      if (button && container) {
+        button.addEventListener('click', function() {
+          const items = container.querySelectorAll('.form-grid');
+          const newIndex = items.length;
+          const template = items[0].cloneNode(true);
+          
+          // Update field names and clear values
+          template.querySelectorAll('input, select').forEach(input => {
+            const name = input.getAttribute('name');
+            if (name) {
+              input.setAttribute('name', name.replace(/\[\d+\]/, `[${newIndex}]`));
+              input.value = '';
+            }
+          });
+          
+          container.appendChild(template);
+          triggerAutosave();
+        });
+      }
+    });
+    
+    // Marital status handler
+    const statusPerkahwinan = document.getElementById('status_perkahwinan');
+    if (statusPerkahwinan) {
+      statusPerkahwinan.addEventListener('change', function() {
+        const value = this.value;
+        const tarikhNikahGroup = document.getElementById('tarikh_nikah_group');
+        const tarikhCeraiGroup = document.getElementById('tarikh_cerai_group');
+        const spouseInfo = document.getElementById('spouse-info');
+        
+        // Hide all conditional fields first
+        if (tarikhNikahGroup) tarikhNikahGroup.style.display = 'none';
+        if (tarikhCeraiGroup) tarikhCeraiGroup.style.display = 'none';
+        if (spouseInfo) spouseInfo.style.display = 'none';
+        
+        // Show relevant fields based on status
+        // For "Bujang" (single), no additional fields are shown
+        if (value === 'Berkahwin') {
+          if (tarikhNikahGroup) tarikhNikahGroup.style.display = 'block';
+          if (spouseInfo) spouseInfo.style.display = 'block';
+        } else if (value === 'Bercerai' || value === 'Duda' || value === 'Janda') {
+          if (tarikhNikahGroup) tarikhNikahGroup.style.display = 'block';
+          if (tarikhCeraiGroup) tarikhCeraiGroup.style.display = 'block';
+          if (spouseInfo) spouseInfo.style.display = 'block';
+        }
+        // Note: For "Bujang" or empty value, all fields remain hidden
+        
+        triggerAutosave();
+      });
+    }
+  }
+  
+  // Autosave functionality
+  function triggerAutosave() {
+    if (autosaveTimeout) clearTimeout(autosaveTimeout);
+    
+    autosaveTimeout = setTimeout(async () => {
+      if (kirId) {
+        try {
+          const data = collectFormData();
+          const { KIRService } = await import('../../services/backend/KIRService.js');
+          await KIRService.updateKIR(kirId, data);
+          console.log('Autosaved successfully');
+        } catch (error) {
+          console.error('Autosave failed:', error);
+        }
+      }
+    }, 2000);
+  }
+  
+  // S1 Requirement: ensureKirId() - create-once logic for AdminDashboard
+  async function ensureKIRExists() {
+    console.log('ensureKIRExists() called', { kirId });
+    
+    // If kirId already exists, use it
+    if (kirId) {
+      console.log('Using existing kirId:', kirId);
+      return kirId;
+    }
+    
+    // Check localStorage for persisted kirId
+    const savedKirId = localStorage.getItem('wizardKirId');
+    if (savedKirId) {
+      kirId = savedKirId;
+      console.log('Using kirId from localStorage:', kirId);
+      return kirId;
+    }
+    
+    const data = collectFormData();
+    
+    // Check if no_kp is available for index lookup
+    if (!data.no_kp) {
+      throw new Error('No. KP diperlukan untuk mencipta KIR');
+    }
+    
+    const { normalizeNoKP } = await import('../../services/database/collections.js');
+    const normalizedNoKP = normalizeNoKP(data.no_kp);
+    if (!normalizedNoKP) {
+      throw new Error('No. KP tidak sah');
+    }
+    
+    try {
+      const { KIRService } = await import('../../services/backend/KIRService.js');
+      
+      // Check /index_nokp/{normalized_no_kp} for existing KIR
+      const existingIndex = await KIRService.getNoKPIndex(normalizedNoKP);
+      if (existingIndex && existingIndex.kir_id) {
+        kirId = existingIndex.kir_id;
+        
+        // Persist to localStorage
+        localStorage.setItem('wizardKirId', kirId);
+        updatePersistence();
+        
+        console.log('Found existing KIR via index_nokp:', kirId);
+        return kirId;
+      }
+      
+      // No existing KIR found - create new one
+      const requiredFields = stepConfig[1].required;
+      const hasRequiredData = requiredFields.every(field => data[field]);
+      
+      if (!hasRequiredData) {
+        throw new Error('Maklumat asas diperlukan untuk mencipta KIR');
+      }
+      
+      data.status_rekod = 'Draf';
+      const result = await KIRService.createKIR(data);
+      kirId = result.id;
+      
+      // Persist to localStorage immediately
+      localStorage.setItem('wizardKirId', kirId);
+      updatePersistence();
+      
+      console.log('Created new KIR:', kirId);
+      return kirId;
+      
+    } catch (error) {
+      console.error('Error in ensureKIRExists:', error);
+      if (error.message.includes('duplicate') || error.message.includes('No. KP')) {
+        throw error;
+      } else {
+        throw new Error('Ralat mencipta KIR: ' + error.message);
+      }
+    }
+  }
+  
+  // Update UI based on current step
+  function updateUI() {
+    // Update wizard sections - only hide non-current steps to avoid flash
+    const sections = document.querySelectorAll('.wizard-step');
+    sections.forEach((section, index) => {
+      const stepNumber = parseInt(section.getAttribute('data-step'));
+      if (stepNumber === currentStep) {
+        section.classList.add('active');
+      } else {
+        section.classList.remove('active');
+      }
+    });
+    
+    // Update progress indicators
+    const progressSteps = document.querySelectorAll('.progress-step');
+    progressSteps.forEach((step, index) => {
+      step.classList.remove('active', 'completed');
+      if (index + 1 < currentStep) {
+        step.classList.add('completed');
+      } else if (index + 1 === currentStep) {
+        step.classList.add('active');
+      }
+    });
+    
+    // Update button visibility - get current button references
+    const currentPrevBtn = document.getElementById('prevBtn');
+    const currentNextBtn = document.getElementById('nextBtn');
+    const currentSubmitBtn = document.getElementById('submitBtn');
+    
+    if (currentPrevBtn) currentPrevBtn.style.display = currentStep > 1 ? 'inline-block' : 'none';
+    if (currentNextBtn) currentNextBtn.style.display = currentStep < totalSteps ? 'inline-block' : 'none';
+    if (currentSubmitBtn) currentSubmitBtn.style.display = currentStep === totalSteps ? 'inline-block' : 'none';
+    
+    // Update completion percentage for final step
+    if (currentStep === 8) {
+      updateCompletionStatus();
+      updateReviewContent();
+    }
+    
+    updatePersistence();
+    // UI updated for current step
+  }
+  
+  // Validate current step
+  function validateStep() {
+    const currentSection = document.querySelector(`[data-step="${currentStep}"]`);
+    if (!currentSection) return true;
+    
+    const requiredFields = stepConfig[currentStep].required;
+    let isValid = true;
+    let errors = [];
+    
+    requiredFields.forEach(fieldName => {
+      const field = currentSection.querySelector(`[name="${fieldName}"]`);
+      if (field) {
+        if (field.type === 'checkbox') {
+          if (!field.checked) {
+            field.style.outline = '2px solid #dc3545';
+            errors.push(`${field.closest('.form-group')?.querySelector('label')?.textContent || fieldName} diperlukan`);
+            isValid = false;
+          } else {
+            field.style.outline = 'none';
+          }
+        } else if (!field.value.trim()) {
+          field.style.borderColor = '#dc3545';
+          errors.push(`${field.closest('.form-group')?.querySelector('label')?.textContent || fieldName} diperlukan`);
+          isValid = false;
+        } else {
+          field.style.borderColor = '#e9ecef';
+        }
+      }
+    });
+    
+    // Additional validations
+    if (currentStep === 2) {
+      const statusPerkahwinan = document.getElementById('status_perkahwinan')?.value;
+      const tarikhNikah = document.getElementById('tarikh_nikah')?.value;
+      const tarikhCerai = document.getElementById('tarikh_cerai')?.value;
+      
+      if (statusPerkahwinan === 'Berkahwin' && !tarikhNikah) {
+        errors.push('Tarikh nikah diperlukan untuk status berkahwin');
+        isValid = false;
+      }
+      
+      if (['Bercerai', 'Janda', 'Duda'].includes(statusPerkahwinan)) {
+        if (!tarikhCerai) {
+          errors.push('Tarikh cerai diperlukan');
+          isValid = false;
+        } else if (tarikhNikah && new Date(tarikhCerai) < new Date(tarikhNikah)) {
+          errors.push('Tarikh cerai mesti selepas tarikh nikah');
+          isValid = false;
+        }
+      }
+    }
+    
+    if (!isValid) {
+      showError(errors.join('\n'));
+    }
+    
+    return isValid;
+  }
+  
+  // Update completion status
+  function updateCompletionStatus() {
+    const data = collectFormData();
+    let completedItems = 0;
+    let totalItems = 0;
+    
+    // Check Maklumat Asas (weight: 4)
+    const basicFields = ['nama_penuh', 'no_kp', 'telefon_utama', 'alamat'];
+    basicFields.forEach(field => {
+      totalItems++;
+      if (data[field]) completedItems++;
+    });
+    
+    // Check KAFA (weight: 2)
+    if (data.kafa_iman && data.kafa_islam) completedItems++;
+    totalItems++;
+    
+    // Check Pekerjaan (weight: 1)
+    if (data.status_pekerjaan) completedItems++;
+    totalItems++;
+    
+    // Check Ekonomi (weight: 1)
+    if (data.jumlah_pendapatan > 0 || (data.pendapatan_tetap && data.pendapatan_tetap.length > 0)) completedItems++;
+    totalItems++;
+    
+    const percentage = Math.round((completedItems / totalItems) * 100);
+    
+    const percentageEl = document.getElementById('completion-percentage');
+    const progressFill = document.getElementById('progress-fill');
+    
+    if (percentageEl) percentageEl.textContent = `${percentage}%`;
+    if (progressFill) progressFill.style.width = `${percentage}%`;
+  }
+  
+  // Update review content
+  function updateReviewContent() {
+    const reviewContent = document.getElementById('reviewContent');
+    if (!reviewContent) return;
+    
+    const data = collectFormData();
+    let html = '';
+    
+    Object.keys(stepConfig).forEach(stepNum => {
+      if (stepNum == 8) return; // Skip review step itself
+      
+      const config = stepConfig[stepNum];
+      html += `<div class="review-section"><h6>${config.label}</h6>`;
+      
+      // Add relevant fields for each step
+      if (stepNum == 1) {
+        html += `<p><strong>Nama:</strong> ${data.nama_penuh || '-'}</p>`;
+        html += `<p><strong>No. KP:</strong> ${data.no_kp || '-'}</p>`;
+        html += `<p><strong>Telefon:</strong> ${data.telefon_utama || '-'}</p>`;
+      } else if (stepNum == 2) {
+        html += `<p><strong>Status Perkahwinan:</strong> ${data.status_perkahwinan || '-'}</p>`;
+      } else if (stepNum == 5) {
+        html += `<p><strong>Status Pekerjaan:</strong> ${data.status_pekerjaan || '-'}</p>`;
+        if (data.gaji_bulanan) html += `<p><strong>Gaji:</strong> RM ${data.gaji_bulanan}</p>`;
+      }
+      
+      html += '</div>';
+    });
+    
+    reviewContent.innerHTML = html;
+  }
+  
+  // Show error message
+  function showError(message) {
+    alert(message); // Could be enhanced with a better UI
+  }
+  
+  // Event listeners
+  if (form) {
+    form.addEventListener('input', triggerAutosave);
+    form.addEventListener('change', triggerAutosave);
+  }
+  
+  // KAFA score calculation listeners
+  ['tahap_iman', 'tahap_islam', 'tahap_fatihah', 'tahap_taharah_wuduk_solat', 'tahap_puasa_fidyah_zakat'].forEach(id => {
+    const element = document.getElementById(id);
+    if (element) element.addEventListener('change', updateKAFAScore);
+  });
+  
+  // Economic calculation listeners
+  document.addEventListener('input', function(e) {
+    if (e.target.name && (e.target.name.includes('pendapatan') || e.target.name.includes('perbelanjaan') || e.target.name.includes('bantuan'))) {
+      updateEconomicTotals();
+    }
+  });
+  
+  // Next button handler
+  if (nextBtn) {
+    // Remove any existing event listeners to prevent duplicates
+    const newNextBtn = nextBtn.cloneNode(true);
+    nextBtn.parentNode.replaceChild(newNextBtn, nextBtn);
+    
+    newNextBtn.addEventListener('click', async function() {
+      // Navigate to next step
+      if (validateStep()) {
+        await ensureKIRExists();
+        if (currentStep < totalSteps) {
+          currentStep++;
+          updateUI();
+        }
+      }
+    });
+  }
+  
+  // Previous button handler
+  if (prevBtn) {
+    // Remove any existing event listeners to prevent duplicates
+    const newPrevBtn = prevBtn.cloneNode(true);
+    prevBtn.parentNode.replaceChild(newPrevBtn, prevBtn);
+    
+    newPrevBtn.addEventListener('click', function() {
+      // Navigate to previous step
+      if (currentStep > 1) {
+        currentStep--;
+        updateUI();
+      }
+    });
+  }
+  
+  // Save draft handler
+  if (saveBtn) {
+    // Remove any existing event listeners to prevent duplicates
+    const newSaveBtn = saveBtn.cloneNode(true);
+    saveBtn.parentNode.replaceChild(newSaveBtn, saveBtn);
+    
+    newSaveBtn.addEventListener('click', async function() {
+      // Save current form data as draft
+      
+      try {
+        const data = collectFormData();
+        
+        // S1 Requirement: All saves call ensureKIRExists() first
+        await ensureKIRExists();
+        
+        // Then updateKIR (never call create twice)
+        const { KIRService } = await import('../../services/backend/KIRService.js');
+        await KIRService.updateKIR(kirId, {
+          ...data,
+          status_rekod: 'Draf'
+        });
+        
+        // Log to console each write: {op, kirId, from, time}
+        console.log({
+          op: 'updateKIR',
+          kirId: kirId,
+          from: 'saveAsDraft-AdminDashboard',
+          time: new Date().toISOString()
+        });
+        
+        alert('Draf telah disimpan!');
+      } catch (error) {
+        console.error('Error saving draft:', error);
+        if (error.message.includes('duplicate') || error.message.includes('No. KP')) {
+          alert(error.message);
+        } else {
+          alert('Ralat menyimpan draf: ' + error.message);
+        }
+      }
+    });
+  }
+  
+  // Submit handler
+  if (submitBtn) {
+    // Remove any existing event listeners to prevent duplicates
+    const newSubmitBtn = submitBtn.cloneNode(true);
+    submitBtn.parentNode.replaceChild(newSubmitBtn, submitBtn);
+    
+    let isSubmitting = false; // Prevent multiple submissions
+    
+    newSubmitBtn.addEventListener('click', async function() {
+      // Prevent multiple submissions
+      if (isSubmitting) {
+        console.log('Submission already in progress, ignoring click');
+        return;
+      }
+      
+      // Submit final form data
+      if (validateStep()) {
+        isSubmitting = true;
+        newSubmitBtn.disabled = true;
+        newSubmitBtn.textContent = 'Menghantar...';
+        
+        try {
+          // S1 Requirement: All saves call ensureKIRExists() first
+          await ensureKIRExists();
+          
+          const { KIRService } = await import('../../services/backend/KIRService.js');
+          
+          // Update with final submission status
+          const data = collectFormData();
+          await KIRService.updateKIR(kirId, {
+            ...data,
+            status_rekod: 'Dihantar',
+            tarikh_hantar: new Date().toISOString()
+          });
+          
+          console.log('KIR updated successfully, now creating related documents...');
+          
+          // Create related documents (KAFA, Pendidikan, etc.) after successful submission
+          await KIRService.createRelatedDocuments(kirId, data);
+          
+          console.log('Related documents created successfully');
+          
+          // Clear localStorage
+          localStorage.removeItem('ciptaKIR_draft');
+          localStorage.removeItem('wizardKirId');
+          localStorage.removeItem('wizardIsCreated');
+          
+          alert('KIR telah dihantar berjaya!');
+          
+          // Trigger KIR list refresh before redirect
+          if (typeof window.loadKIRData === 'function') {
+            window.loadKIRData();
+          }
+          
+          // Also dispatch refresh event
+          window.dispatchEvent(new CustomEvent('kirListNeedsRefresh', {
+            detail: { kirId: kirId, action: 'submitted' }
+          }));
+          
+          // Redirect to KIR details
+          window.location.href = `/admin/kir/${kirId}`;
+        } catch (error) {
+          console.error('Error submitting form:', error);
+          isSubmitting = false;
+          newSubmitBtn.disabled = false;
+          newSubmitBtn.textContent = 'Hantar';
+          
+          if (error.message.includes('PERMISSION_DENIED')) {
+            alert('Akses ditolak: sila semak peraturan Firestore/peranan.');
+          } else {
+            alert('Ralat menghantar borang: ' + error.message);
+          }
+        }
+      }
+    });
+  }
+  
+  // Initialize everything
+  initializeRouting();
+  initializeDynamicFields();
+  initializeAIRFunctionality();
+  initializeSpouseConditionalLogic();
+  
+  // Delay UI update to ensure DOM is ready
+  requestAnimationFrame(() => {
+    updateUI();
+    updateEconomicTotals();
+  });
+  
+  // 8-step wizard initialization complete
+}
+
+// AIR (Ahli Isi Rumah) Dynamic Functionality
+function initializeAIRFunctionality() {
+  const airContainer = document.getElementById('air-rows');
+  const addAIRBtn = document.getElementById('add-air-row');
+  const toggleAIRBtn = document.getElementById('toggle-air-section');
+  const airMainContainer = document.getElementById('air-container');
+  
+  console.log('Initializing AIR functionality...');
+  console.log('AIR elements found:', {
+    airContainer: !!airContainer,
+    addAIRBtn: !!addAIRBtn,
+    toggleAIRBtn: !!toggleAIRBtn,
+    airMainContainer: !!airMainContainer
+  });
+  
+  if (!airContainer || !addAIRBtn) {
+    console.log('AIR elements not found, skipping AIR initialization');
+    return;
+  }
+  
+  let airCounter = 0;
+  
+  // Add new AIR row
+  function addAIRRow() {
+    airCounter++;
+    const airRow = document.createElement('div');
+    airRow.className = 'air-grid air-row';
+    airRow.dataset.airIndex = airCounter;
+    
+    airRow.innerHTML = `
+      <div class="air-grid-row">
+        <div class="air-cell">
+          <input type="text" id="air_nama_${airCounter}" name="air[${airCounter}][nama]" placeholder="Nama" required>
+        </div>
+        
+        <div class="air-cell">
+          <input type="text" id="air_no_kp_${airCounter}" name="air[${airCounter}][no_kp]" pattern="[0-9]{12}" maxlength="12" placeholder="No. KP">
+          <input type="date" id="air_tarikh_lahir_${airCounter}" name="air[${airCounter}][tarikh_lahir]" placeholder="Tarikh Lahir" style="margin-top: 5px;">
+          <small style="font-size: 0.75rem; color: #666;">No. KP atau Tarikh Lahir</small>
+        </div>
+        
+        <div class="air-cell">
+          <select id="air_jantina_${airCounter}" name="air[${airCounter}][jantina]" required>
+            <option value="">Pilih</option>
+            <option value="Lelaki">Lelaki</option>
+            <option value="Perempuan">Perempuan</option>
+          </select>
+        </div>
+        
+        <div class="air-cell">
+          <select id="air_hubungan_${airCounter}" name="air[${airCounter}][hubungan]" required>
+            <option value="">Pilih</option>
+            <option value="Anak">Anak</option>
+            <option value="Menantu">Menantu</option>
+            <option value="Cucu">Cucu</option>
+            <option value="Adik">Adik</option>
+            <option value="Lain-lain">Lain-lain</option>
+          </select>
+        </div>
+        
+        <div class="air-cell">
+          <select id="air_status_${airCounter}" name="air[${airCounter}][status]" required onchange="toggleAIRConditionalFields(${airCounter})">
+            <option value="">Pilih</option>
+            <option value="Pelajar">Pelajar</option>
+            <option value="Bekerja">Bekerja</option>
+            <option value="Tidak Bekerja">Tidak Bekerja</option>
+          </select>
+        </div>
+        
+        <div class="air-cell">
+          <select id="air_oku_${airCounter}" name="air[${airCounter}][oku]">
+            <option value="Tidak">Tidak</option>
+            <option value="Ya">Ya</option>
+          </select>
+        </div>
+        
+        <div class="air-cell">
+          <input type="number" id="air_pendapatan_${airCounter}" name="air[${airCounter}][pendapatan]" min="0" step="0.01" placeholder="Pendapatan (RM)" class="conditional-field" style="display: none;">
+          <input type="text" id="air_sekolah_${airCounter}" name="air[${airCounter}][sekolah]" placeholder="Sekolah/IPT" class="conditional-field" style="display: none;">
+        </div>
+        
+        <div class="air-cell">
+          <button type="button" class="air-remove-btn" onclick="removeAIRRow(${airCounter})">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      </div>
+    `;
+    
+    airContainer.appendChild(airRow);
+    updateAIREmptyState();
+  }
+  
+  // Remove AIR row
+  window.removeAIRRow = function(index) {
+    const airRow = document.querySelector(`[data-air-index="${index}"]`);
+    if (airRow) {
+      airRow.remove();
+      updateAIREmptyState();
+    }
+  };
+  
+  // Toggle conditional fields based on status
+  window.toggleAIRConditionalFields = function(index) {
+    const statusSelect = document.getElementById(`air_status_${index}`);
+    const pendapatanInput = document.getElementById(`air_pendapatan_${index}`);
+    const sekolahInput = document.getElementById(`air_sekolah_${index}`);
+    
+    if (statusSelect && pendapatanInput && sekolahInput) {
+      const status = statusSelect.value;
+      
+      // Reset visibility
+      pendapatanInput.style.display = 'none';
+      sekolahInput.style.display = 'none';
+      
+      // Show relevant fields
+      if (status === 'Bekerja') {
+        pendapatanInput.style.display = 'block';
+      } else if (status === 'Pelajar') {
+        sekolahInput.style.display = 'block';
+      }
+    }
+  };
+  
+  // Update empty state
+  function updateAIREmptyState() {
+    const airRows = airContainer.querySelectorAll('.air-row');
+    const emptyState = airContainer.querySelector('.air-empty-state');
+    
+    if (airRows.length === 0) {
+      if (!emptyState) {
+        const emptyDiv = document.createElement('div');
+        emptyDiv.className = 'air-empty-state';
+        emptyDiv.innerHTML = 'Tiada ahli isi rumah ditambah. Klik "Tambah Ahli Isi Rumah" untuk menambah.';
+        airContainer.appendChild(emptyDiv);
+      }
+    } else {
+      if (emptyState) {
+        emptyState.remove();
+      }
+    }
+  }
+  
+  // Add event listener to add button
+  addAIRBtn.addEventListener('click', addAIRRow);
+  
+  // Add event listener to toggle button
+  if (toggleAIRBtn && airMainContainer) {
+    toggleAIRBtn.addEventListener('click', () => {
+      if (airMainContainer.style.display === 'none') {
+        airMainContainer.style.display = 'block';
+        toggleAIRBtn.innerHTML = '<i class="fas fa-minus"></i> Sembunyikan AIR';
+      } else {
+        airMainContainer.style.display = 'none';
+        toggleAIRBtn.innerHTML = '<i class="fas fa-plus"></i> Tambah AIR (Ringkas)';
+      }
+    });
+  }
+  
+  // Initialize empty state
+   updateAIREmptyState();
+}
+
+// Spouse Conditional Logic
+function initializeSpouseConditionalLogic() {
+  const statusPerkahwinanSelect = document.getElementById('status_perkahwinan');
+  const spouseSection = document.getElementById('ringkasan-pasangan-section');
+  const airSection = document.getElementById('ahli-isi-rumah-section');
+  const addAIRManualBtn = document.getElementById('toggle-air-section');
+  
+  console.log('Initializing spouse conditional logic...');
+  console.log('Elements found:', {
+    statusPerkahwinanSelect: !!statusPerkahwinanSelect,
+    spouseSection: !!spouseSection,
+    airSection: !!airSection,
+    addAIRManualBtn: !!addAIRManualBtn
+  });
+  
+  if (!statusPerkahwinanSelect) {
+    console.log('Status perkahwinan select not found, skipping spouse logic initialization');
+    return;
+  }
+  
+  function toggleSpouseAndAIRSections() {
+    const status = statusPerkahwinanSelect.value;
+    console.log('Toggling spouse and AIR sections for status:', status);
+    
+    // Show/hide spouse section - show for married, divorced, or widowed
+    if (spouseSection) {
+      if (status === 'Berkahwin' || status === 'Bercerai' || status === 'Balu/Duda') {
+        spouseSection.style.display = 'block';
+        // Make spouse fields required only if currently married
+        const spouseRequiredFields = spouseSection.querySelectorAll('input[data-required-if-married]');
+        spouseRequiredFields.forEach(field => {
+          field.required = (status === 'Berkahwin');
+        });
+      } else {
+        spouseSection.style.display = 'none';
+        // Remove required from spouse fields
+        const spouseFields = spouseSection.querySelectorAll('input');
+        spouseFields.forEach(field => {
+          field.required = false;
+          field.value = ''; // Clear values
+        });
+      }
+    }
+    
+    // Show/hide AIR section based on marriage status
+    if (airSection) {
+      if (status === 'Berkahwin' || status === 'Bercerai' || status === 'Balu/Duda') {
+        console.log('Showing AIR section for married/divorced/widowed status');
+        airSection.style.display = 'block';
+      } else {
+        // Keep AIR section hidden by default for single, but allow manual show
+        console.log('Hiding AIR section for single status');
+        airSection.style.display = 'none';
+      }
+    } else {
+      console.log('AIR section element not found!');
+    }
+    
+    // Show/hide manual AIR button
+    if (addAIRManualBtn) {
+      if (status === 'Bujang' || status === '') {
+        addAIRManualBtn.style.display = 'inline-block';
+      } else {
+        addAIRManualBtn.style.display = 'none';
+      }
+    }
+  }
+  
+  // Manual AIR section toggle
+  if (addAIRManualBtn) {
+    addAIRManualBtn.addEventListener('click', () => {
+      if (airSection) {
+        airSection.style.display = 'block';
+        addAIRManualBtn.style.display = 'none';
+      }
+    });
+  }
+  
+  // Add event listener
+  statusPerkahwinanSelect.addEventListener('change', toggleSpouseAndAIRSections);
+  
+  // Initialize on page load
+  toggleSpouseAndAIRSections();
+}

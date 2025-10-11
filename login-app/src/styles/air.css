@@ -1,0 +1,400 @@
+/* AIR Tab Styles */
+.air-tab-content {
+  padding: 20px;
+}
+
+.air-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.air-header h3 {
+  margin: 0;
+  color: #333;
+  font-size: 1.5rem;
+}
+
+.air-table-container {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  overflow: hidden;
+}
+
+.air-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.air-table th,
+.air-table td {
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.air-table th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+  color: #555;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.air-table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.air-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.air-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+.air-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.air-name {
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 2px;
+}
+
+.air-age {
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.action-menu {
+  display: flex;
+  gap: 8px;
+}
+
+.action-menu-btn {
+  background: none;
+  border: none;
+  padding: 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  color: #666;
+  transition: all 0.2s ease;
+}
+
+.action-menu-btn:hover {
+  background-color: #f0f0f0;
+  color: #333;
+}
+
+.action-menu-btn:last-child:hover {
+  background-color: #fee;
+  color: #d63384;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #666;
+}
+
+.empty-state p {
+  margin-bottom: 20px;
+  font-size: 1.1rem;
+}
+
+/* AIR Drawer Styles */
+.air-drawer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1000;
+  visibility: hidden;
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+
+.air-drawer.open {
+  visibility: visible;
+  opacity: 1;
+}
+
+.drawer-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+}
+
+.drawer-content {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 600px;
+  height: 100%;
+  background: white;
+  box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);
+  transform: translateX(100%);
+  transition: transform 0.3s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.air-drawer.open .drawer-content {
+  transform: translateX(0);
+}
+
+.drawer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e0e0e0;
+  background: #f8f9fa;
+}
+
+.drawer-header h3 {
+  margin: 0;
+  color: #333;
+  font-size: 1.3rem;
+}
+
+.drawer-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #666;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.drawer-close:hover {
+  background-color: #e9ecef;
+  color: #333;
+}
+
+.drawer-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.drawer-tabs {
+  display: flex;
+  border-bottom: 1px solid #e0e0e0;
+  background: #f8f9fa;
+  padding: 0 24px;
+}
+
+.drawer-tab {
+  background: none;
+  border: none;
+  padding: 16px 20px;
+  cursor: pointer;
+  color: #666;
+  font-weight: 500;
+  border-bottom: 3px solid transparent;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+}
+
+.drawer-tab:hover {
+  color: #333;
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.drawer-tab.active {
+  color: #007bff;
+  border-bottom-color: #007bff;
+  background-color: white;
+}
+
+.drawer-tab .dirty-indicator {
+  color: #dc3545;
+  font-size: 1.5rem;
+  line-height: 1;
+  margin-left: 4px;
+}
+
+.drawer-tab-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+/* AIR Form Styles */
+.air-form {
+  max-width: none;
+}
+
+.air-form .form-section h4 {
+  margin: 0 0 20px 0;
+  color: #333;
+  font-size: 1.2rem;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.air-form .form-group {
+  margin-bottom: 20px;
+}
+
+.air-form .form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.air-form .form-group label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 500;
+  color: #333;
+}
+
+.air-form .form-group input,
+.air-form .form-group select,
+.air-form .form-group textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.95rem;
+  transition: border-color 0.2s ease;
+}
+
+.air-form .form-group input:focus,
+.air-form .form-group select:focus,
+.air-form .form-group textarea:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.air-form .form-group textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.air-form .form-actions {
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid #e0e0e0;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.current-image {
+  margin-top: 10px;
+  padding: 10px;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  background: #f8f9fa;
+}
+
+.current-image img {
+  border-radius: 4px;
+}
+
+.smoking-fields {
+  margin-top: 20px;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border-left: 4px solid #ffc107;
+}
+
+.smoking-fields .form-row {
+  margin-bottom: 15px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .drawer-content {
+    width: 100%;
+  }
+  
+  .air-form .form-row {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+  
+  .drawer-tabs {
+    overflow-x: auto;
+    padding: 0 16px;
+  }
+  
+  .drawer-tab {
+    white-space: nowrap;
+    padding: 12px 16px;
+  }
+  
+  .drawer-tab-content {
+    padding: 16px;
+  }
+  
+  .air-table {
+    font-size: 0.9rem;
+  }
+  
+  .air-table th,
+  .air-table td {
+    padding: 8px 12px;
+  }
+  
+  .air-info {
+    gap: 8px;
+  }
+  
+  .air-avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .air-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+  
+  .air-table-container {
+    overflow-x: auto;
+  }
+  
+  .air-table {
+    min-width: 600px;
+  }
+}
