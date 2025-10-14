@@ -28,6 +28,10 @@ export function createAdminSidebar(user) {
           <span class="nav-icon">📋</span>
           Senarai KIR
         </a>
+        <a href="#" class="nav-item" data-section="senarai-kir-new">
+          <span class="nav-icon">📋</span>
+          Senarai KIR (New)
+        </a>
         <a href="#" class="nav-item" data-section="cipta-kir">
           <span class="nav-icon">➕</span>
           Cipta KIR
@@ -1223,6 +1227,10 @@ export function createAdminMainContent() {
       </div>
     </div>
     
+    <!-- Senarai KIR (New) Content Section -->
+    <div id="senarai-kir-new-content" class="content-section">
+      <!-- Content will be dynamically loaded by SenaraiKIR.js component -->
+    </div>
 
     
     <div id="program-kehadiran-content" class="content-section">
@@ -2750,6 +2758,37 @@ export function setupSenariKIRListeners() {
         if (senariKirTableBody) {
           // Use the same KIR management functionality but with different table
           initializeKIRManagement('senariKirTableBody');
+        }
+      }, 100);
+    });
+  }
+
+  // Setup listener for new Senarai KIR (New) tab
+  const senariKirNewNav = document.querySelector('[data-section="senarai-kir-new"]');
+  if (senariKirNewNav) {
+    senariKirNewNav.addEventListener('click', () => {
+      setTimeout(async () => {
+        // Import and initialize the new SenaraiKIR component
+        try {
+          const { SenaraiKIR } = await import('./SenaraiKIR.js');
+          const senariKIRNew = new SenaraiKIR();
+          
+          // Make instance globally available
+          window.senaraiKIRNew = senariKIRNew;
+          
+          // Get the content container and load the component
+          const contentContainer = document.getElementById('senarai-kir-new-content');
+          if (contentContainer) {
+            contentContainer.innerHTML = senariKIRNew.createContent();
+            // Add another timeout to ensure DOM is ready
+            setTimeout(async () => {
+              await senariKIRNew.initialize();
+            }, 100);
+          } else {
+            console.error('Content container not found: senarai-kir-new-content');
+          }
+        } catch (error) {
+          console.error('Error loading SenaraiKIR component:', error);
         }
       }, 100);
     });
