@@ -10,6 +10,7 @@ import { KekeluargaanTab } from './KIRProfile/components/tabs/KekeluargaanTab.js
 import { KesihatanTab } from './KIRProfile/components/tabs/KesihatanTab.js';
 import { PendapatanTab } from './KIRProfile/components/tabs/PendapatanTab.js';
 import { PerbelanjaanTab } from './KIRProfile/components/tabs/PerbelanjaanTab.js';
+import { BantuanBulananTab } from './KIRProfile/components/tabs/BantuanBulananTab.js';
 import { AIRTab } from './KIRProfile/components/tabs/AIRTab.js';
 import { PKIRTab } from './KIRProfile/components/tabs/PKIRTab.js';
 import { ProgramTab } from './KIRProfile/components/tabs/ProgramTab.js';
@@ -70,6 +71,7 @@ export class KIRProfile {
       'kesihatan': new KesihatanTab(this),
       'pendapatan': new PendapatanTab(this),
       'perbelanjaan': new PerbelanjaanTab(this),
+      'bantuan-bulanan': new BantuanBulananTab(this),
       'air': new AIRTab(this),
       'pkir': new PKIRTab(this),
       'program': new ProgramTab(this)

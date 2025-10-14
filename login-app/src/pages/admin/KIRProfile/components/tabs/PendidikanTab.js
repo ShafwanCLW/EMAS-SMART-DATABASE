@@ -26,7 +26,7 @@ export class PendidikanTab extends BaseTab {
         <div class="form-section">
           <h3>Pendidikan</h3>
           
-          <div class="form-grid">
+          <div class="form-row">
             <div class="form-group">
               <label for="tahap_pendidikan">Tahap Pendidikan</label>
               <select id="tahap_pendidikan" name="tahap_pendidikan">
@@ -46,7 +46,9 @@ export class PendidikanTab extends BaseTab {
               <label for="nama_sekolah">Nama Sekolah/Institusi</label>
               <input type="text" id="nama_sekolah" name="nama_sekolah" value="${namaSekolah}">
             </div>
-            
+          </div>
+          
+          <div class="form-row">
             <div class="form-group">
               <label for="tahun_tamat">Tahun Tamat</label>
               <input type="number" id="tahun_tamat" name="tahun_tamat" value="${tahunTamat}" min="1950" max="2030" placeholder="YYYY">

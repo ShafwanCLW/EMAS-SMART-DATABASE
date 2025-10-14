@@ -5,29 +5,204 @@ export class AIRTab extends BaseTab {
     super(kirProfile);
     this.tabId = 'air';
     this.airData = [];
-    this.isDrawerOpen = false;
-    this.currentAIR = null;
-    this.currentDrawerTab = 'maklumat-asas';
-    this.drawerDirtyTabs = new Set();
+    this.currentEditingId = null;
   }
 
   render() {
     return `
       <div class="air-tab">
-        <div class="air-header">
-          <div class="air-title">
-            <h3>Ahli Isi Rumah (AIR)</h3>
-            <button type="button" class="btn btn-primary" onclick="airTab.openAIRDrawer()">
-              <i class="fas fa-plus"></i> Tambah AIR
-            </button>
+        <div class="tab-header">
+          <h3>Ahli Isi Rumah (AIR)</h3>
+          <p class="tab-subtitle">Maklumat ahli isi rumah yang tinggal bersama</p>
+        </div>
+        
+        <div class="form-container">
+          <form class="air-form" id="airForm">
+            <!-- Maklumat Asas Section -->
+            <div class="form-section">
+              <h4 class="section-title">Maklumat Asas</h4>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="nama">Nama Penuh</label>
+                  <input type="text" id="nama" name="nama" required>
+                </div>
+                <div class="form-group">
+                  <label for="no_kp">No. Kad Pengenalan</label>
+                  <input type="text" id="no_kp" name="no_kp" placeholder="123456-12-1234">
+                </div>
+                <div class="form-group">
+                  <label for="sijil_lahir">Sijil Lahir</label>
+                  <input type="text" id="sijil_lahir" name="sijil_lahir">
+                </div>
+                <div class="form-group">
+                  <label for="tarikh_lahir">Tarikh Lahir</label>
+                  <input type="date" id="tarikh_lahir" name="tarikh_lahir" required>
+                </div>
+                <div class="form-group">
+                  <label for="umur">Umur</label>
+                  <input type="number" id="umur" name="umur" readonly>
+                </div>
+                <div class="form-group">
+                  <label for="hubungan">Hubungan dengan KIR</label>
+                  <select id="hubungan" name="hubungan" required>
+                    <option value="">Pilih Hubungan</option>
+                    <option value="Suami">Suami</option>
+                    <option value="Isteri">Isteri</option>
+                    <option value="Anak">Anak</option>
+                    <option value="Ibu">Ibu</option>
+                    <option value="Bapa">Bapa</option>
+                    <option value="Adik Beradik">Adik Beradik</option>
+                    <option value="Datuk/Nenek">Datuk/Nenek</option>
+                    <option value="Lain-lain">Lain-lain</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Pendidikan Section -->
+            <div class="form-section">
+              <h4 class="section-title">Maklumat Pendidikan</h4>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="tahap_semasa">Tahap Pendidikan Semasa</label>
+                  <select id="tahap_semasa" name="tahap_semasa">
+                    <option value="">Pilih Tahap Pendidikan</option>
+                    <option value="Tidak Bersekolah">Tidak Bersekolah</option>
+                    <option value="Tadika">Tadika</option>
+                    <option value="Sekolah Rendah">Sekolah Rendah</option>
+                    <option value="Sekolah Menengah">Sekolah Menengah</option>
+                    <option value="Sijil/Diploma">Sijil/Diploma</option>
+                    <option value="Ijazah Sarjana Muda">Ijazah Sarjana Muda</option>
+                    <option value="Ijazah Sarjana">Ijazah Sarjana</option>
+                    <option value="Ijazah Doktor Falsafah">Ijazah Doktor Falsafah</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="sekolah_ipt">Sekolah/IPT</label>
+                  <input type="text" id="sekolah_ipt" name="sekolah_ipt">
+                </div>
+                <div class="form-group">
+                  <label for="keputusan">Keputusan</label>
+                  <input type="text" id="keputusan" name="keputusan">
+                </div>
+                <div class="form-group">
+                  <label for="sekolah_kafa">Sekolah KAFA</label>
+                  <input type="text" id="sekolah_kafa" name="sekolah_kafa">
+                </div>
+                <div class="form-group">
+                  <label for="keputusan_kafa">Keputusan KAFA</label>
+                  <input type="text" id="keputusan_kafa" name="keputusan_kafa">
+                </div>
+                <div class="form-group full-width">
+                  <label for="keperluan_sokongan">Keperluan Sokongan</label>
+                  <textarea id="keperluan_sokongan" name="keperluan_sokongan" rows="3"></textarea>
+                </div>
+              </div>
+            </div>
+
+            <!-- Pekerjaan Section -->
+            <div class="form-section">
+              <h4 class="section-title">Maklumat Pekerjaan</h4>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="status">Status Pekerjaan</label>
+                  <select id="status" name="status">
+                    <option value="">Pilih Status</option>
+                    <option value="Bekerja">Bekerja</option>
+                    <option value="Tidak Bekerja">Tidak Bekerja</option>
+                    <option value="Pencen">Pencen</option>
+                    <option value="Pelajar">Pelajar</option>
+                    <option value="Suri Rumah">Suri Rumah</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="jenis_pekerjaan">Jenis Pekerjaan</label>
+                  <input type="text" id="jenis_pekerjaan" name="jenis_pekerjaan">
+                </div>
+                <div class="form-group">
+                  <label for="pendapatan_bulanan">Pendapatan Bulanan (RM)</label>
+                  <input type="number" id="pendapatan_bulanan" name="pendapatan_bulanan" step="0.01">
+                </div>
+                <div class="form-group">
+                  <label for="nama_majikan">Nama Majikan</label>
+                  <input type="text" id="nama_majikan" name="nama_majikan">
+                </div>
+                <div class="form-group full-width">
+                  <label for="alamat_majikan">Alamat Majikan</label>
+                  <textarea id="alamat_majikan" name="alamat_majikan" rows="3"></textarea>
+                </div>
+              </div>
+            </div>
+
+            <!-- Kesihatan Section -->
+            <div class="form-section">
+              <h4 class="section-title">Maklumat Kesihatan</h4>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="status_oku">Status OKU</label>
+                  <select id="status_oku" name="status_oku">
+                    <option value="">Pilih Status</option>
+                    <option value="Ya">Ya</option>
+                    <option value="Tidak">Tidak</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="jenis_kecacatan">Jenis Kecacatan</label>
+                  <input type="text" id="jenis_kecacatan" name="jenis_kecacatan">
+                </div>
+                <div class="form-group">
+                  <label for="status_merokok">Status Merokok</label>
+                  <select id="status_merokok" name="status_merokok" onchange="airTab.toggleSmokingFields(this.value)">
+                    <option value="">Pilih Status</option>
+                    <option value="Ya">Ya</option>
+                    <option value="Tidak">Tidak</option>
+                    <option value="Bekas Perokok">Bekas Perokok</option>
+                  </select>
+                </div>
+                <div class="form-group smoking-fields" style="display: none;">
+                  <label for="bilangan_batang">Bilangan Batang Sehari</label>
+                  <input type="number" id="bilangan_batang" name="bilangan_batang">
+                </div>
+                <div class="form-group full-width">
+                  <label for="penyakit_kronik">Penyakit Kronik</label>
+                  <textarea id="penyakit_kronik" name="penyakit_kronik" rows="3" placeholder="Senaraikan penyakit kronik jika ada"></textarea>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button type="button" class="btn btn-secondary" onclick="airTab.resetForm()">Reset</button>
+              <button type="submit" class="btn btn-primary">Simpan AIR</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- AIR List Section -->
+        <div class="air-list-section">
+          <h4>Senarai Ahli Isi Rumah</h4>
+          <div class="air-list" id="airList">
+            ${this.createAIRList()}
           </div>
         </div>
-        
-        <div class="air-content">
-          ${this.createAIRContent()}
+      </div>
+    `;
+  }
+
+  createAIRList() {
+    if (!this.airData || this.airData.length === 0) {
+      return `
+        <div class="empty-state">
+          <div class="empty-icon">
+            <i class="fas fa-users"></i>
+          </div>
+          <p>Tiada ahli isi rumah didaftarkan</p>
         </div>
-        
-        ${this.createAIRDrawer()}
+      `;
+    }
+
+    return `
+      <div class="air-cards">
+        ${this.airData.map(air => this.createAIRCard(air)).join('')}
       </div>
     `;
   }
@@ -641,6 +816,142 @@ export class AIRTab extends BaseTab {
     }
   }
 
+  // Form handling methods
+  resetForm() {
+    const form = document.getElementById('airForm');
+    if (form) {
+      form.reset();
+      this.currentEditingId = null;
+      
+      // Update form button text
+      const submitBtn = form.querySelector('button[type="submit"]');
+      if (submitBtn) {
+        submitBtn.textContent = 'Simpan AIR';
+      }
+      
+      // Hide smoking fields
+      this.toggleSmokingFields('');
+    }
+  }
+
+  editAIR(airId) {
+    const air = this.airData.find(a => a.id === airId);
+    if (!air) return;
+    
+    this.currentEditingId = airId;
+    
+    // Populate form with AIR data
+    const form = document.getElementById('airForm');
+    if (form) {
+      Object.keys(air).forEach(key => {
+        const input = form.querySelector(`[name="${key}"]`);
+        if (input) {
+          input.value = air[key] || '';
+        }
+      });
+      
+      // Calculate and set age
+      if (air.tarikh_lahir) {
+        const age = this.calculateAge(air.tarikh_lahir);
+        const ageInput = form.querySelector('[name="umur"]');
+        if (ageInput) {
+          ageInput.value = age;
+        }
+      }
+      
+      // Update form button text
+      const submitBtn = form.querySelector('button[type="submit"]');
+      if (submitBtn) {
+        submitBtn.textContent = 'Kemaskini AIR';
+      }
+      
+      // Handle smoking fields visibility
+      this.toggleSmokingFields(air.status_merokok || '');
+      
+      // Scroll to form
+      form.scrollIntoView({ behavior: 'smooth' });
+    }
+  }
+
+  async deleteAIR(airId) {
+    const air = this.airData.find(a => a.id === airId);
+    if (!air) return;
+    
+    if (!confirm(`Adakah anda pasti mahu memadam ${air.nama}?`)) {
+      return;
+    }
+    
+    try {
+      await this.kirProfile.AIRService.deleteAIR(airId);
+      this.kirProfile.showToast('AIR berjaya dipadam', 'success');
+      await this.loadAIRData();
+      this.refreshAIRList();
+    } catch (error) {
+      console.error('Error deleting AIR:', error);
+      this.kirProfile.showToast('Ralat memadam AIR: ' + error.message, 'error');
+    }
+  }
+
+  async saveAIR(formData) {
+    // Validate that KIR ID is available
+    if (!this.kirProfile.kirId) {
+      console.error('Cannot save AIR: KIR ID is not available');
+      this.kirProfile.showToast('Ralat: ID KIR tidak tersedia. Sila muat semula halaman.', 'error');
+      return;
+    }
+    
+    try {
+      if (this.currentEditingId) {
+        // Update existing AIR
+        await this.kirProfile.AIRService.updateAIR(this.currentEditingId, formData);
+        this.kirProfile.showToast('AIR berjaya dikemaskini', 'success');
+      } else {
+        // Create new AIR
+        await this.kirProfile.AIRService.createAIR(this.kirProfile.kirId, formData);
+        this.kirProfile.showToast('AIR berjaya ditambah', 'success');
+      }
+      
+      // Refresh data and reset form
+      await this.loadAIRData();
+      this.refreshAIRList();
+      this.resetForm();
+      
+    } catch (error) {
+      console.error('Error saving AIR:', error);
+      this.kirProfile.showToast('Ralat menyimpan AIR: ' + error.message, 'error');
+    }
+  }
+
+  refreshAIRList() {
+    const airListContainer = document.getElementById('airList');
+    if (airListContainer) {
+      airListContainer.innerHTML = this.createAIRList();
+    }
+  }
+
+  toggleSmokingFields(value) {
+    const smokingFields = document.querySelector('.smoking-fields');
+    if (smokingFields) {
+      smokingFields.style.display = value === 'Ya' ? 'block' : 'none';
+    }
+  }
+
+  // Data Management Methods
+  async loadAIRData() {
+    try {
+      if (!this.kirProfile.kirId) {
+        this.airData = [];
+        return;
+      }
+      
+      this.airData = await this.kirProfile.AIRService.getAIRByKIRId(this.kirProfile.kirId) || [];
+    } catch (error) {
+      console.error('Error loading AIR data:', error);
+      this.airData = [];
+      this.kirProfile.showToast('Ralat memuatkan data AIR: ' + error.message, 'error');
+    }
+  }
+
   // Utility Methods
   calculateAge(birthDate) {
     if (!birthDate) return 0;
@@ -670,40 +981,48 @@ export class AIRTab extends BaseTab {
     
     // Load initial data
     this.loadAIRData().then(() => {
-      // Re-render if needed after data load
-      if (!this.isDrawerOpen) {
-        const tabContent = document.querySelector('[data-tab="air"]');
-        if (tabContent) {
-          tabContent.innerHTML = this.render();
-          // Re-setup event listeners after re-render
-          window.airTab = this;
-        }
-      }
+      this.refreshAIRList();
     });
     
-    // Set up form change tracking for drawer forms
-    const drawerForms = document.querySelectorAll('.air-form');
-    drawerForms.forEach(form => {
-      const tabId = form.dataset.drawerTab;
-      
-      form.addEventListener('input', () => {
-        this.drawerDirtyTabs.add(tabId);
-        // Update navigation to show dirty indicator
-        const drawerTabs = document.querySelector('.drawer-tabs');
-        if (drawerTabs) {
-          drawerTabs.innerHTML = this.createDrawerTabNavigation();
-        }
+    // Set up form submission
+    const form = document.getElementById('airForm');
+    if (form) {
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
+        
+        // Remove empty values
+        Object.keys(data).forEach(key => {
+          if (data[key] === '') {
+            delete data[key];
+          }
+        });
+        
+        await this.saveAIR(data);
       });
       
-      form.addEventListener('change', () => {
-        this.drawerDirtyTabs.add(tabId);
-        // Update navigation to show dirty indicator
-        const drawerTabs = document.querySelector('.drawer-tabs');
-        if (drawerTabs) {
-          drawerTabs.innerHTML = this.createDrawerTabNavigation();
-        }
-      });
-    });
+      // Set up birth date change listener for age calculation
+      const birthDateInput = form.querySelector('[name="tarikh_lahir"]');
+      if (birthDateInput) {
+        birthDateInput.addEventListener('change', (e) => {
+          const age = this.calculateAge(e.target.value);
+          const ageInput = form.querySelector('[name="umur"]');
+          if (ageInput) {
+            ageInput.value = age;
+          }
+        });
+      }
+      
+      // Set up smoking fields toggle
+      const smokingSelect = form.querySelector('[name="status_merokok"]');
+      if (smokingSelect) {
+        smokingSelect.addEventListener('change', (e) => {
+          this.toggleSmokingFields(e.target.value);
+        });
+      }
+    }
   }
 
   async save() {

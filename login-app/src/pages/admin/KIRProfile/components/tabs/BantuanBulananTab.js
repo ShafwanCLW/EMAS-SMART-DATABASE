@@ -1,413 +1,193 @@
-import BaseTab from '../shared/BaseTab.js';
+import { BaseTab } from '../shared/BaseTab.js';
 
-export default class BantuanBulananTab extends BaseTab {
+export class BantuanBulananTab extends BaseTab {
   constructor(kirProfile) {
     super(kirProfile);
-    this.bantuanBulananData = [];
+    this.tabId = 'bantuan_bulanan';
   }
 
   render() {
+    const data = this.data || {};
+    
     return `
-      <div class="info-card">
-        <h3><i class="fas fa-hand-holding-usd"></i> Bantuan Bulanan</h3>
-        
-        <div class="form-container">
-          <div class="form-grid">
-            <div class="form-group full-width">
-              <div class="total-display">
-                <div class="total-card">
-                  <div class="total-label">Jumlah Bantuan Bulanan</div>
-                  <div class="total-amount" id="total-bantuan-bulanan">RM 0.00</div>
-                </div>
-              </div>
+      <form class="kir-form" data-tab="bantuan_bulanan">
+        <div class="form-section">
+          <h3>Bantuan Bulanan</h3>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="bantuan_jkm">Bantuan JKM (RM)</label>
+              <input type="number" id="bantuan_jkm" name="bantuan_jkm" value="${data.bantuan_jkm || ''}" step="0.01" min="0" placeholder="0.00">
             </div>
             
-            <div class="form-group full-width">
-              <div class="section-header">
-                <h4>Senarai Bantuan Bulanan</h4>
-                <button type="button" class="btn btn-primary btn-sm" onclick="bantuanBulananTab.openBantuanBulananModal()">
-                  <i class="fas fa-plus"></i> Tambah Bantuan
-                </button>
-              </div>
+            <div class="form-group">
+              <label for="bantuan_zakat">Bantuan Zakat (RM)</label>
+              <input type="number" id="bantuan_zakat" name="bantuan_zakat" value="${data.bantuan_zakat || ''}" step="0.01" min="0" placeholder="0.00">
             </div>
-            
-            <div class="form-group full-width">
-              <div class="bantuan-bulanan-table-container" id="bantuan-bulanan-table">
-                ${this.createBantuanBulananTable()}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      ${this.createBantuanBulananModal()}
-    `;
-  }
-
-  createBantuanBulananTable() {
-    if (!this.bantuanBulananData || this.bantuanBulananData.length === 0) {
-      return `
-        <div class="empty-state">
-          <i class="fas fa-hand-holding-usd"></i>
-          <p>Tiada bantuan bulanan direkodkan</p>
-          <button type="button" class="btn btn-primary" onclick="bantuanBulananTab.openBantuanBulananModal()">
-            <i class="fas fa-plus"></i> Tambah Bantuan Pertama
-          </button>
-        </div>
-      `;
-    }
-
-    const tableRows = this.bantuanBulananData.map(item => `
-      <tr>
-        <td>${this.formatDate(item.tarikh_mula)}</td>
-        <td>${this.escapeHtml(item.agensi)}</td>
-        <td>${this.formatCurrency(item.kadar)}</td>
-        <td>
-          <span class="frequency-badge frequency-${item.kekerapan.toLowerCase()}">
-            ${this.getFrequencyBadge(item.kekerapan)}
-          </span>
-        </td>
-        <td>${this.escapeHtml(item.cara_terima)}</td>
-        <td>${this.formatCurrency(this.calculateMonthlyValue(item.kadar, item.kekerapan))}</td>
-        <td>
-          <div class="action-buttons">
-            <button class="btn btn-sm btn-edit" onclick="bantuanBulananTab.editBantuanBulanan('${item.id}')" title="Edit">
-              <i class="fas fa-edit"></i>
-            </button>
-            <button class="btn btn-sm btn-delete" onclick="bantuanBulananTab.deleteBantuanBulanan('${item.id}')" title="Padam">
-              <i class="fas fa-trash"></i>
-            </button>
-          </div>
-        </td>
-      </tr>
-    `).join('');
-
-    return `
-      <div class="table-responsive">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Tarikh Mula</th>
-              <th>Agensi</th>
-              <th>Kadar</th>
-              <th>Kekerapan</th>
-              <th>Cara Terima</th>
-              <th>Nilai Bulanan</th>
-              <th>Tindakan</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${tableRows}
-          </tbody>
-        </table>
-      </div>
-    `;
-  }
-
-  createBantuanBulananModal() {
-    return `
-      <div id="bantuan-bulanan-modal" class="modal" style="display: none;">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h4 id="bantuan-bulanan-modal-title">Tambah Bantuan Bulanan</h4>
-            <button class="modal-close" onclick="bantuanBulananTab.closeBantuanBulananModal()">
-              <i class="fas fa-times"></i>
-            </button>
           </div>
           
-          <form id="bantuan-bulanan-form" onsubmit="bantuanBulananTab.saveBantuanBulanan(event)">
-            <div class="modal-body">
-              <div class="form-row">
-                <div class="form-group">
-                  <label for="tarikh_mula">Tarikh Mula *</label>
-                  <input type="date" id="tarikh_mula" name="tarikh_mula" required>
-                </div>
-                
-                <div class="form-group">
-                  <label for="agensi">Agensi *</label>
-                  <input type="text" id="agensi" name="agensi" required placeholder="Nama agensi pemberi bantuan">
-                </div>
-              </div>
-              
-              <div class="form-row">
-                <div class="form-group">
-                  <label for="kadar">Kadar (RM) *</label>
-                  <input type="number" id="kadar" name="kadar" step="0.01" min="0" required placeholder="0.00">
-                </div>
-                
-                <div class="form-group">
-                  <label for="kekerapan">Kekerapan *</label>
-                  <select id="kekerapan" name="kekerapan" required>
-                    <option value="">Pilih kekerapan</option>
-                    <option value="Mingguan">Mingguan</option>
-                    <option value="Bulanan">Bulanan</option>
-                    <option value="Tahunan">Tahunan</option>
-                    <option value="Sekali">Sekali</option>
-                  </select>
-                </div>
-              </div>
-              
-              <div class="form-group">
-                <label for="cara_terima">Cara Terima *</label>
-                <input type="text" id="cara_terima" name="cara_terima" required placeholder="Contoh: Tunai, Bank, Cek">
-              </div>
-              
-              <div class="form-group">
-                <label for="catatan">Catatan</label>
-                <textarea id="catatan" name="catatan" rows="3" placeholder="Catatan tambahan (pilihan)"></textarea>
-              </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="bantuan_oku">Bantuan OKU (RM)</label>
+              <input type="number" id="bantuan_oku" name="bantuan_oku" value="${data.bantuan_oku || ''}" step="0.01" min="0" placeholder="0.00">
             </div>
             
-            <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" onclick="bantuanBulananTab.closeBantuanBulananModal()">
-                Batal
-              </button>
-              <button type="submit" class="btn btn-primary">
-                <i class="fas fa-save"></i> Simpan
-              </button>
+            <div class="form-group">
+              <label for="bantuan_warga_emas">Bantuan Warga Emas (RM)</label>
+              <input type="number" id="bantuan_warga_emas" name="bantuan_warga_emas" value="${data.bantuan_warga_emas || ''}" step="0.01" min="0" placeholder="0.00">
             </div>
-          </form>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="bantuan_baitulmal">Bantuan Baitulmal (RM)</label>
+              <input type="number" id="bantuan_baitulmal" name="bantuan_baitulmal" value="${data.bantuan_baitulmal || ''}" step="0.01" min="0" placeholder="0.00">
+            </div>
+            
+            <div class="form-group">
+              <label for="bantuan_ngo">Bantuan NGO (RM)</label>
+              <input type="number" id="bantuan_ngo" name="bantuan_ngo" value="${data.bantuan_ngo || ''}" step="0.01" min="0" placeholder="0.00">
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="bantuan_kerajaan_negeri">Bantuan Kerajaan Negeri (RM)</label>
+              <input type="number" id="bantuan_kerajaan_negeri" name="bantuan_kerajaan_negeri" value="${data.bantuan_kerajaan_negeri || ''}" step="0.01" min="0" placeholder="0.00">
+            </div>
+            
+            <div class="form-group">
+              <label for="bantuan_lain">Bantuan Lain (RM)</label>
+              <input type="number" id="bantuan_lain" name="bantuan_lain" value="${data.bantuan_lain || ''}" step="0.01" min="0" placeholder="0.00">
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="jumlah_keseluruhan_bantuan">Jumlah Keseluruhan Bantuan Bulanan (RM)</label>
+            <input type="number" id="jumlah_keseluruhan_bantuan" name="jumlah_keseluruhan_bantuan" value="${data.jumlah_keseluruhan_bantuan || ''}" step="0.01" min="0" readonly>
+          </div>
+          
+          <div class="form-group">
+            <label for="catatan_bantuan">Catatan Tambahan (Opsional)</label>
+            <textarea id="catatan_bantuan" name="catatan_bantuan" rows="3" placeholder="Sebarang maklumat tambahan mengenai bantuan yang diterima">${data.catatan_bantuan || ''}</textarea>
+          </div>
         </div>
-      </div>
+        
+        <div class="form-actions">
+          <button type="button" class="btn btn-primary" onclick="kirProfile.saveTab('bantuan_bulanan')">Simpan</button>
+        </div>
+      </form>
     `;
   }
 
-  // Modal Methods
-  openBantuanBulananModal(editData = null) {
-    const modal = document.getElementById('bantuan-bulanan-modal');
-    const form = document.getElementById('bantuan-bulanan-form');
-    const title = document.getElementById('bantuan-bulanan-modal-title');
+  async save() {
+    // Validate form first
+    if (!this.validate()) {
+      this.showToast('Sila lengkapkan semua medan yang diperlukan', 'error');
+      return false;
+    }
+
+    try {
+      const formData = this.getFormData();
+      
+      // Calculate total assistance automatically
+      const bantuan_jkm = parseFloat(formData.bantuan_jkm) || 0;
+      const bantuan_zakat = parseFloat(formData.bantuan_zakat) || 0;
+      const bantuan_oku = parseFloat(formData.bantuan_oku) || 0;
+      const bantuan_warga_emas = parseFloat(formData.bantuan_warga_emas) || 0;
+      const bantuan_baitulmal = parseFloat(formData.bantuan_baitulmal) || 0;
+      const bantuan_ngo = parseFloat(formData.bantuan_ngo) || 0;
+      const bantuan_kerajaan_negeri = parseFloat(formData.bantuan_kerajaan_negeri) || 0;
+      const bantuan_lain = parseFloat(formData.bantuan_lain) || 0;
+      
+      formData.jumlah_keseluruhan_bantuan = bantuan_jkm + bantuan_zakat + bantuan_oku + 
+                                           bantuan_warga_emas + bantuan_baitulmal + bantuan_ngo + 
+                                           bantuan_kerajaan_negeri + bantuan_lain;
+
+      // Save via KIRService
+      await this.kirProfile.kirService.updateRelatedDocument(this.kirProfile.kirId, 'bantuan_bulanan', formData);
+      
+      // Update local data
+      if (!this.kirProfile.relatedData) {
+        this.kirProfile.relatedData = {};
+      }
+      this.kirProfile.relatedData.bantuan_bulanan = { ...this.kirProfile.relatedData.bantuan_bulanan, ...formData };
+      
+      // Clear dirty state
+      this.clearDirty();
+      
+      this.showToast('Data bantuan bulanan berjaya disimpan', 'success');
+      return true;
+      
+    } catch (error) {
+      console.error('Error saving bantuan bulanan data:', error);
+      this.showToast('Ralat menyimpan data bantuan bulanan: ' + error.message, 'error');
+      return false;
+    }
+  }
+
+  validate() {
+    const form = document.querySelector(`[data-tab="${this.tabId}"]`);
+    if (!form) return false;
+
+    // Basic validation - at least one assistance should be provided
+    const assistanceFields = [
+      'bantuan_jkm', 'bantuan_zakat', 'bantuan_oku', 'bantuan_warga_emas',
+      'bantuan_baitulmal', 'bantuan_ngo', 'bantuan_kerajaan_negeri', 'bantuan_lain'
+    ];
     
-    if (editData) {
-      title.textContent = 'Edit Bantuan Bulanan';
-      form.dataset.editId = editData.id;
-      form.elements.tarikh_mula.value = editData.tarikh_mula;
-      form.elements.agensi.value = editData.agensi;
-      form.elements.kadar.value = editData.kadar;
-      form.elements.kekerapan.value = editData.kekerapan;
-      form.elements.cara_terima.value = editData.cara_terima;
-      form.elements.catatan.value = editData.catatan || '';
-    } else {
-      title.textContent = 'Tambah Bantuan Bulanan';
-      form.removeAttribute('data-edit-id');
-      form.reset();
-    }
+    const hasAnyAssistance = assistanceFields.some(fieldName => {
+      const value = form.querySelector(`[name="${fieldName}"]`)?.value;
+      return value && parseFloat(value) > 0;
+    });
     
-    modal.style.display = 'block';
-    form.elements.tarikh_mula.focus();
-  }
-
-  closeBantuanBulananModal() {
-    const modal = document.getElementById('bantuan-bulanan-modal');
-    const form = document.getElementById('bantuan-bulanan-form');
-    modal.style.display = 'none';
-    form.reset();
-    form.removeAttribute('data-edit-id');
-  }
-
-  // CRUD Methods
-  async saveBantuanBulanan(event) {
-    event.preventDefault();
-    
-    try {
-      const formData = new FormData(event.target);
-      const data = {
-        tarikh_mula: formData.get('tarikh_mula'),
-        agensi: formData.get('agensi').trim(),
-        kadar: parseFloat(formData.get('kadar')) || 0,
-        kekerapan: formData.get('kekerapan'),
-        cara_terima: formData.get('cara_terima').trim(),
-        catatan: formData.get('catatan')?.trim() || ''
-      };
-
-      // Validation
-      if (!data.tarikh_mula) {
-        this.kirProfile.showToast('Tarikh mula diperlukan', 'error');
-        return;
-      }
-      if (!data.agensi) {
-        this.kirProfile.showToast('Agensi diperlukan', 'error');
-        return;
-      }
-      if (data.kadar < 0) {
-        this.kirProfile.showToast('Kadar tidak boleh negatif', 'error');
-        return;
-      }
-      if (!data.kekerapan) {
-        this.kirProfile.showToast('Kekerapan diperlukan', 'error');
-        return;
-      }
-      if (!data.cara_terima) {
-        this.kirProfile.showToast('Cara terima diperlukan', 'error');
-        return;
-      }
-
-      const editId = event.target.dataset.editId;
-      if (editId) {
-        await this.kirProfile.kirService.updateBantuanBulanan(editId, data);
-        this.kirProfile.showToast('Bantuan bulanan berjaya dikemas kini', 'success');
-      } else {
-        await this.kirProfile.kirService.addBantuanBulanan(this.kirProfile.kirId, data);
-        this.kirProfile.showToast('Bantuan bulanan berjaya ditambah', 'success');
-      }
-      
-      this.closeBantuanBulananModal();
-      await this.loadBantuanBulananData();
-      this.refreshTable();
-      this.updateTotalBantuanBulanan();
-      
-    } catch (error) {
-      console.error('Error saving bantuan bulanan:', error);
-      const message = error.message.includes('permission') ? 
-        'Akses ditolak: sila semak peranan dan peraturan pangkalan data.' : 
-        'Ralat menyimpan data bantuan bulanan';
-      this.kirProfile.showToast(message, 'error');
-    }
-  }
-
-  async editBantuanBulanan(id) {
-    try {
-      const item = this.bantuanBulananData.find(item => item.id === id);
-      if (!item) {
-        this.kirProfile.showToast('Bantuan bulanan tidak dijumpai', 'error');
-        return;
-      }
-      
-      this.openBantuanBulananModal(item);
-      
-    } catch (error) {
-      console.error('Error editing bantuan bulanan:', error);
-      this.kirProfile.showToast('Ralat membuka borang edit', 'error');
-    }
-  }
-
-  async deleteBantuanBulanan(id) {
-    if (!confirm('Adakah anda pasti untuk memadam bantuan bulanan ini?')) {
-      return;
+    if (!hasAnyAssistance) {
+      this.showToast('Sila masukkan sekurang-kurangnya satu bantuan', 'error');
+      return false;
     }
 
-    try {
-      await this.kirProfile.kirService.deleteBantuanBulanan(id);
-      this.kirProfile.showToast('Bantuan bulanan berjaya dipadam', 'success');
-      await this.loadBantuanBulananData();
-      this.refreshTable();
-      this.updateTotalBantuanBulanan();
-      
-    } catch (error) {
-      console.error('Error deleting bantuan bulanan:', error);
-      const message = error.message.includes('permission') ? 
-        'Akses ditolak: sila semak peranan dan peraturan pangkalan data.' : 
-        'Ralat memadam data bantuan bulanan';
-      this.kirProfile.showToast(message, 'error');
-    }
-  }
-
-  // Data Management
-  async loadBantuanBulananData() {
-    try {
-      this.bantuanBulananData = await this.kirProfile.kirService.getBantuanBulananByKIR(this.kirProfile.kirId) || [];
-    } catch (error) {
-      console.error('Error loading bantuan bulanan data:', error);
-      this.bantuanBulananData = [];
-    }
-  }
-
-  refreshTable() {
-    const tableContainer = document.getElementById('bantuan-bulanan-table');
-    if (tableContainer) {
-      tableContainer.innerHTML = this.createBantuanBulananTable();
-    }
-  }
-
-  // Calculation Methods
-  calculateTotalBantuanBulanan() {
-    return this.bantuanBulananData.reduce((total, item) => {
-      return total + this.calculateMonthlyValue(item.kadar, item.kekerapan);
-    }, 0);
-  }
-
-  updateTotalBantuanBulanan() {
-    const totalElement = document.getElementById('total-bantuan-bulanan');
-    if (totalElement) {
-      const total = this.calculateTotalBantuanBulanan();
-      totalElement.textContent = this.formatCurrency(total);
-    }
-  }
-
-  calculateMonthlyValue(kadar, kekerapan) {
-    const amount = parseFloat(kadar) || 0;
-    
-    switch (kekerapan?.toLowerCase()) {
-      case 'mingguan':
-        return amount * 4.33; // Average weeks per month
-      case 'bulanan':
-        return amount;
-      case 'tahunan':
-        return amount / 12;
-      case 'sekali':
-        return 0; // One-time payment doesn't contribute to monthly
-      default:
-        return amount; // Default to monthly
-    }
-  }
-
-  // Utility Methods
-  formatCurrency(amount) {
-    const num = parseFloat(amount) || 0;
-    return `RM ${num.toLocaleString('ms-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  }
-
-  formatDate(dateString) {
-    if (!dateString) return '-';
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString('ms-MY');
-    } catch (error) {
-      return dateString;
-    }
-  }
-
-  getFrequencyBadge(kekerapan) {
-    const badges = {
-      'Mingguan': 'Mingguan',
-      'Bulanan': 'Bulanan', 
-      'Tahunan': 'Tahunan',
-      'Sekali': 'Sekali'
-    };
-    return badges[kekerapan] || kekerapan;
-  }
-
-  escapeHtml(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+    return true;
   }
 
   setupEventListeners() {
-    // Make the tab instance globally accessible for onclick handlers
-    window.bantuanBulananTab = this;
+    // Auto-calculate total when individual amounts change
+    const assistanceFields = [
+      'bantuan_jkm', 'bantuan_zakat', 'bantuan_oku', 'bantuan_warga_emas',
+      'bantuan_baitulmal', 'bantuan_ngo', 'bantuan_kerajaan_negeri', 'bantuan_lain'
+    ];
     
-    // Load initial data
-    this.loadBantuanBulananData().then(() => {
-      this.refreshTable();
-      this.updateTotalBantuanBulanan();
+    assistanceFields.forEach(fieldName => {
+      const field = document.getElementById(fieldName);
+      if (field) {
+        field.addEventListener('input', () => {
+          this.calculateAndUpdateTotal();
+        });
+      }
     });
-    
-    // Set up modal close on outside click
-    const modal = document.getElementById('bantuan-bulanan-modal');
-    if (modal) {
-      modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-          this.closeBantuanBulananModal();
-        }
+
+    // Mark as dirty when form changes
+    const form = document.querySelector(`[data-tab="${this.tabId}"]`);
+    if (form) {
+      form.addEventListener('input', () => {
+        this.markDirty();
       });
     }
   }
 
-  async save() {
-    // Bantuan Bulanan data is managed through individual CRUD operations
-    // No form-level save needed as data is already persisted
-    return {};
+  calculateAndUpdateTotal() {
+    const assistanceFields = [
+      'bantuan_jkm', 'bantuan_zakat', 'bantuan_oku', 'bantuan_warga_emas',
+      'bantuan_baitulmal', 'bantuan_ngo', 'bantuan_kerajaan_negeri', 'bantuan_lain'
+    ];
+    
+    const total = assistanceFields.reduce((sum, fieldName) => {
+      const value = parseFloat(document.getElementById(fieldName)?.value) || 0;
+      return sum + value;
+    }, 0);
+    
+    const totalField = document.getElementById('jumlah_keseluruhan_bantuan');
+    if (totalField) {
+      totalField.value = total.toFixed(2);
+    }
   }
 }
