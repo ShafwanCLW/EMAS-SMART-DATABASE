@@ -283,46 +283,93 @@ export class KIRProfile {
   createHeader() {
     const completeness = this.calculateCompleteness();
     const statusChip = this.getStatusChip(this.kirData?.status_rekod);
+    const initials = this.getInitials(this.kirData?.nama_penuh);
     
     return `
-      <div class="kir-profile-header">
-        <div class="header-top">
-          <button class="btn btn-outline" onclick="kirProfile.goBack()">
-            <i class="fas fa-arrow-left"></i> Kembali ke Senarai KIR
+      <div class="kir-profile-header-modern">
+        <div class="header-background-pattern"></div>
+        
+        <div class="header-top-modern">
+          <button class="back-btn-modern" onclick="kirProfile.goBack()">
+            <i class="fas fa-arrow-left"></i>
+            <span>Kembali ke Senarai KIR</span>
           </button>
+          
+          <div class="header-meta">
+            <span class="last-updated">
+              <i class="fas fa-clock"></i>
+              Dikemas kini: ${this.formatDate(this.kirData?.tarikh_kemas_kini)}
+            </span>
+          </div>
         </div>
         
-        <div class="header-main">
-          <div class="kir-info">
-            <div class="profile-avatar">
-              <div class="avatar-circle">
-                <i class="fas fa-user"></i>
+        <div class="header-main-modern">
+          <div class="profile-section">
+            <div class="profile-avatar-modern">
+              <div class="avatar-circle-modern">
+                <span class="avatar-initials">${initials}</span>
               </div>
+              <div class="avatar-status-indicator ${this.getStatusClass(this.kirData?.status_rekod)}"></div>
             </div>
-            <div class="profile-details">
-              <h1 class="kir-name">${this.kirData?.nama_penuh || 'Tiada Nama'}</h1>
-              <div class="kir-details">
-                <div class="detail-item">
-                  <i class="fas fa-id-card"></i>
-                  <span>No. KP: ${this.kirData?.no_kp || 'Tiada'}</span>
+            
+            <div class="profile-info">
+              <div class="name-section">
+                <h1 class="profile-name">${this.kirData?.nama_penuh || 'Tiada Nama'}</h1>
+                ${statusChip}
+              </div>
+              
+              <div class="profile-details-grid">
+                <div class="detail-card">
+                  <div class="detail-icon">
+                    <i class="fas fa-id-card"></i>
+                  </div>
+                  <div class="detail-content">
+                    <span class="detail-label">No. KP</span>
+                    <span class="detail-value">${this.kirData?.no_kp || 'Tiada'}</span>
+                  </div>
                 </div>
-                <div class="detail-item">
-                  <i class="fas fa-clock"></i>
-                  <span>Dikemas kini: ${this.formatDate(this.kirData?.tarikh_kemas_kini)}</span>
+                
+                <div class="detail-card">
+                  <div class="detail-icon">
+                    <i class="fas fa-map-marker-alt"></i>
+                  </div>
+                  <div class="detail-content">
+                    <span class="detail-label">Negeri</span>
+                    <span class="detail-value">${this.kirData?.negeri || 'Tiada'}</span>
+                  </div>
                 </div>
-                <div class="detail-item">
-                  <i class="fas fa-chart-pie"></i>
-                  <span>Kelengkapan: ${completeness}%</span>
-                  <div class="progress-bar">
-                    <div class="progress-fill" style="width: ${completeness}%"></div>
+                
+                <div class="detail-card">
+                  <div class="detail-icon">
+                    <i class="fas fa-phone"></i>
+                  </div>
+                  <div class="detail-content">
+                    <span class="detail-label">Telefon</span>
+                    <span class="detail-value">${this.kirData?.telefon_utama || 'Tiada'}</span>
                   </div>
                 </div>
               </div>
-              ${statusChip}
+              
+              <div class="completion-section">
+                <div class="completion-header">
+                  <span class="completion-label">
+                    <i class="fas fa-chart-pie"></i>
+                    Kelengkapan Profil
+                  </span>
+                  <span class="completion-percentage">${completeness}%</span>
+                </div>
+                <div class="progress-bar-modern">
+                  <div class="progress-fill-modern" style="width: ${completeness}%"></div>
+                  <div class="progress-glow" style="width: ${completeness}%"></div>
+                </div>
+                <div class="completion-description">
+                  ${this.getCompletenessDescription(completeness)}
+                </div>
+              </div>
             </div>
           </div>
           
-          <div class="header-actions">
+          <div class="header-actions-modern">
             ${this.createStatusActions()}
           </div>
         </div>
@@ -336,16 +383,39 @@ export class KIRProfile {
     let actions = [];
     
     if (currentStatus === 'Draf' || currentStatus === 'Dihantar') {
-      actions.push(`<button class="btn btn-primary" onclick="kirProfile.updateStatus('Dihantar')">Hantar</button>`);
+      actions.push(`
+        <button class="btn-modern btn-primary-modern" onclick="kirProfile.updateStatus('Dihantar')">
+          <i class="fas fa-paper-plane"></i>
+          <span>Hantar</span>
+        </button>
+      `);
     }
     
     if (currentStatus === 'Dihantar') {
-      actions.push(`<button class="btn btn-success" onclick="kirProfile.updateStatus('Disahkan')">Sahkan</button>`);
+      actions.push(`
+        <button class="btn-modern btn-success-modern" onclick="kirProfile.updateStatus('Disahkan')">
+          <i class="fas fa-check-circle"></i>
+          <span>Sahkan</span>
+        </button>
+      `);
     }
     
     if (currentStatus !== 'Tidak Aktif') {
-      actions.push(`<button class="btn btn-danger" onclick="kirProfile.updateStatus('Tidak Aktif')">Tidak Aktif</button>`);
+      actions.push(`
+        <button class="btn-modern btn-danger-modern" onclick="kirProfile.updateStatus('Tidak Aktif')">
+          <i class="fas fa-ban"></i>
+          <span>Tidak Aktif</span>
+        </button>
+      `);
     }
+    
+    // Add edit button
+    actions.unshift(`
+      <button class="btn-modern btn-outline-modern" onclick="kirProfile.enableEditMode()">
+        <i class="fas fa-edit"></i>
+        <span>Edit Profil</span>
+      </button>
+    `);
     
     return actions.join('');
   }
@@ -1685,7 +1755,40 @@ export class KIRProfile {
       'Tidak Aktif': 'status-inactive'
     }[status] || 'status-unknown';
     
-    return `<span class="status-chip ${statusClass}">${status || 'Tidak Diketahui'}</span>`;
+    return `<span class="status-chip-modern ${statusClass}">${status || 'Tidak Diketahui'}</span>`;
+  }
+
+  // Get initials from full name
+  getInitials(name) {
+    if (!name) return 'N/A';
+    return name.split(' ')
+      .map(word => word.charAt(0).toUpperCase())
+      .slice(0, 2)
+      .join('');
+  }
+
+  // Get status class for avatar indicator
+  getStatusClass(status) {
+    const statusClasses = {
+      'Draf': 'status-draft',
+      'Dihantar': 'status-pending', 
+      'Disahkan': 'status-active',
+      'Tidak Aktif': 'status-inactive'
+    };
+    return statusClasses[status] || 'status-unknown';
+  }
+
+  // Get completion description
+  getCompletenessDescription(percentage) {
+    if (percentage >= 90) {
+      return '<span class="completion-excellent"><i class="fas fa-star"></i> Profil hampir lengkap</span>';
+    } else if (percentage >= 70) {
+      return '<span class="completion-good"><i class="fas fa-thumbs-up"></i> Profil dalam keadaan baik</span>';
+    } else if (percentage >= 50) {
+      return '<span class="completion-fair"><i class="fas fa-exclamation-triangle"></i> Profil perlu dilengkapkan</span>';
+    } else {
+      return '<span class="completion-poor"><i class="fas fa-times-circle"></i> Profil tidak lengkap</span>';
+    }
   }
 
   formatDate(dateString) {

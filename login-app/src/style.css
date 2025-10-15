@@ -68,133 +68,504 @@ body.kir-profile-active #app {
   padding: 0;
 }
 
-/* Enhanced Header Design */
-.kir-profile-header {
+/* Modern KIR Profile Header Styles */
+.kir-profile-header-modern {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 16px;
-  padding: 2rem;
+  border-radius: 24px;
+  padding: 0;
   margin-bottom: 2rem;
-  box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+  box-shadow: 0 20px 40px rgba(102, 126, 234, 0.15);
   color: white;
   position: relative;
   overflow: hidden;
+  min-height: 280px;
 }
 
-.kir-profile-header::before {
-  content: '';
+.header-background-pattern {
   position: absolute;
   top: 0;
   right: 0;
-  width: 200px;
-  height: 200px;
-  background: rgba(255,255,255,0.1);
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
   border-radius: 50%;
-  transform: translate(50px, -50px);
+  transform: translate(100px, -100px);
 }
 
-.kir-profile .header-top {
-  margin-bottom: 1.5rem;
+.header-top-modern {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 2rem;
   position: relative;
   z-index: 2;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
 }
 
-.kir-profile .back-btn {
-  background: rgba(255,255,255,0.2);
+.back-btn-modern {
+  background: rgba(255,255,255,0.15);
   color: white;
-  border: 2px solid rgba(255,255,255,0.3);
+  border: 2px solid rgba(255,255,255,0.2);
   padding: 0.75rem 1.5rem;
-  border-radius: 10px;
+  border-radius: 12px;
   cursor: pointer;
   font-size: 0.9rem;
-  font-weight: 500;
+  font-weight: 600;
   transition: all 0.3s ease;
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.75rem;
+  backdrop-filter: blur(10px);
 }
 
-.kir-profile .back-btn:hover {
-  background: rgba(255,255,255,0.3);
-  border-color: rgba(255,255,255,0.5);
+.back-btn-modern:hover {
+  background: rgba(255,255,255,0.25);
+  border-color: rgba(255,255,255,0.4);
   transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
 }
 
-.kir-profile .header-main {
+.header-meta {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.last-updated {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: rgba(255,255,255,0.8);
+  background: rgba(255,255,255,0.1);
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  backdrop-filter: blur(10px);
+}
+
+.header-main-modern {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
+  padding: 2rem;
   position: relative;
   z-index: 2;
   gap: 2rem;
 }
 
-.kir-profile .kir-info {
+.profile-section {
   flex: 1;
-}
-
-.kir-profile .kir-info h1 {
-  margin: 0 0 1rem 0;
-  color: white;
-  font-size: 2.2rem;
-  font-weight: 700;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.2);
-}
-
-.kir-profile .kir-details {
   display: flex;
-  gap: 1.5rem;
-  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 2rem;
+}
+
+.profile-avatar-modern {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.avatar-circle-modern {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  display: flex;
   align-items: center;
+  justify-content: center;
+  color: #667eea;
+  font-size: 2.5rem;
+  font-weight: 700;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+  border: 4px solid rgba(255,255,255,0.2);
+  position: relative;
 }
 
-.kir-profile .kir-details span {
-  font-size: 0.95rem;
-  color: rgba(255,255,255,0.9);
-  background: rgba(255,255,255,0.1);
-  padding: 0.5rem 1rem;
-  border-radius: 20px;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255,255,255,0.2);
+.avatar-initials {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  letter-spacing: -0.02em;
 }
 
-.kir-profile .status-chip {
+.avatar-status-indicator {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 3px solid white;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.avatar-status-indicator.status-active {
+  background: #10b981;
+}
+
+.avatar-status-indicator.status-pending {
+  background: #3b82f6;
+}
+
+.avatar-status-indicator.status-draft {
+  background: #f59e0b;
+}
+
+.avatar-status-indicator.status-inactive {
+  background: #ef4444;
+}
+
+.profile-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.name-section {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.profile-name {
+  margin: 0;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: white;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  line-height: 1.2;
+}
+
+.status-chip-modern {
+  display: inline-flex;
+  align-items: center;
   padding: 0.5rem 1rem;
   border-radius: 20px;
-  font-size: 0.8rem;
+  font-size: 0.875rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   border: 2px solid;
+  backdrop-filter: blur(10px);
 }
 
-.kir-profile .status-chip.draf {
-  background: #fef3c7;
-  color: #92400e;
+.status-chip-modern.status-draft {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
   border-color: #f59e0b;
 }
 
-.kir-profile .status-chip.dihantar {
-  background: #dbeafe;
-  color: #1e40af;
+.status-chip-modern.status-pending {
+  background: rgba(59, 130, 246, 0.2);
+  color: #60a5fa;
   border-color: #3b82f6;
 }
 
-.kir-profile .status-chip.disahkan {
-  background: #d1fae5;
-  color: #065f46;
+.status-chip-modern.status-active {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
   border-color: #10b981;
 }
 
-.kir-profile .status-chip.tidak-aktif {
-  background: #fee2e2;
-  color: #991b1b;
+.status-chip-modern.status-inactive {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
   border-color: #ef4444;
 }
 
-.kir-profile .header-actions {
+.profile-details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.detail-card {
   display: flex;
+  align-items: center;
   gap: 0.75rem;
-  flex-wrap: wrap;
+  background: rgba(255,255,255,0.1);
+  padding: 1rem;
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.2);
+}
+
+.detail-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.125rem;
+}
+
+.detail-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.detail-label {
+  font-size: 0.75rem;
+  color: rgba(255,255,255,0.7);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+.detail-value {
+  font-size: 0.9rem;
+  color: white;
+  font-weight: 600;
+}
+
+.completion-section {
+  background: rgba(255,255,255,0.1);
+  padding: 1.5rem;
+  border-radius: 16px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.2);
+}
+
+.completion-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.completion-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: rgba(255,255,255,0.9);
+}
+
+.completion-percentage {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: white;
+}
+
+.progress-bar-modern {
+  position: relative;
+  width: 100%;
+  height: 12px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 0.75rem;
+}
+
+.progress-fill-modern {
+  height: 100%;
+  background: linear-gradient(90deg, #10b981 0%, #34d399 100%);
+  border-radius: 6px;
+  transition: width 0.8s ease;
+  position: relative;
+}
+
+.progress-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%);
+  border-radius: 6px;
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.completion-description {
+  font-size: 0.875rem;
+}
+
+.completion-excellent {
+  color: #34d399;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.completion-good {
+  color: #60a5fa;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.completion-fair {
+  color: #fbbf24;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.completion-poor {
+  color: #f87171;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.header-actions-modern {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: flex-end;
+}
+
+.btn-modern {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1.5rem;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 2px solid;
+  backdrop-filter: blur(10px);
+  min-width: 140px;
+  justify-content: center;
+}
+
+.btn-primary-modern {
+  background: rgba(59, 130, 246, 0.2);
+  color: #60a5fa;
+  border-color: #3b82f6;
+}
+
+.btn-primary-modern:hover {
+  background: rgba(59, 130, 246, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+}
+
+.btn-success-modern {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+  border-color: #10b981;
+}
+
+.btn-success-modern:hover {
+  background: rgba(16, 185, 129, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+}
+
+.btn-danger-modern {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+  border-color: #ef4444;
+}
+
+.btn-danger-modern:hover {
+  background: rgba(239, 68, 68, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(239, 68, 68, 0.3);
+}
+
+.btn-outline-modern {
+  background: rgba(255,255,255,0.1);
+  color: white;
+  border-color: rgba(255,255,255,0.3);
+}
+
+.btn-outline-modern:hover {
+  background: rgba(255,255,255,0.2);
+  border-color: rgba(255,255,255,0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .header-main-modern {
+    flex-direction: column;
+    gap: 2rem;
+  }
+  
+  .header-actions-modern {
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  
+  .profile-details-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .kir-profile-header-modern {
+    border-radius: 16px;
+    min-height: auto;
+  }
+  
+  .header-top-modern {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+  }
+  
+  .profile-section {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 1.5rem;
+  }
+  
+  .profile-name {
+    font-size: 2rem;
+  }
+  
+  .name-section {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  
+  .avatar-circle-modern {
+    width: 80px;
+    height: 80px;
+    font-size: 2rem;
+  }
+  
+  .btn-modern {
+    min-width: 120px;
+    padding: 0.75rem 1.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .header-main-modern,
+  .header-top-modern {
+    padding: 1.5rem;
+  }
+  
+  .profile-name {
+    font-size: 1.75rem;
+  }
+  
+  .detail-card {
+    padding: 0.75rem;
+  }
+  
+  .completion-section {
+    padding: 1rem;
+  }
 }
 
 .kir-profile .header-actions .btn {
@@ -530,12 +901,25 @@ body.kir-profile-active #app {
   border: 1px solid #ef4444;
 }
 
-/* Enhanced Form Styling for KIR Profile */
+/* Enhanced Form Styling for KIR Profile - Fixed layout shift */
 .kir-profile .form-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 1.5rem;
   margin-bottom: 2rem;
+  /* Prevent layout shift by ensuring stable initial dimensions */
+  min-height: 200px;
+  opacity: 1;
+  transition: opacity 0.2s ease-in-out;
+}
+
+/* Ensure KIR profile form grid loads with proper dimensions */
+.kir-profile .form-grid:not(.loaded) {
+  opacity: 0.9;
+}
+
+.kir-profile .form-grid.loaded {
+  opacity: 1;
 }
 
 .kir-profile .form-group {
@@ -3501,12 +3885,14 @@ body.kir-profile-active #app {
   border: 2px dashed #dee2e6;
 }
 
-/* Form Grid */
+/* Form Grid - Fixed layout shift issue */
 .form-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 1.5rem;
   margin-bottom: 2rem;
+  /* Prevent layout shift by ensuring stable initial dimensions */
+  min-height: 200px;
 }
 
 .form-group {
@@ -4349,10 +4735,16 @@ body.kir-profile-active #app {
   color: #856404;
 }
 
+/* General form-row layout shift prevention */
+.form-row {
+  min-height: 60px;
+}
+
 /* Modal Enhancements for Kesihatan */
 .modal-form .form-row {
   display: flex;
   gap: 15px;
+  min-height: 60px;
 }
 
 .modal-form .form-row .form-group {
@@ -5147,6 +5539,7 @@ body.kir-profile-active #app {
 .financial-form .form-row {
   display: flex;
   gap: 15px;
+  min-height: 60px;
 }
 
 .financial-form .form-row .form-group {
