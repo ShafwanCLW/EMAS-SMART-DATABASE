@@ -40,6 +40,10 @@ export function createAdminSidebar(user) {
           <span class="nav-icon">📅</span>
           Program & Kehadiran
         </a>
+        <a href="#" class="nav-item" data-section="program-kehadiran-newest">
+          <span class="nav-icon">??</span>
+          Program & Kehadiran (Newest)
+        </a>
         <a href="#" class="nav-item" data-section="financial-tracking">
             <span class="nav-icon">💰</span>
             Financial Tracking
@@ -1419,6 +1423,10 @@ export function createAdminMainContent() {
       </div>
     </div>
     
+    <div id="program-kehadiran-newest-content" class="content-section">
+      <!-- Content will be dynamically loaded by ProgramKehadiranNewest.js component -->
+    </div>
+
     <div id="reports-content" class="content-section">
       <div class="section-header">
         <h3 class="section-title">Laporan</h3>
@@ -3190,6 +3198,51 @@ export function setupProgramKehadiranNewListeners() {
         await initializeProgramKehadiranNew();
       }, 100);
     }
+  }
+}
+
+export function setupProgramKehadiranNewestListeners() {
+  const programNewestNav = document.querySelector('[data-section="program-kehadiran-newest"]');
+
+  const loadNewestModule = async () => {
+    try {
+      const container = document.getElementById('program-kehadiran-newest-content');
+      if (!container) {
+        console.error('Content container not found: program-kehadiran-newest-content');
+        return;
+      }
+
+      if (container.dataset.programNewestLoaded === "true" && window.programKehadiranNewest) {
+        return;
+      }
+
+      const { ProgramKehadiranNewest } = await import('./ProgramKehadiranNewest.js');
+      const programNewest = new ProgramKehadiranNewest();
+      window.programKehadiranNewest = programNewest;
+      container.innerHTML = programNewest.createContent();
+
+      try {
+        await programNewest.initialize();
+        container.dataset.programNewestLoaded = "true";
+      } catch (initError) {
+        console.error('Error initializing Program & Kehadiran (Newest):', initError);
+      }
+    } catch (error) {
+      console.error('Error loading ProgramKehadiranNewest module:', error);
+    }
+  };
+
+  if (programNewestNav) {
+    programNewestNav.addEventListener('click', () => {
+      console.log('Program & Kehadiran (Newest) nav clicked, loading module...');
+      setTimeout(loadNewestModule, 100);
+    });
+  }
+
+  const initialContainer = document.getElementById('program-kehadiran-newest-content');
+  if (initialContainer && initialContainer.classList.contains('active')) {
+    console.log('Program & Kehadiran (Newest) section is active on load, initializing...');
+    setTimeout(loadNewestModule, 100);
   }
 }
 
