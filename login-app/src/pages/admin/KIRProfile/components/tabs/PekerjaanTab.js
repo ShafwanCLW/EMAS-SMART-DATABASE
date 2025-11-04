@@ -23,6 +23,29 @@ export class PekerjaanTab extends BaseTab {
     const alamatKerja = data.alamat_kerja || '';
     const pengalamanKerja = data.pengalaman_kerja || '';
     const kemahiran = data.kemahiran || '';
+
+    // Parse pengalaman kerja list if present
+    const pengalamanList = (() => {
+      try {
+        return JSON.parse(data.pengalaman_kerja_list || '[]');
+      } catch (e) {
+        return [];
+      }
+    })();
+    const pengalamanListAttrVal = JSON.stringify(pengalamanList).replace(/"/g, '&quot;');
+    const pengalamanItemsHTML = pengalamanList.length
+      ? pengalamanList.map((item, idx) => `
+          <div class="experience-item" data-index="${idx}">
+            <div class="experience-main">
+              <strong>${item.jawatan || 'Jawatan tidak dinyatakan'}</strong>
+              <span>di ${item.majikan || 'Majikan tidak dinyatakan'}</span>
+              <span>(${item.tempoh || 'Tempoh tidak dinyatakan'})</span>
+            </div>
+            ${item.catatan ? `<div class="experience-note">${item.catatan}</div>` : ''}
+            <button type="button" class="btn btn-sm btn-danger" onclick="pekerjaanTab.removeExperience(${idx})">Buang</button>
+          </div>
+        `).join('')
+      : '<p class="empty-state">Tiada pengalaman kerja ditambah.</p>';
     
     return `
       <form class="kir-form" data-tab="pekerjaan">
@@ -38,6 +61,7 @@ export class PekerjaanTab extends BaseTab {
                 <option value="Tidak Bekerja" ${statusPekerjaan === 'Tidak Bekerja' ? 'selected' : ''}>Tidak Bekerja</option>
                 <option value="Bersara" ${statusPekerjaan === 'Bersara' ? 'selected' : ''}>Bersara</option>
                 <option value="OKU" ${statusPekerjaan === 'OKU' ? 'selected' : ''}>OKU</option>
+                <option value="Berniaga" ${statusPekerjaan === 'Berniaga' ? 'selected' : ''}>Berniaga</option>
               </select>
             </div>
             
@@ -52,7 +76,7 @@ export class PekerjaanTab extends BaseTab {
             </div>
             
             <div class="form-group" id="gaji_bulanan_group">
-              <label for="gaji_bulanan">Gaji Bulanan (RM)</label>
+              <label for="gaji_bulanan">Gaji Kasar Bulanan (RM)</label>
               <input type="number" id="gaji_bulanan" name="gaji_bulanan" value="${gajiBulanan}" step="0.01" min="0">
             </div>
             
@@ -70,6 +94,37 @@ export class PekerjaanTab extends BaseTab {
               <label for="kemahiran">Kemahiran</label>
               <textarea id="kemahiran" name="kemahiran" rows="3" placeholder="Senaraikan kemahiran yang dimiliki">${kemahiran}</textarea>
             </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h3>Pengalaman Kerja</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="exp_jawatan">Jawatan</label>
+              <input type="text" id="exp_jawatan" name="exp_jawatan" placeholder="Contoh: Jurujual">
+            </div>
+            <div class="form-group">
+              <label for="exp_majikan">Majikan</label>
+              <input type="text" id="exp_majikan" name="exp_majikan" placeholder="Contoh: Syarikat ABC">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="exp_tempoh">Tempoh</label>
+              <input type="text" id="exp_tempoh" name="exp_tempoh" placeholder="Contoh: Jan 2020 - Dis 2022">
+            </div>
+            <div class="form-group full-width">
+              <label for="exp_catatan">Catatan (Opsional)</label>
+              <textarea id="exp_catatan" name="exp_catatan" rows="2" placeholder="Penerangan ringkas mengenai tanggungjawab"></textarea>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn btn-secondary" onclick="pekerjaanTab.addExperience()">Tambah Pengalaman</button>
+            <input type="hidden" id="pengalaman_kerja_list" name="pengalaman_kerja_list" value="${pengalamanListAttrVal}">
+          </div>
+          <div id="pengalaman_list" class="experience-list">
+            ${pengalamanItemsHTML}
           </div>
         </div>
         
@@ -155,5 +210,90 @@ export class PekerjaanTab extends BaseTab {
       // Trigger initial state
       statusSelect.dispatchEvent(new Event('change'));
     }
+
+    // Expose tab instance for inline handlers
+    window.pekerjaanTab = this;
+  }
+
+  // Add experience item to the list
+  addExperience() {
+    const jawatan = document.getElementById('exp_jawatan')?.value?.trim();
+    const majikan = document.getElementById('exp_majikan')?.value?.trim();
+    const tempoh = document.getElementById('exp_tempoh')?.value?.trim();
+    const catatan = document.getElementById('exp_catatan')?.value?.trim();
+
+    if (!jawatan && !majikan && !tempoh) {
+      this.showToast('Sila isi sekurang-kurangnya Jawatan, Majikan atau Tempoh', 'error');
+      return;
+    }
+
+    const hiddenInput = document.getElementById('pengalaman_kerja_list');
+    let list = [];
+    try {
+      list = JSON.parse(hiddenInput?.value || '[]');
+    } catch (e) {
+      list = [];
+    }
+
+    list.push({ jawatan, majikan, tempoh, catatan });
+    if (hiddenInput) hiddenInput.value = JSON.stringify(list);
+
+    // Update UI list
+    const listContainer = document.getElementById('pengalaman_list');
+    if (listContainer) {
+      listContainer.innerHTML = list.map((item, idx) => `
+        <div class="experience-item" data-index="${idx}">
+          <div class="experience-main">
+            <strong>${item.jawatan || 'Jawatan tidak dinyatakan'}</strong>
+            <span>di ${item.majikan || 'Majikan tidak dinyatakan'}</span>
+            <span>(${item.tempoh || 'Tempoh tidak dinyatakan'})</span>
+          </div>
+          ${item.catatan ? `<div class=\"experience-note\">${item.catatan}</div>` : ''}
+          <button type="button" class="btn btn-sm btn-danger" onclick="pekerjaanTab.removeExperience(${idx})">Buang</button>
+        </div>
+      `).join('');
+    }
+
+    // Clear inputs
+    ['exp_jawatan','exp_majikan','exp_tempoh','exp_catatan'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = '';
+    });
+
+    this.markDirty();
+  }
+
+  // Remove experience item by index
+  removeExperience(index) {
+    const hiddenInput = document.getElementById('pengalaman_kerja_list');
+    if (!hiddenInput) return;
+    let list = [];
+    try {
+      list = JSON.parse(hiddenInput.value || '[]');
+    } catch (e) {
+      list = [];
+    }
+    if (index < 0 || index >= list.length) return;
+    list.splice(index, 1);
+    hiddenInput.value = JSON.stringify(list);
+
+    const listContainer = document.getElementById('pengalaman_list');
+    if (listContainer) {
+      listContainer.innerHTML = list.length
+        ? list.map((item, idx) => `
+            <div class="experience-item" data-index="${idx}">
+              <div class="experience-main">
+                <strong>${item.jawatan || 'Jawatan tidak dinyatakan'}</strong>
+                <span>di ${item.majikan || 'Majikan tidak dinyatakan'}</span>
+                <span>(${item.tempoh || 'Tempoh tidak dinyatakan'})</span>
+              </div>
+              ${item.catatan ? `<div class=\"experience-note\">${item.catatan}</div>` : ''}
+              <button type="button" class="btn btn-sm btn-danger" onclick="pekerjaanTab.removeExperience(${idx})">Buang</button>
+            </div>
+          `).join('')
+        : '<p class="empty-state">Tiada pengalaman kerja ditambah.</p>';
+    }
+
+    this.markDirty();
   }
 }
