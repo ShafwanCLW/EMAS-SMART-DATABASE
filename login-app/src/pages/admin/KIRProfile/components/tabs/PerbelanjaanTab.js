@@ -8,6 +8,7 @@ export class PerbelanjaanTab extends BaseTab {
 
   render() {
     const data = this.data || {};
+    const jenisKenderaan = data.jenis_kenderaan || (data.ansuran_kenderaan ? 'Kereta Sendiri' : 'Tiada');
     
     return `
       <form class="kir-form" data-tab="perbelanjaan">
@@ -31,8 +32,16 @@ export class PerbelanjaanTab extends BaseTab {
               <label for="sewa_rumah">Sewa Rumah (RM)</label>
               <input type="number" id="sewa_rumah" name="sewa_rumah" value="${data.sewa_rumah || ''}" step="0.01" min="0" placeholder="0.00">
             </div>
-            
             <div class="form-group">
+              <label for="jenis_kenderaan">Jenis Kenderaan</label>
+              <select id="jenis_kenderaan" name="jenis_kenderaan">
+                <option value="Kereta Sendiri" ${jenisKenderaan === 'Kereta Sendiri' ? 'selected' : ''}>Kereta Sendiri</option>
+                <option value="Moto" ${jenisKenderaan === 'Moto' ? 'selected' : ''}>Moto</option>
+                <option value="Tiada" ${jenisKenderaan === 'Tiada' ? 'selected' : ''}>Tiada</option>
+              </select>
+            </div>
+            
+            <div class="form-group kenderaan-ansuran-group" style="${jenisKenderaan === 'Tiada' ? 'display:none;' : ''}">
               <label for="ansuran_kenderaan">Ansuran Kenderaan (RM)</label>
               <input type="number" id="ansuran_kenderaan" name="ansuran_kenderaan" value="${data.ansuran_kenderaan || ''}" step="0.01" min="0" placeholder="0.00">
             </div>
@@ -68,7 +77,7 @@ export class PerbelanjaanTab extends BaseTab {
           </div>
           
           <div class="form-group">
-            <label for="catatan_perbelanjaan">Catatan Tambahan (Opsional)</label>
+            <label for="catatan_perbelanjaan">Catatan Tambahan (Sekiranya ada)</label>
             <textarea id="catatan_perbelanjaan" name="catatan_perbelanjaan" rows="3" placeholder="Sebarang maklumat tambahan mengenai perbelanjaan">${data.catatan_perbelanjaan || ''}</textarea>
           </div>
         </div>
@@ -89,12 +98,17 @@ export class PerbelanjaanTab extends BaseTab {
 
     try {
       const formData = this.getFormData();
+      const jenisKenderaan = formData.jenis_kenderaan || 'Tiada';
+      formData.jenis_kenderaan = jenisKenderaan;
+      if (jenisKenderaan === 'Tiada') {
+        formData.ansuran_kenderaan = '';
+      }
       
       // Calculate total expenses automatically
       const utiliti_air = parseFloat(formData.utiliti_air) || 0;
       const utiliti_elektrik = parseFloat(formData.utiliti_elektrik) || 0;
       const sewa_rumah = parseFloat(formData.sewa_rumah) || 0;
-      const ansuran_kenderaan = parseFloat(formData.ansuran_kenderaan) || 0;
+      const ansuran_kenderaan = jenisKenderaan === 'Tiada' ? 0 : (parseFloat(formData.ansuran_kenderaan) || 0);
       const makanan = parseFloat(formData.makanan) || 0;
       const sekolah_anak = parseFloat(formData.sekolah_anak) || 0;
       const rawatan_kesihatan = parseFloat(formData.rawatan_kesihatan) || 0;
@@ -171,6 +185,25 @@ export class PerbelanjaanTab extends BaseTab {
       form.addEventListener('input', () => {
         this.markDirty();
       });
+    }
+
+    const jenisSelect = document.getElementById('jenis_kenderaan');
+    const ansuranGroup = document.querySelector('.kenderaan-ansuran-group');
+    const ansuranInput = document.getElementById('ansuran_kenderaan');
+    if (jenisSelect && ansuranGroup) {
+      const toggleAnsuranVisibility = () => {
+        const isNone = jenisSelect.value === 'Tiada';
+        ansuranGroup.style.display = isNone ? 'none' : '';
+        if (isNone && ansuranInput) {
+          ansuranInput.value = '';
+          this.calculateAndUpdateTotal();
+        }
+      };
+      jenisSelect.addEventListener('change', () => {
+        toggleAnsuranVisibility();
+        this.markDirty();
+      });
+      toggleAnsuranVisibility();
     }
   }
 
