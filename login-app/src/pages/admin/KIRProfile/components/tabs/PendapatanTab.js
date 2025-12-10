@@ -28,7 +28,7 @@ export class PendapatanTab extends BaseTab {
           
           <div class="form-row">
             <div class="form-group">
-              <label for="pendapatan_sampingan">Sumber Pendapatan Sampingan (Opsional)</label>
+              <label for="pendapatan_sampingan">Sumber Pendapatan Sampingan (Sekiranya ada)</label>
               <input type="text" id="pendapatan_sampingan" name="pendapatan_sampingan" value="${data.pendapatan_sampingan || ''}" placeholder="Contoh: Kerja sambilan, Komisyen">
             </div>
             
@@ -40,7 +40,7 @@ export class PendapatanTab extends BaseTab {
           
           <div class="form-row">
             <div class="form-group">
-              <label for="pendapatan_lain">Sumber Pendapatan Lain (Opsional)</label>
+              <label for="pendapatan_lain">Sumber Pendapatan Lain (Sekiranya ada)</label>
               <input type="text" id="pendapatan_lain" name="pendapatan_lain" value="${data.pendapatan_lain || ''}" placeholder="Contoh: Dividen, Sewa">
             </div>
             
@@ -56,7 +56,7 @@ export class PendapatanTab extends BaseTab {
           </div>
           
           <div class="form-group">
-            <label for="catatan_pendapatan">Catatan Tambahan (Opsional)</label>
+            <label for="catatan_pendapatan">Catatan Tambahan (Sekiranya ada)</label>
             <textarea id="catatan_pendapatan" name="catatan_pendapatan" rows="3" placeholder="Sebarang maklumat tambahan mengenai pendapatan">${data.catatan_pendapatan || ''}</textarea>
           </div>
         </div>
