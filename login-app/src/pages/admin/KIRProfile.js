@@ -1880,10 +1880,10 @@ export class KIRProfile {
         this.markTabDirty(tabId);
       }
       
-      // Track AIR drawer form changes
-      if (e.target.closest('.air-form')) {
-        const form = e.target.closest('.air-form');
-        const tabId = form.dataset.drawerTab;
+      // Track AIR drawer form changes (only for drawer forms that have data-drawer-tab)
+      const airForm = e.target.closest('.air-form');
+      if (airForm && airForm.dataset.drawerTab) {
+        const tabId = airForm.dataset.drawerTab;
         this.drawerDirtyTabs.add(tabId);
         this.render();
       }

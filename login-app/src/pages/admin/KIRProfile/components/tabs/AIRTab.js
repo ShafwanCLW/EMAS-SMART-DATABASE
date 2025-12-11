@@ -1,4 +1,5 @@
 import { BaseTab } from '../shared/BaseTab.js';
+import { DokumenService } from '../../../../../services/backend/DokumenService.js';
 
 export class AIRTab extends BaseTab {
   constructor(kirProfile) {
@@ -6,17 +7,40 @@ export class AIRTab extends BaseTab {
     this.tabId = 'air';
     this.airData = [];
     this.currentEditingId = null;
+    this.isFormVisible = false;
+    this.isSavingAIR = false;
+    this.formMode = 'create';
+    this.currentSijilLahir = null;
+    this.pendingSijilRemoval = false;
   }
 
   render() {
     return `
       <div class="air-tab">
         <div class="tab-header">
-          <h3>Ahli Isi Rumah (AIR)</h3>
-          <p class="tab-subtitle">Maklumat ahli isi rumah yang tinggal bersama</p>
+          <div>
+            <h3>Ahli Isi Rumah (AIR)</h3>
+            <p class="tab-subtitle">Maklumat ahli isi rumah yang tinggal bersama</p>
+          </div>
+          <div class="tab-actions">
+            <button type="button" class="btn btn-primary show-air-form-btn"
+              style="${this.isFormVisible ? 'display:none;' : ''}"
+              onclick="airTab.handleAddAIR()">
+              <i class="fas fa-plus"></i> Tambah Ahli Isi Rumah
+            </button>
+          </div>
         </div>
         
-        <div class="form-container">
+        <div class="form-container air-form-container" style="${this.isFormVisible ? '' : 'display:none;'}">
+          <div class="air-form-header">
+            <div>
+              <h4>${this.formMode === 'edit' ? 'Kemaskini Ahli Isi Rumah' : 'Tambah Ahli Isi Rumah'}</h4>
+              <p>${this.formMode === 'edit' ? 'Semak dan kemaskini maklumat ahli isi rumah yang dipilih.' : 'Lengkapkan borang ini untuk menambah ahli isi rumah baharu.'}</p>
+            </div>
+            <button type="button" class="btn btn-light" onclick="airTab.cancelForm()">
+              <i class="fas fa-arrow-left"></i> Kembali ke Senarai
+            </button>
+          </div>
           <form class="air-form" id="airForm">
             <!-- Maklumat Asas Section -->
             <div class="form-section">
@@ -31,8 +55,9 @@ export class AIRTab extends BaseTab {
                   <input type="text" id="no_kp" name="no_kp" placeholder="123456-12-1234">
                 </div>
                 <div class="form-group">
-                  <label for="sijil_lahir">Sijil Lahir</label>
-                  <input type="text" id="sijil_lahir" name="sijil_lahir">
+                  <label for="sijil_lahir">Sijil Lahir (PDF/JPG/PNG)</label>
+                  <input type="file" id="sijil_lahir" name="sijil_lahir" accept=".pdf,image/*">
+                  <div class="sijil-lahir-preview"></div>
                 </div>
                 <div class="form-group">
                   <label for="tarikh_lahir">Tarikh Lahir</label>
@@ -171,15 +196,18 @@ export class AIRTab extends BaseTab {
             </div>
 
             <div class="form-actions">
-              <button type="button" class="btn btn-secondary" onclick="airTab.resetForm()">Reset</button>
+              <button type="button" class="btn btn-secondary" onclick="airTab.cancelForm()">Batal</button>
               <button type="submit" class="btn btn-primary">Simpan AIR</button>
             </div>
           </form>
         </div>
 
         <!-- AIR List Section -->
-        <div class="air-list-section">
-          <h4>Senarai Ahli Isi Rumah</h4>
+        <div class="air-list-section" style="${this.isFormVisible ? 'display:none;' : ''}">
+          <div class="list-header">
+            <h4>Senarai Ahli Isi Rumah</h4>
+            <p class="tab-subtitle">Klik Edit untuk melihat butiran penuh atau Padam untuk keluarkan ahli daripada senarai.</p>
+          </div>
           <div class="air-list" id="airList">
             ${this.createAIRList()}
           </div>
@@ -200,12 +228,89 @@ export class AIRTab extends BaseTab {
       `;
     }
 
-    return `
-      <div class="air-cards">
-        ${this.airData.map(air => this.createAIRCard(air)).join('')}
-      </div>
-    `;
+    return this.createAIRTable();
   }
+
+  formatDateForInput(value) {
+    if (!value) return '';
+    const date = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(date.getTime())) return '';
+    return date.toISOString().split('T')[0];
+  }
+
+  populateForm(data = {}) {
+    const form = document.getElementById('airForm');
+    if (!form) return;
+
+    const setValue = (name, value) => {
+      const input = form.querySelector(`[name="${name}"]`);
+      if (input) {
+        input.value = value ?? '';
+      }
+    };
+
+    setValue('nama', data.nama || '');
+    setValue('no_kp', this.formatICForInput(data.no_kp || ''));
+    const sijilInput = form.querySelector('#sijil_lahir');
+    if (sijilInput) {
+      sijilInput.value = '';
+    }
+    setValue('tarikh_lahir', this.formatDateForInput(data.tarikh_lahir));
+    const ageInput = form.querySelector('[name="umur"]');
+    if (ageInput) {
+      ageInput.value = data.tarikh_lahir ? this.calculateAge(data.tarikh_lahir) : '';
+    }
+    setValue('hubungan', data.hubungan || '');
+
+    setValue('tahap_semasa', data.tahap_semasa || '');
+    setValue('sekolah_ipt', data.sekolah_ipt || '');
+    setValue('keputusan', data.keputusan || '');
+    setValue('sekolah_kafa', data.sekolah_kafa || '');
+    setValue('keputusan_kafa', data.keputusan_kafa || '');
+    setValue('keperluan_sokongan', data.keperluan_sokongan || '');
+
+    setValue('status', data.status || '');
+    setValue('jenis_pekerjaan', data.jenis_pekerjaan || '');
+    setValue('pendapatan_bulanan', data.pendapatan_bulanan ?? '');
+    setValue('nama_majikan', data.nama_majikan || '');
+    setValue('alamat_majikan', data.alamat_majikan || '');
+
+    setValue('status_oku', data.status_oku || '');
+    setValue('jenis_kecacatan', data.jenis_kecacatan || '');
+
+    const smokingSelect = form.querySelector('[name="status_merokok"]');
+    if (smokingSelect) {
+      smokingSelect.value = data.status_merokok || '';
+    }
+    setValue('bilangan_batang', data.bilangan_batang ?? '');
+    setValue('penyakit_kronik', data.penyakit_kronik || '');
+
+    if (data.sijil_lahir_url) {
+      this.currentSijilLahir = {
+        url: data.sijil_lahir_url,
+        name: data.sijil_lahir_name || this.extractFileName(data.sijil_lahir_url),
+        docId: data.sijil_lahir_doc_id || null
+      };
+    } else if (data.sijil_lahir) {
+      this.currentSijilLahir = {
+        url: data.sijil_lahir,
+        name: this.extractFileName(data.sijil_lahir),
+        docId: data.sijil_lahir_doc_id || null
+      };
+    } else {
+      this.currentSijilLahir = null;
+    }
+    this.pendingSijilRemoval = false;
+    this.updateSijilPreview();
+
+    this.toggleSmokingFields(data.status_merokok || '');
+
+    const submitBtn = form.querySelector('button[type="submit"]');
+    if (submitBtn) {
+      submitBtn.textContent = data.id ? 'Kemaskini AIR' : 'Simpan AIR';
+    }
+  }
+
 
   createAIRContent() {
     if (!this.airData || this.airData.length === 0) {
@@ -255,7 +360,7 @@ export class AIRTab extends BaseTab {
           <div class="air-details">
             <div class="detail-item">
               <span class="label">No. KP:</span>
-              <span class="value">${air.no_kp || 'Tiada'}</span>
+              <span class="value">${this.formatICForInput(air.no_kp) || 'Tiada'}</span>
             </div>
             <div class="detail-item">
               <span class="label">Umur:</span>
@@ -282,7 +387,6 @@ export class AIRTab extends BaseTab {
   createAIRTable() {
     return `
       <div class="air-table-container">
-        <h4>Senarai Ahli Isi Rumah</h4>
         <div class="table-responsive">
           <table class="air-table">
             <thead>
@@ -301,17 +405,17 @@ export class AIRTab extends BaseTab {
                 <tr>
                   <td>${this.escapeHtml(air.nama)}</td>
                   <td>${this.escapeHtml(air.hubungan)}</td>
-                  <td>${air.no_kp || '-'}</td>
+                  <td>${this.formatICForInput(air.no_kp) || '-'}</td>
                   <td>${this.calculateAge(air.tarikh_lahir)} tahun</td>
                   <td>${air.tahap_semasa || '-'}</td>
                   <td>${air.status || '-'}</td>
                   <td>
                     <div class="action-menu">
-                      <button class="action-menu-btn" title="Edit AIR" onclick="airTab.editAIR('${air.id}')">
-                        <i class="fas fa-edit"></i>
+                      <button type="button" class="btn btn-sm btn-outline action-btn" title="Edit AIR" onclick="airTab.editAIR('${air.id}')">
+                        <i class="fas fa-edit"></i> Edit
                       </button>
-                      <button class="action-menu-btn" title="Padam AIR" onclick="airTab.deleteAIR('${air.id}')">
-                        <i class="fas fa-trash"></i>
+                      <button type="button" class="btn btn-sm btn-danger action-btn" title="Padam AIR" onclick="airTab.deleteAIR('${air.id}')">
+                        <i class="fas fa-trash"></i> Padam
                       </button>
                     </div>
                   </td>
@@ -324,7 +428,161 @@ export class AIRTab extends BaseTab {
     `;
   }
 
-  // AIR Drawer Methods
+  handleAddAIR() {
+    this.currentEditingId = null;
+    this.resetForm();
+    this.isFormVisible = true;
+    this.updateFormVisibility(true);
+    this.populateForm();
+  }
+
+  cancelForm() {
+    this.resetForm();
+    this.isFormVisible = false;
+    this.currentEditingId = null;
+    this.updateFormVisibility();
+  }
+
+  resetForm() {
+    const form = document.getElementById('airForm');
+    if (form) {
+      form.reset();
+      this.currentEditingId = null;
+      const submitBtn = form.querySelector('button[type="submit"]');
+      if (submitBtn) {
+        submitBtn.textContent = 'Simpan AIR';
+      }
+      this.toggleSmokingFields('');
+    }
+    this.formMode = 'create';
+    this.updateFormHeader();
+    this.currentSijilLahir = null;
+    this.pendingSijilRemoval = false;
+    const sijilInput = document.getElementById('sijil_lahir');
+    if (sijilInput) {
+      sijilInput.value = '';
+    }
+    this.updateSijilPreview();
+  }
+
+  updateFormVisibility(scrollToForm = false) {
+    const formContainer = document.querySelector('.air-form-container');
+    if (formContainer) {
+      formContainer.style.display = this.isFormVisible ? '' : 'none';
+      if (scrollToForm && this.isFormVisible) {
+        const form = formContainer.querySelector('#airForm');
+        if (form) {
+          form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          const focusTarget = form.querySelector('input:not([readonly]), select, textarea');
+          if (focusTarget) focusTarget.focus();
+        }
+      }
+    }
+    const toggleBtn = document.querySelector('.show-air-form-btn');
+    if (toggleBtn) {
+      toggleBtn.style.display = this.isFormVisible ? 'none' : '';
+    }
+    const listSection = document.querySelector('.air-list-section');
+    if (listSection) {
+      listSection.style.display = this.isFormVisible ? 'none' : '';
+    }
+  }
+
+  updateFormHeader() {
+    const header = document.querySelector('.air-form-header');
+    if (!header) return;
+
+    const title = header.querySelector('h4');
+    const subtitle = header.querySelector('p');
+
+    if (title) {
+      title.textContent = this.formMode === 'edit'
+        ? 'Kemaskini Ahli Isi Rumah'
+        : 'Tambah Ahli Isi Rumah';
+    }
+
+    if (subtitle) {
+      subtitle.textContent = this.formMode === 'edit'
+        ? 'Semak dan kemaskini maklumat ahli isi rumah yang dipilih.'
+        : 'Lengkapkan borang ini untuk menambah ahli isi rumah baharu.';
+    }
+  }
+
+  updateSijilPreview(selectedFile = null) {
+    const preview = document.querySelector('.sijil-lahir-preview');
+    if (!preview) return;
+
+    if (selectedFile) {
+      preview.innerHTML = `
+        <div class="file-status success">
+          <i class="fas fa-file-upload"></i>
+          <span>Fail dipilih: ${this.escapeHtml(selectedFile.name)}</span>
+        </div>
+      `;
+      return;
+    }
+
+    if (this.pendingSijilRemoval && this.currentSijilLahir) {
+      preview.innerHTML = `
+        <div class="file-status warning">
+          <i class="fas fa-exclamation-triangle"></i>
+          <span>Dokumen semasa akan dipadam selepas anda menyimpan.</span>
+        </div>
+      `;
+      return;
+    }
+
+    if (this.currentSijilLahir?.url) {
+      const name = this.escapeHtml(this.currentSijilLahir.name || 'Sijil Lahir');
+      preview.innerHTML = `
+        <div class="file-status existing">
+          <a href="${this.currentSijilLahir.url}" target="_blank" rel="noopener" class="file-link">
+            <i class="fas fa-file"></i> ${name}
+          </a>
+          <button type="button" class="btn btn-sm btn-light" style="margin-left:0.5rem;" onclick="airTab.clearExistingSijilLahir()">
+            Padam Dokumen
+          </button>
+        </div>
+      `;
+      return;
+    }
+
+    preview.innerHTML = '<small class="text-muted">Tiada fail dimuat naik.</small>';
+  }
+
+  clearExistingSijilLahir() {
+    this.pendingSijilRemoval = true;
+    const fileInput = document.getElementById('sijil_lahir');
+    if (fileInput) {
+      fileInput.value = '';
+    }
+    this.updateSijilPreview();
+  }
+
+  extractFileName(path = '') {
+    if (!path) return 'Sijil Lahir';
+    try {
+      const url = new URL(path);
+      path = url.pathname;
+    } catch (err) {
+      // not a URL, use as-is
+    }
+    const segments = path.split('/');
+    return segments.pop() || 'Sijil Lahir';
+  }
+
+  async deleteExistingSijilDocument() {
+    if (this.currentSijilLahir?.docId) {
+      try {
+        await DokumenService.deleteDokumen(this.currentSijilLahir.docId);
+      } catch (error) {
+        console.warn('Gagal memadam dokumen sijil lahir sedia ada:', error);
+      }
+    }
+    this.currentSijilLahir = null;
+  }
+
+  // AIR Drawer Methods (legacy)
   createAIRDrawer() {
     return `
       <div class="air-drawer ${this.isDrawerOpen ? 'open' : ''}" id="airDrawer">
@@ -746,6 +1004,15 @@ export class AIRTab extends BaseTab {
         delete data[key];
       }
     });
+
+    if (data.no_kp) {
+      const normalizedIC = this.normalizeICValue(data.no_kp);
+      if (normalizedIC) {
+        data.no_kp = normalizedIC;
+      } else {
+        delete data.no_kp;
+      }
+    }
     
     try {
       this.showDrawerSaveLoading(tabId);
@@ -816,61 +1083,17 @@ export class AIRTab extends BaseTab {
     }
   }
 
-  // Form handling methods
-  resetForm() {
-    const form = document.getElementById('airForm');
-    if (form) {
-      form.reset();
-      this.currentEditingId = null;
-      
-      // Update form button text
-      const submitBtn = form.querySelector('button[type="submit"]');
-      if (submitBtn) {
-        submitBtn.textContent = 'Simpan AIR';
-      }
-      
-      // Hide smoking fields
-      this.toggleSmokingFields('');
-    }
-  }
-
   editAIR(airId) {
     const air = this.airData.find(a => a.id === airId);
     if (!air) return;
     
+    this.resetForm();
+    this.formMode = 'edit';
     this.currentEditingId = airId;
-    
-    // Populate form with AIR data
-    const form = document.getElementById('airForm');
-    if (form) {
-      Object.keys(air).forEach(key => {
-        const input = form.querySelector(`[name="${key}"]`);
-        if (input) {
-          input.value = air[key] || '';
-        }
-      });
-      
-      // Calculate and set age
-      if (air.tarikh_lahir) {
-        const age = this.calculateAge(air.tarikh_lahir);
-        const ageInput = form.querySelector('[name="umur"]');
-        if (ageInput) {
-          ageInput.value = age;
-        }
-      }
-      
-      // Update form button text
-      const submitBtn = form.querySelector('button[type="submit"]');
-      if (submitBtn) {
-        submitBtn.textContent = 'Kemaskini AIR';
-      }
-      
-      // Handle smoking fields visibility
-      this.toggleSmokingFields(air.status_merokok || '');
-      
-      // Scroll to form
-      form.scrollIntoView({ behavior: 'smooth' });
-    }
+    this.isFormVisible = true;
+    this.updateFormHeader();
+    this.updateFormVisibility(true);
+    this.populateForm(air);
   }
 
   async deleteAIR(airId) {
@@ -892,22 +1115,67 @@ export class AIRTab extends BaseTab {
     }
   }
 
-  async saveAIR(formData) {
+  async saveAIR(formData, sijilLahirFile = null) {
     // Validate that KIR ID is available
     if (!this.kirProfile.kirId) {
       console.error('Cannot save AIR: KIR ID is not available');
       this.kirProfile.showToast('Ralat: ID KIR tidak tersedia. Sila muat semula halaman.', 'error');
       return;
     }
+
+    if (this.isSavingAIR) {
+      return;
+    }
+    this.isSavingAIR = true;
+    const payload = { ...formData };
+    delete payload.sijil_lahir;
     
     try {
+      if (sijilLahirFile && sijilLahirFile.name) {
+        await this.deleteExistingSijilDocument();
+        const uploaded = await DokumenService.uploadDokumen(
+          this.kirProfile.kirId,
+          sijilLahirFile,
+          'Sijil Lahir'
+        );
+        payload.sijil_lahir_url = uploaded.url;
+        payload.sijil_lahir_name = uploaded.name || sijilLahirFile.name;
+        payload.sijil_lahir_doc_id = uploaded.id;
+        this.pendingSijilRemoval = false;
+        this.currentSijilLahir = {
+          url: uploaded.url,
+          name: uploaded.name || sijilLahirFile.name,
+          docId: uploaded.id
+        };
+      } else if (this.pendingSijilRemoval) {
+        await this.deleteExistingSijilDocument();
+        payload.sijil_lahir_url = null;
+        payload.sijil_lahir_name = null;
+        payload.sijil_lahir_doc_id = null;
+        this.pendingSijilRemoval = false;
+      } else if (this.currentSijilLahir?.url) {
+        payload.sijil_lahir_url = this.currentSijilLahir.url;
+        if (this.currentSijilLahir.name) {
+          payload.sijil_lahir_name = this.currentSijilLahir.name;
+        }
+        if (this.currentSijilLahir.docId) {
+          payload.sijil_lahir_doc_id = this.currentSijilLahir.docId;
+        }
+      }
+
+      ['sijil_lahir_url', 'sijil_lahir_name', 'sijil_lahir_doc_id'].forEach(field => {
+        if (payload[field] === undefined) {
+          delete payload[field];
+        }
+      });
+
       if (this.currentEditingId) {
         // Update existing AIR
-        await this.kirProfile.airService.updateAIR(this.currentEditingId, formData);
+        await this.kirProfile.airService.updateAIR(this.currentEditingId, payload);
         this.kirProfile.showToast('AIR berjaya dikemaskini', 'success');
       } else {
         // Create new AIR
-        await this.kirProfile.airService.createAIR(this.kirProfile.kirId, formData);
+        await this.kirProfile.airService.createAIR(this.kirProfile.kirId, payload);
         this.kirProfile.showToast('AIR berjaya ditambah', 'success');
       }
       
@@ -915,10 +1183,15 @@ export class AIRTab extends BaseTab {
       await this.loadAIRData();
       this.refreshAIRList();
       this.resetForm();
+      this.isFormVisible = false;
+      this.currentEditingId = null;
+      this.updateFormVisibility();
       
     } catch (error) {
       console.error('Error saving AIR:', error);
       this.kirProfile.showToast('Ralat menyimpan AIR: ' + error.message, 'error');
+    } finally {
+      this.isSavingAIR = false;
     }
   }
 
@@ -975,14 +1248,79 @@ export class AIRTab extends BaseTab {
     return div.innerHTML;
   }
 
-  setupEventListeners() {
+  normalizeICValue(value = '') {
+    return (value || '')
+      .toString()
+      .replace(/\D/g, '')
+      .slice(0, 12);
+  }
+
+  formatICForInput(value = '') {
+    const digits = this.normalizeICValue(value);
+    if (!digits) return '';
+
+    const part1 = digits.slice(0, 6);
+    const part2 = digits.slice(6, 8);
+    const part3 = digits.slice(8, 12);
+    const segments = [];
+
+    if (part1) segments.push(part1);
+    if (part2) segments.push(part2);
+    if (part3) segments.push(part3);
+
+    return segments.join('-');
+  }
+
+  getICCursorPosition(digitCount, formattedValue) {
+    if (digitCount <= 0) return 0;
+
+    let digitsSeen = 0;
+    for (let i = 0; i < formattedValue.length; i++) {
+      if (/\d/.test(formattedValue[i])) {
+        digitsSeen++;
+        if (digitsSeen === digitCount) {
+          return i + 1;
+        }
+      }
+    }
+
+    return formattedValue.length;
+  }
+
+  attachICInputMask(input) {
+    if (!input) return;
+
+    input.setAttribute('maxlength', '14');
+
+    const formatAndMaintainCursor = (event) => {
+      const rawValue = event.target.value || '';
+      const selectionStart = event.target.selectionStart || rawValue.length;
+      const digitsBeforeCursor = this.normalizeICValue(rawValue.slice(0, selectionStart)).length;
+      const formattedValue = this.formatICForInput(rawValue);
+      event.target.value = formattedValue;
+
+      const cursorPosition = this.getICCursorPosition(digitsBeforeCursor, formattedValue);
+      window.requestAnimationFrame(() => {
+        event.target.setSelectionRange(cursorPosition, cursorPosition);
+      });
+    };
+
+    input.addEventListener('input', formatAndMaintainCursor);
+    input.addEventListener('blur', () => {
+      input.value = this.formatICForInput(input.value);
+    });
+  }
+
+  setupEventListeners(bindOnly = false) {
     // Make the tab instance globally accessible for onclick handlers
     window.airTab = this;
     
     // Load initial data
-    this.loadAIRData().then(() => {
-      this.refreshAIRList();
-    });
+    if (!bindOnly) {
+      this.loadAIRData().then(() => {
+        this.refreshAIRList();
+      });
+    }
     
     // Set up form submission
     const form = document.getElementById('airForm');
@@ -1000,7 +1338,19 @@ export class AIRTab extends BaseTab {
           }
         });
         
-        await this.saveAIR(data);
+        if (data.no_kp) {
+          const normalizedIC = this.normalizeICValue(data.no_kp);
+          if (normalizedIC) {
+            data.no_kp = normalizedIC;
+          } else {
+            delete data.no_kp;
+          }
+        }
+
+        const sijilInput = form.querySelector('#sijil_lahir');
+        const sijilFile = sijilInput && sijilInput.files ? sijilInput.files[0] || null : null;
+        
+        await this.saveAIR(data, sijilFile);
       });
       
       // Set up birth date change listener for age calculation
@@ -1020,6 +1370,24 @@ export class AIRTab extends BaseTab {
       if (smokingSelect) {
         smokingSelect.addEventListener('change', (e) => {
           this.toggleSmokingFields(e.target.value);
+        });
+      }
+
+      const noKpInput = form.querySelector('#no_kp');
+      if (noKpInput) {
+        this.attachICInputMask(noKpInput);
+      }
+
+      const sijilInput = form.querySelector('#sijil_lahir');
+      if (sijilInput) {
+        sijilInput.addEventListener('change', (e) => {
+          const file = e.target.files && e.target.files[0] ? e.target.files[0] : null;
+          if (file) {
+            this.pendingSijilRemoval = false;
+            this.updateSijilPreview(file);
+          } else {
+            this.updateSijilPreview();
+          }
         });
       }
     }
