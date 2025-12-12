@@ -130,15 +130,31 @@ export class FinancialTrackingNewest {
                     <option value="other">Other</option>
                   </select>
                 </div>
-                <div class="form-group">
-                  <label for="ftn-newest-income-reference" class="form-label">Reference Number</label>
-                  <input type="text" id="ftn-newest-income-reference" name="reference" class="form-input" placeholder="Invoice or receipt number">
-                </div>
-              </div>
-
               <div class="form-group">
-                <label for="ftn-newest-income-description" class="form-label">Description</label>
-                <textarea id="ftn-newest-income-description" name="description" class="form-textarea" rows="3" placeholder="Additional notes about this income"></textarea>
+                <label for="ftn-newest-income-reference" class="form-label">Reference Number</label>
+                <input type="text" id="ftn-newest-income-reference" name="reference" class="form-input" placeholder="Invoice or receipt number">
+              </div>
+              <div class="form-group">
+                <label for="ftn-newest-income-project-title" class="form-label">Project Title</label>
+                <input type="text" id="ftn-newest-income-project-title" name="projectTitle" class="form-input" placeholder="Name of project">
+              </div>
+              <div class="form-group">
+                <label for="ftn-newest-income-project-account" class="form-label">Project Account Number</label>
+                <input type="text" id="ftn-newest-income-project-account" name="projectAccountNumber" class="form-input" placeholder="Account number">
+              </div>
+              <div class="form-group">
+                <label for="ftn-newest-income-duration" class="form-label">Duration</label>
+                <input type="text" id="ftn-newest-income-duration" name="duration" class="form-input" placeholder="e.g. Jan - Mar 2026">
+              </div>
+              <div class="form-group">
+                <label for="ftn-newest-income-concept" class="form-label">Project Concept</label>
+                <input type="text" id="ftn-newest-income-concept" name="projectConcept" class="form-input" placeholder="Brief concept">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="ftn-newest-income-description" class="form-label">Description</label>
+              <textarea id="ftn-newest-income-description" name="description" class="form-textarea" rows="3" placeholder="Additional notes about this income"></textarea>
               </div>
 
               <div class="form-actions">
@@ -208,11 +224,27 @@ export class FinancialTrackingNewest {
                     <option value="other">Other</option>
                   </select>
                 </div>
-                <div class="form-group">
-                  <label for="ftn-newest-expense-reference" class="form-label">Reference Number</label>
-                  <input type="text" id="ftn-newest-expense-reference" name="reference" class="form-input" placeholder="Invoice or receipt number">
-                </div>
+              <div class="form-group">
+                <label for="ftn-newest-expense-reference" class="form-label">Reference Number</label>
+                <input type="text" id="ftn-newest-expense-reference" name="reference" class="form-input" placeholder="Invoice or receipt number">
               </div>
+              <div class="form-group">
+                <label for="ftn-newest-expense-project-title" class="form-label">Project Title</label>
+                <input type="text" id="ftn-newest-expense-project-title" name="projectTitle" class="form-input" placeholder="Name of project">
+              </div>
+              <div class="form-group">
+                <label for="ftn-newest-expense-project-account" class="form-label">Project Account Number</label>
+                <input type="text" id="ftn-newest-expense-project-account" name="projectAccountNumber" class="form-input" placeholder="Account number">
+              </div>
+              <div class="form-group">
+                <label for="ftn-newest-expense-duration" class="form-label">Duration</label>
+                <input type="text" id="ftn-newest-expense-duration" name="duration" class="form-input" placeholder="e.g. Jan - Mar 2026">
+              </div>
+              <div class="form-group">
+                <label for="ftn-newest-expense-concept" class="form-label">Project Concept</label>
+                <input type="text" id="ftn-newest-expense-concept" name="projectConcept" class="form-input" placeholder="Brief concept">
+              </div>
+            </div>
 
               <div class="form-group">
                 <label for="ftn-newest-expense-description" class="form-label">Description</label>
@@ -488,6 +520,10 @@ export class FinancialTrackingNewest {
       amount: parseFloat(this.getFieldValue(`${NEWEST_PREFIX}-income-amount`)),
       paymentMethod: this.getFieldValue(`${NEWEST_PREFIX}-income-method`),
       reference: this.getFieldValue(`${NEWEST_PREFIX}-income-reference`),
+      projectTitle: this.getFieldValue(`${NEWEST_PREFIX}-income-project-title`),
+      projectAccountNumber: this.getFieldValue(`${NEWEST_PREFIX}-income-project-account`),
+      duration: this.getFieldValue(`${NEWEST_PREFIX}-income-duration`),
+      projectConcept: this.getFieldValue(`${NEWEST_PREFIX}-income-concept`),
       description: this.getFieldValue(`${NEWEST_PREFIX}-income-description`)
     };
   }
@@ -500,6 +536,10 @@ export class FinancialTrackingNewest {
       amount: parseFloat(this.getFieldValue(`${NEWEST_PREFIX}-expense-amount`)),
       paymentMethod: this.getFieldValue(`${NEWEST_PREFIX}-expense-method`),
       reference: this.getFieldValue(`${NEWEST_PREFIX}-expense-reference`),
+      projectTitle: this.getFieldValue(`${NEWEST_PREFIX}-expense-project-title`),
+      projectAccountNumber: this.getFieldValue(`${NEWEST_PREFIX}-expense-project-account`),
+      duration: this.getFieldValue(`${NEWEST_PREFIX}-expense-duration`),
+      projectConcept: this.getFieldValue(`${NEWEST_PREFIX}-expense-concept`),
       description: this.getFieldValue(`${NEWEST_PREFIX}-expense-description`)
     };
   }

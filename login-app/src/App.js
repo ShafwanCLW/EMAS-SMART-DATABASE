@@ -7,6 +7,7 @@ import { AuthService, handleLogin, handleLogout } from './services/frontend/Auth
 import { saveUserSession, loadUserSession, clearUserSession } from './lib/SessionUtils.js';
 import { setupNavigationListeners } from './lib/NavigationUtils.js';
 import { KIRProfile } from './pages/admin/KIRProfile.js';
+import { createCheckinPage, setupCheckinPage } from './pages/public/CheckinPage.js';
 
 
 
@@ -376,12 +377,23 @@ export class App {
 
   // Handle route changes
   handleRouteChange() {
+    const route = this.getCurrentRoute();
+    if (route && route.path === 'checkin') {
+      this.renderCheckin(route.query.programId);
+      return;
+    }
+
     const currentUser = FirebaseAuthService.getCurrentUser();
     const userProfile = FirebaseAuthService.getUserProfile();
     
     if (currentUser && userProfile) {
       this.renderDashboard();
     }
+  }
+
+  renderCheckin(programId) {
+    this.appElement.innerHTML = createCheckinPage(programId);
+    setupCheckinPage(programId);
   }
 
   // Handle successful login
@@ -466,6 +478,12 @@ export class App {
     
     // Setup Firebase auth state listener
     FirebaseAuthService.onAuthStateChange((user) => {
+      const route = this.getCurrentRoute();
+      if (route && route.path === 'checkin') {
+        this.renderCheckin(route.query.programId);
+        return;
+      }
+
       if (user) {
         // User is signed in with Firebase
         this.renderDashboard();

@@ -41,17 +41,9 @@ export function createAdminSidebar(user) {
           <span class="nav-icon">➕</span>
           Cipta KIR
         </a>
-        <a href="#" class="nav-item" data-section="program-kehadiran">
-          <span class="nav-icon">📅</span>
-          Program & Kehadiran
-        </a>
         <a href="#" class="nav-item" data-section="program-kehadiran-newest">
-          <span class="nav-icon">??</span>
+          <span class="nav-icon">📅</span>
           Program & Kehadiran (Newest)
-        </a>
-        <a href="#" class="nav-item" data-section="financial-tracking">
-            <span class="nav-icon">💰</span>
-            Financial Tracking
         </a>
         <a href="#" class="nav-item" data-section="financial-tracking-newest">
             <span class="nav-icon">💰</span>

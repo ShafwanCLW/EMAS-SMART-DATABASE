@@ -18,6 +18,64 @@ import {
 import { db } from '../database/firebase.js';
 import { COLLECTIONS, STANDARD_FIELDS, addStandardFields, createEnvFilter, getEnvironment } from '../database/collections.js';
 
+const pickFirst = (...values) => values.find(value => value !== undefined && value !== null);
+
+const normalizeProgramPayload = (programData = {}, { includeDefaults = false } = {}) => {
+  const data = {};
+
+  const namaProgram = pickFirst(programData.nama_program, programData.name);
+  if (namaProgram !== undefined || includeDefaults) {
+    data.nama_program = namaProgram ?? 'New Program';
+  }
+
+  const penerangan = pickFirst(programData.penerangan, programData.description, programData.deskripsi);
+  if (penerangan !== undefined || includeDefaults) {
+    data.penerangan = penerangan ?? '';
+  }
+
+  const tarikhMula = pickFirst(programData.tarikh_mula, programData.startDate);
+  if (tarikhMula !== undefined || includeDefaults) {
+    data.tarikh_mula = tarikhMula ?? new Date().toISOString();
+  }
+
+  const tarikhTamat = pickFirst(programData.tarikh_tamat, programData.endDate);
+  if (tarikhTamat !== undefined || includeDefaults) {
+    data.tarikh_tamat = tarikhTamat ?? new Date().toISOString();
+  }
+
+  const kategori = pickFirst(programData.kategori, programData.category);
+  if (kategori !== undefined || includeDefaults) {
+    data.kategori = kategori ?? '';
+  }
+
+  const status = pickFirst(programData.status);
+  if (status !== undefined || includeDefaults) {
+    data.status = status ?? 'Upcoming';
+  }
+
+  const lokasi = pickFirst(programData.lokasi, programData.location);
+  if (lokasi !== undefined || includeDefaults) {
+    data.lokasi = lokasi ?? '';
+  }
+
+  const coOrganizer = pickFirst(programData.co_organizer, programData.coOrganizer);
+  if (coOrganizer !== undefined || includeDefaults) {
+    data.co_organizer = coOrganizer ?? '';
+  }
+
+  const expenses = pickFirst(programData.expenses, programData.perbelanjaan, programData.expense);
+  if (expenses !== undefined || includeDefaults) {
+    data.expenses = expenses ?? '';
+  }
+
+  const timeScale = pickFirst(programData.time_scale, programData.timeScale);
+  if (timeScale !== undefined || includeDefaults) {
+    data.time_scale = timeScale ?? '';
+  }
+
+  return data;
+};
+
 export class ProgramService {
   // List all programs with optional filters
   static async listProgram(options = {}) {
@@ -188,13 +246,7 @@ export class ProgramService {
   static async createProgram(programData) {
     try {
       const data = {
-        nama_program: programData.name || 'Test Program',
-        penerangan: programData.description || 'This is a test program to verify display functionality',
-        tarikh_mula: programData.startDate || new Date().toISOString(),
-        tarikh_tamat: programData.endDate || new Date().toISOString(),
-        kategori: programData.category || 'Test',
-        status: programData.status || 'Upcoming',
-        lokasi: programData.location || 'Test Location',
+        ...normalizeProgramPayload(programData, { includeDefaults: true }),
         tarikh_cipta: serverTimestamp(),
         tarikh_kemas_kini: serverTimestamp(),
         env: getEnvironment()
@@ -242,13 +294,7 @@ export class ProgramService {
   static async updateProgram(programId, programData) {
     try {
       const data = {
-        nama_program: programData.name,
-        penerangan: programData.description,
-        tarikh_mula: programData.startDate,
-        tarikh_tamat: programData.endDate,
-        kategori: programData.category,
-        status: programData.status,
-        lokasi: programData.location || '',
+        ...normalizeProgramPayload(programData),
         tarikh_kemas_kini: serverTimestamp()
       };
       
@@ -775,15 +821,11 @@ export class ProgramService {
   static async updateProgram(programId, updates) {
     try {
       const data = {
-        ...updates,
+        ...normalizeProgramPayload(updates),
         tarikh_kemas_kini: serverTimestamp()
       };
       
-      if (updates.tarikh) {
-        data.tarikh = new Date(updates.tarikh);
-      }
-      
-      await updateDoc(doc(db, 'program', programId), data);
+      await updateDoc(doc(db, COLLECTIONS.PROGRAM, programId), data);
       return { id: programId, ...data };
     } catch (error) {
       console.error('Error updating program:', error);
