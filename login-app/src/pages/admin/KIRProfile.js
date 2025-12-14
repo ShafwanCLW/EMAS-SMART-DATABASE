@@ -103,6 +103,29 @@ export class KIRProfile {
     }
   }
 
+  getProfilePhotoPlaceholderHTML() {
+    const initials = this.getProfileInitials(this.kirData?.nama_penuh || '');
+    return `
+      <div class="profile-photo-placeholder">
+        <span>${initials}</span>
+      </div>
+    `;
+  }
+
+  getProfileInitials(name) {
+    if (!name || typeof name !== 'string') {
+      return 'KIR';
+    }
+    const parts = name.trim().split(/\s+/).filter(Boolean);
+    if (parts.length === 0) {
+      return 'KIR';
+    }
+    const first = parts[0][0] || '';
+    const second = parts.length > 1 ? parts[parts.length - 1][0] : '';
+    const initials = `${first}${second}`.toUpperCase();
+    return initials || 'KIR';
+  }
+
   // Initialize tab components
   initializeTabComponents() {
     this.tabComponents = {
