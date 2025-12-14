@@ -10,6 +10,9 @@ export class FinancialTrackingNewest {
     this.buttons = {};
     this.transactionBody = null;
     this.transactionFilters = {};
+    this.recentTransactionsContainer = null;
+    this.transactionLabelEl = null;
+    this.healthIndicatorEl = null;
     this.state = {
       transactions: [],
       totals: { income: 0, expense: 0, balance: 0 }
@@ -19,301 +22,379 @@ export class FinancialTrackingNewest {
   createContent() {
     return `
       <div class="financial-newest">
-        <div class="section-header">
-          <h3 class="section-title">Financial Tracking (Newest)</h3>
-          <p class="section-description">
-            Streamlined tools to manage income, expenses, and transaction insights independently.
-          </p>
-        </div>
+        <header class="financial-hero">
+          <div class="hero-text">
+            <p class="hero-subtitle">Laporan Kewangan</p>
+            <h3 class="section-title">Financial Tracking (Newest)</h3>
+            <p class="section-description">
+              Streamlined tools to manage income, expenses, and transaction insights independently.
+            </p>
+          </div>
+          <div class="hero-actions">
+            <button class="btn btn-ghost" data-action="refresh-summary">
+              <span>&#8635;</span> Refresh Data
+            </button>
+            <button class="btn btn-primary" data-view-target="transactions">
+              <span>&#128179;</span> View Transactions
+            </button>
+          </div>
+        </header>
 
-        <section class="sub-content-section active" data-view="overview">
-          <div class="financial-stats-grid">
-            <div class="stat-card financial-card">
-              <div class="stat-header">
-                <h3 class="stat-title">Jumlah Terkumpul</h3>
-                <span class="stat-icon">&#128176;</span>
+        <section class="financial-dashboard active" data-view="overview">
+          <div class="financial-metrics-grid">
+            <article class="metric-card income">
+              <div class="metric-card-top">
+                <div>
+                  <p class="metric-label">Jumlah Terkumpul</p>
+                  <p class="metric-value" id="ftn-newest-total-income">RM 0.00</p>
+                </div>
+                <span class="metric-icon">&#128176;</span>
               </div>
-              <p class="stat-value" id="ftn-newest-total-income">RM 0.00</p>
-              <p class="stat-change positive">Updated from database</p>
-            </div>
-            <div class="stat-card financial-card">
-              <div class="stat-header">
-                <h3 class="stat-title">Jumlah Perbelanjaan</h3>
-                <span class="stat-icon">&#128184;</span>
+              <p class="metric-subtext">Updated from database</p>
+            </article>
+            <article class="metric-card expense">
+              <div class="metric-card-top">
+                <div>
+                  <p class="metric-label">Jumlah Perbelanjaan</p>
+                  <p class="metric-value" id="ftn-newest-total-expense">RM 0.00</p>
+                </div>
+                <span class="metric-icon">&#128184;</span>
               </div>
-              <p class="stat-value" id="ftn-newest-total-expense">RM 0.00</p>
-              <p class="stat-change negative">Tracked expenses</p>
-            </div>
-            <div class="stat-card financial-card">
-              <div class="stat-header">
-                <h3 class="stat-title">Baki Semasa</h3>
-                <span class="stat-icon">&#128200;</span>
+              <p class="metric-subtext">Tracked expenses</p>
+            </article>
+            <article class="metric-card balance">
+              <div class="metric-card-top">
+                <div>
+                  <p class="metric-label">Baki Semasa</p>
+                  <p class="metric-value" id="ftn-newest-net-balance">RM 0.00</p>
+                </div>
+                <span class="metric-icon">&#128200;</span>
               </div>
-              <p class="stat-value" id="ftn-newest-net-balance">RM 0.00</p>
-              <p class="stat-change" id="ftn-newest-balance-info">Awaiting activity</p>
-            </div>
+              <p class="metric-subtext" id="ftn-newest-balance-info">Awaiting activity</p>
+            </article>
+            <article class="metric-card activity">
+              <div class="metric-card-top">
+                <div>
+                  <p class="metric-label">Rekod Transaksi</p>
+                  <p class="metric-value" id="ftn-newest-total-transactions">0</p>
+                </div>
+                <span class="metric-icon">&#128221;</span>
+              </div>
+              <p class="metric-subtext" id="ftn-newest-transaction-label">No transactions recorded.</p>
+            </article>
           </div>
 
-          <div class="financial-actions">
-            <div class="action-buttons" style="display:flex;flex-wrap:wrap;gap:20px;margin:30px 0;">
-              <button class="action-btn primary-action" data-view-target="income">
-                <span>&#10133;</span> Money In
+          <div class="financial-panels-grid">
+            <article class="financial-panel recent-activity-panel">
+              <div class="panel-header">
+                <div>
+                  <p class="panel-eyebrow">Transactions</p>
+                  <h4>Recent Activity</h4>
+                </div>
+                <button class="btn btn-outline" data-view-target="transactions">Show All</button>
+              </div>
+              <div class="recent-activity-list" data-role="recent-transactions">
+                <p class="empty-text">No financial transactions recorded.</p>
+              </div>
+            </article>
+
+            <article class="financial-panel quick-actions-panel">
+              <div class="panel-header">
+                <div>
+                  <p class="panel-eyebrow">Actions</p>
+                  <h4>Quick Actions</h4>
+                </div>
+              </div>
+              <div class="quick-action-grid">
+                <button class="action-chip" data-view-target="income">
+                  <span>&#10133;</span> Money In
+                </button>
+                <button class="action-chip danger" data-view-target="expense">
+                  <span>&#10134;</span> Money Out
+                </button>
+                <button class="action-chip ghost" data-action="generate-income-report">
+                  <span>&#128202;</span> Income Report
+                </button>
+                <button class="action-chip ghost" data-action="generate-expense-report">
+                  <span>&#128200;</span> Expense Report
+                </button>
+                <button class="action-chip ghost" data-action="export">
+                  <span>&#128190;</span> Export Data
+                </button>
+              </div>
+            </article>
+
+            <article class="financial-panel snapshot-panel">
+              <div class="panel-header">
+                <div>
+                  <p class="panel-eyebrow">Snapshot</p>
+                  <h4>Financial Health</h4>
+                </div>
+              </div>
+              <div class="snapshot-grid">
+                <div class="snapshot-item">
+                  <p>Total Income</p>
+                  <span id="ftn-newest-total-income-mini">RM 0.00</span>
+                </div>
+                <div class="snapshot-item">
+                  <p>Total Expenses</p>
+                  <span id="ftn-newest-total-expense-mini">RM 0.00</span>
+                </div>
+                <div class="snapshot-item">
+                  <p>Net Balance</p>
+                  <span id="ftn-newest-net-balance-mini">RM 0.00</span>
+                </div>
+              </div>
+              <div class="health-indicator" data-role="financial-health">
+                No financial data recorded yet.
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section class="financial-drawer" data-view="income">
+          <div class="drawer-panel">
+            <div class="drawer-header">
+              <div>
+                <p class="panel-eyebrow">Money In</p>
+                <h3>Tambah Rekod Pendapatan</h3>
+                <p>Record incoming funds with relevant context and references.</p>
+              </div>
+              <button class="btn btn-secondary" data-view-target="overview">
+                <span>&larr;</span> Back
               </button>
-              <button class="action-btn primary-action" data-view-target="expense">
-                <span>&#10134;</span> Money Out
-              </button>
-              <div style="width:100%;height:8px;"></div>
-              <button class="action-btn" data-action="generate-income-report">
-                <span>&#128202;</span> Generate Income Report
-              </button>
-              <button class="action-btn" data-action="generate-expense-report">
-                <span>&#128200;</span> Generate Expense Report
-              </button>
-              <button class="action-btn" data-action="export">
-                <span>&#128190;</span> Export Financial Data
-              </button>
-              <button class="action-btn" data-view-target="transactions">
-                <span>&#128197;</span> Show All Transactions
-              </button>
+            </div>
+            <div class="form-container">
+              <form id="ftn-newest-income-form" class="income-form">
+                <div class="form-grid">
+                  <div class="form-group">
+                    <label for="ftn-newest-income-date" class="form-label">Date</label>
+                    <input type="date" id="ftn-newest-income-date" name="date" class="form-input" required>
+                  </div>
+                  <div class="form-group">
+                    <label for="ftn-newest-income-source" class="form-label">Income Source</label>
+                    <input type="text" id="ftn-newest-income-source" name="source" class="form-input" placeholder="Client, donor, or reference" required>
+                  </div>
+                  <div class="form-group">
+                    <label for="ftn-newest-income-category" class="form-label">Category</label>
+                    <select id="ftn-newest-income-category" name="category" class="form-select" required>
+                      <option value="">Select Category</option>
+                      <option value="sales-revenue">Sales Revenue</option>
+                      <option value="service-income">Service Income</option>
+                      <option value="grants-funding">Grants & Funding</option>
+                      <option value="donations">Donations</option>
+                      <option value="investment-returns">Investment Returns</option>
+                      <option value="rental-income">Rental Income</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="ftn-newest-income-amount" class="form-label">Amount (RM)</label>
+                    <input type="number" step="0.01" min="0" id="ftn-newest-income-amount" name="amount" class="form-input" placeholder="0.00" required>
+                  </div>
+                  <div class="form-group">
+                    <label for="ftn-newest-income-method" class="form-label">Payment Method</label>
+                    <select id="ftn-newest-income-method" name="paymentMethod" class="form-select" required>
+                      <option value="">Select Method</option>
+                      <option value="bank-transfer">Bank Transfer</option>
+                      <option value="cash">Cash</option>
+                      <option value="cheque">Cheque</option>
+                      <option value="credit-card">Credit Card</option>
+                      <option value="online-payment">Online Payment</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="ftn-newest-income-reference" class="form-label">Reference Number</label>
+                    <input type="text" id="ftn-newest-income-reference" name="reference" class="form-input" placeholder="Invoice or receipt number">
+                  </div>
+                  <div class="form-group">
+                    <label for="ftn-newest-income-project-title" class="form-label">Project Title</label>
+                    <input type="text" id="ftn-newest-income-project-title" name="projectTitle" class="form-input" placeholder="Name of project">
+                  </div>
+                  <div class="form-group">
+                    <label for="ftn-newest-income-project-account" class="form-label">Project Account Number</label>
+                    <input type="text" id="ftn-newest-income-project-account" name="projectAccountNumber" class="form-input" placeholder="Account number">
+                  </div>
+                  <div class="form-group">
+                    <label for="ftn-newest-income-duration" class="form-label">Duration</label>
+                    <input type="text" id="ftn-newest-income-duration" name="duration" class="form-input" placeholder="e.g. Jan - Mar 2026">
+                  </div>
+                  <div class="form-group">
+                    <label for="ftn-newest-income-concept" class="form-label">Project Concept</label>
+                    <input type="text" id="ftn-newest-income-concept" name="projectConcept" class="form-input" placeholder="Brief concept">
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label for="ftn-newest-income-description" class="form-label">Description</label>
+                  <textarea id="ftn-newest-income-description" name="description" class="form-textarea" rows="3" placeholder="Additional notes about this income"></textarea>
+                </div>
+
+                <div class="form-actions">
+                  <button type="button" class="btn btn-secondary" id="ftn-newest-income-clear">
+                    <span class="btn-icon">&#10006;</span> Clear Form
+                  </button>
+                  <button type="submit" class="btn btn-primary" id="ftn-newest-income-submit">
+                    <span class="btn-icon">&#128190;</span> Save Income Entry
+                  </button>
+                </div>
+
+                <div class="form-message" id="ftn-newest-income-message" style="display:none;"></div>
+              </form>
             </div>
           </div>
         </section>
 
-        <section class="sub-content-section" data-view="income">
-          <div class="section-header">
-            <div class="section-header-start">
-              <button class="back-btn" data-view-target="overview">
-                <span>&larr;</span> Back to Overview
+        <section class="financial-drawer" data-view="expense">
+          <div class="drawer-panel">
+            <div class="drawer-header">
+              <div>
+                <p class="panel-eyebrow">Money Out</p>
+                <h3>Tambah Rekod Perbelanjaan</h3>
+                <p>Capture outgoing payments for better spending visibility.</p>
+              </div>
+              <button class="btn btn-secondary" data-view-target="overview">
+                <span>&larr;</span> Back
               </button>
-              <h3 class="section-title">Money In - Add Income Entry</h3>
             </div>
-            <p class="section-description">Record incoming funds with relevant context and references.</p>
-          </div>
+            <div class="form-container">
+              <form id="ftn-newest-expense-form" class="expense-form">
+                <div class="form-grid">
+                  <div class="form-group">
+                    <label for="ftn-newest-expense-date" class="form-label">Date</label>
+                    <input type="date" id="ftn-newest-expense-date" name="date" class="form-input" required>
+                  </div>
+                  <div class="form-group">
+                    <label for="ftn-newest-expense-vendor" class="form-label">Vendor / Payee</label>
+                    <input type="text" id="ftn-newest-expense-vendor" name="vendor" class="form-input" placeholder="Supplier or person" required>
+                  </div>
+                  <div class="form-group">
+                    <label for="ftn-newest-expense-category" class="form-label">Category</label>
+                    <select id="ftn-newest-expense-category" name="category" class="form-select" required>
+                      <option value="">Select Category</option>
+                      <option value="operating-expenses">Operating Expenses</option>
+                      <option value="staff-salaries">Staff Salaries</option>
+                      <option value="equipment-supplies">Equipment & Supplies</option>
+                      <option value="marketing-advertising">Marketing & Advertising</option>
+                      <option value="utilities">Utilities</option>
+                      <option value="rent-facilities">Rent & Facilities</option>
+                      <option value="professional-services">Professional Services</option>
+                      <option value="travel-transport">Travel & Transport</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="ftn-newest-expense-amount" class="form-label">Amount (RM)</label>
+                    <input type="number" step="0.01" min="0" id="ftn-newest-expense-amount" name="amount" class="form-input" placeholder="0.00" required>
+                  </div>
+                  <div class="form-group">
+                    <label for="ftn-newest-expense-method" class="form-label">Payment Method</label>
+                    <select id="ftn-newest-expense-method" name="paymentMethod" class="form-select" required>
+                      <option value="">Select Method</option>
+                      <option value="bank-transfer">Bank Transfer</option>
+                      <option value="cash">Cash</option>
+                      <option value="cheque">Cheque</option>
+                      <option value="credit-card">Credit Card</option>
+                      <option value="online-payment">Online Payment</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="ftn-newest-expense-reference" class="form-label">Reference Number</label>
+                    <input type="text" id="ftn-newest-expense-reference" name="reference" class="form-input" placeholder="Invoice or receipt number">
+                  </div>
+                  <div class="form-group">
+                    <label for="ftn-newest-expense-project-title" class="form-label">Project Title</label>
+                    <input type="text" id="ftn-newest-expense-project-title" name="projectTitle" class="form-input" placeholder="Name of project">
+                  </div>
+                  <div class="form-group">
+                    <label for="ftn-newest-expense-project-account" class="form-label">Project Account Number</label>
+                    <input type="text" id="ftn-newest-expense-project-account" name="projectAccountNumber" class="form-input" placeholder="Account number">
+                  </div>
+                  <div class="form-group">
+                    <label for="ftn-newest-expense-duration" class="form-label">Duration</label>
+                    <input type="text" id="ftn-newest-expense-duration" name="duration" class="form-input" placeholder="e.g. Jan - Mar 2026">
+                  </div>
+                  <div class="form-group">
+                    <label for="ftn-newest-expense-concept" class="form-label">Project Concept</label>
+                    <input type="text" id="ftn-newest-expense-concept" name="projectConcept" class="form-input" placeholder="Brief concept">
+                  </div>
+                </div>
 
-          <div class="form-container">
-            <form id="ftn-newest-income-form" class="income-form">
-              <div class="form-grid">
                 <div class="form-group">
-                  <label for="ftn-newest-income-date" class="form-label">Date</label>
-                  <input type="date" id="ftn-newest-income-date" name="date" class="form-input" required>
+                  <label for="ftn-newest-expense-description" class="form-label">Description</label>
+                  <textarea id="ftn-newest-expense-description" name="description" class="form-textarea" rows="3" placeholder="Additional notes about this expense"></textarea>
                 </div>
-                <div class="form-group">
-                  <label for="ftn-newest-income-source" class="form-label">Income Source</label>
-                  <input type="text" id="ftn-newest-income-source" name="source" class="form-input" placeholder="Client, donor, or reference" required>
+
+                <div class="form-actions">
+                  <button type="button" class="btn btn-secondary" id="ftn-newest-expense-clear">
+                    <span class="btn-icon">&#10006;</span> Clear Form
+                  </button>
+                  <button type="submit" class="btn btn-primary" id="ftn-newest-expense-submit">
+                    <span class="btn-icon">&#128190;</span> Save Expense Entry
+                  </button>
                 </div>
-                <div class="form-group">
-                  <label for="ftn-newest-income-category" class="form-label">Category</label>
-                  <select id="ftn-newest-income-category" name="category" class="form-select" required>
-                    <option value="">Select Category</option>
-                    <option value="sales-revenue">Sales Revenue</option>
-                    <option value="service-income">Service Income</option>
-                    <option value="grants-funding">Grants & Funding</option>
-                    <option value="donations">Donations</option>
-                    <option value="investment-returns">Investment Returns</option>
-                    <option value="rental-income">Rental Income</option>
-                    <option value="other">Other</option>
-                  </select>
-                </div>
-                <div class="form-group">
-                  <label for="ftn-newest-income-amount" class="form-label">Amount (RM)</label>
-                  <input type="number" step="0.01" min="0" id="ftn-newest-income-amount" name="amount" class="form-input" placeholder="0.00" required>
-                </div>
-                <div class="form-group">
-                  <label for="ftn-newest-income-method" class="form-label">Payment Method</label>
-                  <select id="ftn-newest-income-method" name="paymentMethod" class="form-select" required>
-                    <option value="">Select Method</option>
-                    <option value="bank-transfer">Bank Transfer</option>
-                    <option value="cash">Cash</option>
-                    <option value="cheque">Cheque</option>
-                    <option value="credit-card">Credit Card</option>
-                    <option value="online-payment">Online Payment</option>
-                    <option value="other">Other</option>
-                  </select>
-                </div>
-              <div class="form-group">
-                <label for="ftn-newest-income-reference" class="form-label">Reference Number</label>
-                <input type="text" id="ftn-newest-income-reference" name="reference" class="form-input" placeholder="Invoice or receipt number">
-              </div>
-              <div class="form-group">
-                <label for="ftn-newest-income-project-title" class="form-label">Project Title</label>
-                <input type="text" id="ftn-newest-income-project-title" name="projectTitle" class="form-input" placeholder="Name of project">
-              </div>
-              <div class="form-group">
-                <label for="ftn-newest-income-project-account" class="form-label">Project Account Number</label>
-                <input type="text" id="ftn-newest-income-project-account" name="projectAccountNumber" class="form-input" placeholder="Account number">
-              </div>
-              <div class="form-group">
-                <label for="ftn-newest-income-duration" class="form-label">Duration</label>
-                <input type="text" id="ftn-newest-income-duration" name="duration" class="form-input" placeholder="e.g. Jan - Mar 2026">
-              </div>
-              <div class="form-group">
-                <label for="ftn-newest-income-concept" class="form-label">Project Concept</label>
-                <input type="text" id="ftn-newest-income-concept" name="projectConcept" class="form-input" placeholder="Brief concept">
-              </div>
+
+                <div class="form-message" id="ftn-newest-expense-message" style="display:none;"></div>
+              </form>
             </div>
-
-            <div class="form-group">
-              <label for="ftn-newest-income-description" class="form-label">Description</label>
-              <textarea id="ftn-newest-income-description" name="description" class="form-textarea" rows="3" placeholder="Additional notes about this income"></textarea>
-              </div>
-
-              <div class="form-actions">
-                <button type="button" class="btn btn-secondary" id="ftn-newest-income-clear">
-                  <span class="btn-icon">&#10006;</span> Clear Form
-                </button>
-                <button type="submit" class="btn btn-primary" id="ftn-newest-income-submit">
-                  <span class="btn-icon">&#128190;</span> Save Income Entry
-                </button>
-              </div>
-
-              <div class="form-message" id="ftn-newest-income-message" style="display:none;"></div>
-            </form>
           </div>
         </section>
 
-        <section class="sub-content-section" data-view="expense">
-          <div class="section-header">
-            <div class="section-header-start">
-              <button class="back-btn" data-view-target="overview">
-                <span>&larr;</span> Back to Overview
+        <section class="financial-layer" data-view="transactions">
+          <div class="layer-panel">
+            <div class="drawer-header">
+              <div>
+                <p class="panel-eyebrow">Transactions</p>
+                <h3>All Transactions</h3>
+                <p>Combined timeline of income and expense records with quick filters.</p>
+              </div>
+              <button class="btn btn-secondary" data-view-target="overview">
+                <span>&larr;</span> Back
               </button>
-              <h3 class="section-title">Money Out - Add Expense Entry</h3>
-            </div>
-            <p class="section-description">Capture outgoing payments for better spending visibility.</p>
-          </div>
-
-          <div class="form-container">
-            <form id="ftn-newest-expense-form" class="expense-form">
-              <div class="form-grid">
-                <div class="form-group">
-                  <label for="ftn-newest-expense-date" class="form-label">Date</label>
-                  <input type="date" id="ftn-newest-expense-date" name="date" class="form-input" required>
-                </div>
-                <div class="form-group">
-                  <label for="ftn-newest-expense-vendor" class="form-label">Vendor / Payee</label>
-                  <input type="text" id="ftn-newest-expense-vendor" name="vendor" class="form-input" placeholder="Supplier or person" required>
-                </div>
-                <div class="form-group">
-                  <label for="ftn-newest-expense-category" class="form-label">Category</label>
-                  <select id="ftn-newest-expense-category" name="category" class="form-select" required>
-                    <option value="">Select Category</option>
-                    <option value="operating-expenses">Operating Expenses</option>
-                    <option value="staff-salaries">Staff Salaries</option>
-                    <option value="equipment-supplies">Equipment & Supplies</option>
-                    <option value="marketing-advertising">Marketing & Advertising</option>
-                    <option value="utilities">Utilities</option>
-                    <option value="rent-facilities">Rent & Facilities</option>
-                    <option value="professional-services">Professional Services</option>
-                    <option value="travel-transport">Travel & Transport</option>
-                    <option value="other">Other</option>
-                  </select>
-                </div>
-                <div class="form-group">
-                  <label for="ftn-newest-expense-amount" class="form-label">Amount (RM)</label>
-                  <input type="number" step="0.01" min="0" id="ftn-newest-expense-amount" name="amount" class="form-input" placeholder="0.00" required>
-                </div>
-                <div class="form-group">
-                  <label for="ftn-newest-expense-method" class="form-label">Payment Method</label>
-                  <select id="ftn-newest-expense-method" name="paymentMethod" class="form-select" required>
-                    <option value="">Select Method</option>
-                    <option value="bank-transfer">Bank Transfer</option>
-                    <option value="cash">Cash</option>
-                    <option value="cheque">Cheque</option>
-                    <option value="credit-card">Credit Card</option>
-                    <option value="online-payment">Online Payment</option>
-                    <option value="other">Other</option>
-                  </select>
-                </div>
-              <div class="form-group">
-                <label for="ftn-newest-expense-reference" class="form-label">Reference Number</label>
-                <input type="text" id="ftn-newest-expense-reference" name="reference" class="form-input" placeholder="Invoice or receipt number">
-              </div>
-              <div class="form-group">
-                <label for="ftn-newest-expense-project-title" class="form-label">Project Title</label>
-                <input type="text" id="ftn-newest-expense-project-title" name="projectTitle" class="form-input" placeholder="Name of project">
-              </div>
-              <div class="form-group">
-                <label for="ftn-newest-expense-project-account" class="form-label">Project Account Number</label>
-                <input type="text" id="ftn-newest-expense-project-account" name="projectAccountNumber" class="form-input" placeholder="Account number">
-              </div>
-              <div class="form-group">
-                <label for="ftn-newest-expense-duration" class="form-label">Duration</label>
-                <input type="text" id="ftn-newest-expense-duration" name="duration" class="form-input" placeholder="e.g. Jan - Mar 2026">
-              </div>
-              <div class="form-group">
-                <label for="ftn-newest-expense-concept" class="form-label">Project Concept</label>
-                <input type="text" id="ftn-newest-expense-concept" name="projectConcept" class="form-input" placeholder="Brief concept">
-              </div>
             </div>
 
-              <div class="form-group">
-                <label for="ftn-newest-expense-description" class="form-label">Description</label>
-                <textarea id="ftn-newest-expense-description" name="description" class="form-textarea" rows="3" placeholder="Additional notes about this expense"></textarea>
+            <div class="filters-container">
+              <div class="filter-group">
+                <label for="ftn-newest-transaction-type">Type</label>
+                <select id="ftn-newest-transaction-type" class="form-select">
+                  <option value="all">All</option>
+                  <option value="income">Money In</option>
+                  <option value="expense">Money Out</option>
+                </select>
               </div>
-
-              <div class="form-actions">
-                <button type="button" class="btn btn-secondary" id="ftn-newest-expense-clear">
-                  <span class="btn-icon">&#10006;</span> Clear Form
-                </button>
-                <button type="submit" class="btn btn-primary" id="ftn-newest-expense-submit">
-                  <span class="btn-icon">&#128190;</span> Save Expense Entry
-                </button>
+              <div class="filter-group">
+                <label for="ftn-newest-transaction-date">Date</label>
+                <input type="date" id="ftn-newest-transaction-date" class="form-input">
               </div>
-
-              <div class="form-message" id="ftn-newest-expense-message" style="display:none;"></div>
-            </form>
-          </div>
-        </section>
-
-        <section class="sub-content-section" data-view="transactions">
-          <div class="section-header">
-            <div class="section-header-start">
-              <button class="back-btn" data-view-target="overview">
-                <span>&larr;</span> Back to Overview
-              </button>
-              <h3 class="section-title">All Transactions</h3>
+              <button class="btn btn-secondary" id="ftn-newest-transaction-reset">Reset</button>
             </div>
-            <p class="section-description">Combined timeline of income and expense records with quick filters.</p>
-          </div>
 
-          <div class="filters-container">
-            <div class="filter-group">
-              <label for="ftn-newest-transaction-type">Type</label>
-              <select id="ftn-newest-transaction-type" class="form-select">
-                <option value="all">All</option>
-                <option value="income">Money In</option>
-                <option value="expense">Money Out</option>
-              </select>
+            <div class="table-container">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Type</th>
+                    <th>Category</th>
+                    <th>Description</th>
+                    <th>Amount (RM)</th>
+                  </tr>
+                </thead>
+                <tbody id="ftn-newest-transaction-body">
+                  <tr>
+                    <td colspan="5" class="loading-text">Loading transactions...</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
-            <div class="filter-group">
-              <label for="ftn-newest-transaction-date">Date</label>
-              <input type="date" id="ftn-newest-transaction-date" class="form-input">
-            </div>
-            <button class="btn btn-secondary" id="ftn-newest-transaction-reset">Reset</button>
-          </div>
-
-          <div class="table-container">
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th>Date</th>
-                  <th>Type</th>
-                  <th>Category</th>
-                  <th>Description</th>
-                  <th>Amount (RM)</th>
-                </tr>
-              </thead>
-              <tbody id="ftn-newest-transaction-body">
-                <tr>
-                  <td colspan="5" class="loading-text">Loading transactions...</td>
-                </tr>
-              </tbody>
-            </table>
           </div>
         </section>
       </div>
     `;
   }
+
   async initialize() {
     this.root = document.getElementById('financial-tracking-newest-content');
     if (!this.root) {
@@ -326,17 +407,22 @@ export class FinancialTrackingNewest {
     this.setupFormHandlers();
     this.setupTransactionFilters();
     await this.refreshSummary();
+    await this.loadTransactions(true);
   }
 
   cacheDom() {
-    this.root.querySelectorAll('.sub-content-section').forEach(section => {
+    this.root.querySelectorAll('[data-view]').forEach(section => {
       this.sections[section.dataset.view] = section;
     });
     this.summaryEls = {
       income: this.root.querySelector(`#${NEWEST_PREFIX}-total-income`),
       expense: this.root.querySelector(`#${NEWEST_PREFIX}-total-expense`),
       balance: this.root.querySelector(`#${NEWEST_PREFIX}-net-balance`),
-      info: this.root.querySelector(`#${NEWEST_PREFIX}-balance-info`)
+      info: this.root.querySelector(`#${NEWEST_PREFIX}-balance-info`),
+      activity: this.root.querySelector(`#${NEWEST_PREFIX}-total-transactions`),
+      incomeMini: this.root.querySelector(`#${NEWEST_PREFIX}-total-income-mini`),
+      expenseMini: this.root.querySelector(`#${NEWEST_PREFIX}-total-expense-mini`),
+      balanceMini: this.root.querySelector(`#${NEWEST_PREFIX}-net-balance-mini`)
     };
     this.forms = {
       income: this.root.querySelector(`#${NEWEST_PREFIX}-income-form`),
@@ -356,6 +442,10 @@ export class FinancialTrackingNewest {
       date: this.root.querySelector(`#${NEWEST_PREFIX}-transaction-date`),
       reset: this.root.querySelector(`#${NEWEST_PREFIX}-transaction-reset`)
     };
+
+    this.recentTransactionsContainer = this.root.querySelector('[data-role="recent-transactions"]');
+    this.transactionLabelEl = this.root.querySelector(`#${NEWEST_PREFIX}-transaction-label`);
+    this.healthIndicatorEl = this.root.querySelector('[data-role="financial-health"]');
   }
 
   setupNavigation() {
@@ -401,6 +491,12 @@ export class FinancialTrackingNewest {
   }
 
   handleAction(action) {
+    if (action === 'refresh-summary') {
+      this.refreshSummary();
+      this.loadTransactions(true);
+      return;
+    }
+
     const messages = {
       'generate-income-report': 'Income report generation will be available soon.',
       'generate-expense-report': 'Expense report generation will be available soon.',
@@ -687,18 +783,33 @@ export class FinancialTrackingNewest {
     if (this.summaryEls.income) {
       this.summaryEls.income.textContent = this.formatCurrency(totals.income || 0);
     }
+    if (this.summaryEls.incomeMini) {
+      this.summaryEls.incomeMini.textContent = this.formatCurrency(totals.income || 0);
+    }
     if (this.summaryEls.expense) {
       this.summaryEls.expense.textContent = this.formatCurrency(totals.expense || 0);
+    }
+    if (this.summaryEls.expenseMini) {
+      this.summaryEls.expenseMini.textContent = this.formatCurrency(totals.expense || 0);
     }
     if (this.summaryEls.balance) {
       this.summaryEls.balance.textContent = this.formatCurrency(totals.balance || 0);
     }
+    if (this.summaryEls.balanceMini) {
+      this.summaryEls.balanceMini.textContent = this.formatCurrency(totals.balance || 0);
+    }
+    const summaryText = totals.info || 'Summary unavailable.';
+    const classes = ['positive', 'negative', 'neutral'];
+    const clazz = totals.balance > 0 ? 'positive' : totals.balance < 0 ? 'negative' : 'neutral';
     if (this.summaryEls.info) {
-      this.summaryEls.info.textContent = totals.info || 'Summary unavailable.';
-      const classes = ['positive', 'negative', 'neutral'];
+      this.summaryEls.info.textContent = summaryText;
       this.summaryEls.info.classList.remove(...classes);
-      const clazz = totals.balance > 0 ? 'positive' : totals.balance < 0 ? 'negative' : 'neutral';
       this.summaryEls.info.classList.add(clazz);
+    }
+    if (this.healthIndicatorEl) {
+      this.healthIndicatorEl.textContent = summaryText;
+      this.healthIndicatorEl.classList.remove(...classes);
+      this.healthIndicatorEl.classList.add(clazz);
     }
   }
 
@@ -726,8 +837,13 @@ export class FinancialTrackingNewest {
       );
 
       this.applyTransactionFilters();
+      this.updateTransactionSummary();
+      this.renderRecentTransactionsPreview();
     } catch (error) {
       console.error('FinancialTrackingNewest: transactions failed', error);
+      this.state.transactions = [];
+      this.updateTransactionSummary();
+      this.renderRecentTransactionsPreview();
       if (this.transactionBody) {
         this.transactionBody.innerHTML = `
           <tr>
@@ -801,6 +917,57 @@ export class FinancialTrackingNewest {
         `;
       })
       .join('');
+  }
+
+  updateTransactionSummary() {
+    const count = this.state.transactions.length;
+    if (this.summaryEls.activity) {
+      this.summaryEls.activity.textContent = `${count}`;
+    }
+    if (this.transactionLabelEl) {
+      this.transactionLabelEl.textContent = count
+        ? `${count} transactions tracked`
+        : 'No transactions recorded.';
+    }
+  }
+
+  renderRecentTransactionsPreview() {
+    const container = this.recentTransactionsContainer;
+    if (!container) {
+      return;
+    }
+
+    const recent = (this.state.transactions || []).slice(0, 4);
+    if (!recent.length) {
+      container.innerHTML = '<p class="empty-text">No financial transactions recorded.</p>';
+      return;
+    }
+
+    container.innerHTML = recent
+      .map(item => {
+        const typeLabel = item.type === 'income' ? 'Money In' : 'Money Out';
+        const amount = this.formatCurrency(Math.abs(item.amount));
+        const sign = item.type === 'income' ? '+' : '-';
+        return `
+          <div class="recent-transaction-item">
+            <div>
+              <p class="recent-title">${this.escapeHtml(item.description)}</p>
+              <p class="recent-meta">${item.displayDate} · ${this.escapeHtml(item.category)}</p>
+            </div>
+            <div class="recent-amount ${item.type}">
+              <span class="status-badge ${item.type === 'income' ? 'positive' : 'negative'}">${typeLabel}</span>
+              <span class="amount-text">${sign} ${amount}</span>
+            </div>
+          </div>
+        `;
+      })
+      .join('');
+  }
+
+  escapeHtml(text = '') {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
   }
 
   ensureNonNegative(input) {

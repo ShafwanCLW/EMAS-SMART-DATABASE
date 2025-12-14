@@ -2706,6 +2706,476 @@ body.kir-profile-active #app {
   gap: 1rem;
 }
 
+.financial-newest {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.financial-hero {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 18px;
+  background: #ffffff;
+  border-radius: 26px;
+  border: 1px solid #e2e8f0;
+  padding: clamp(20px, 3vw, 32px);
+  box-shadow: 0 28px 55px rgba(15, 23, 42, 0.08);
+}
+
+.financial-hero .hero-subtitle {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #818cf8;
+  margin-bottom: 6px;
+  font-weight: 700;
+}
+
+.financial-hero .hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.financial-newest .btn {
+  border: none;
+  border-radius: 999px;
+  padding: 10px 18px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.financial-newest .btn.btn-primary {
+  background: linear-gradient(135deg, #7c3aed, #6366f1);
+  color: #fff;
+  box-shadow: 0 12px 24px rgba(99, 102, 241, 0.25);
+}
+
+.financial-newest .btn.btn-secondary {
+  background: #eef2ff;
+  color: #312e81;
+}
+
+.financial-newest .btn.btn-ghost {
+  background: #f5f3ff;
+  border: 1px solid #e4e4ff;
+  color: #4c1d95;
+}
+
+.financial-newest .btn.btn-outline {
+  background: transparent;
+  border: 1px solid #d4d4f7;
+  color: #4c1d95;
+}
+
+.financial-newest .btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.12);
+}
+
+.financial-dashboard {
+  display: none;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.financial-dashboard.active {
+  display: flex;
+}
+
+.financial-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.metric-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 20px;
+  padding: 18px;
+  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.metric-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.metric-label {
+  text-transform: uppercase;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  color: #94a3b8;
+  margin-bottom: 6px;
+}
+
+.metric-value {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+}
+
+.financial-newest .metric-card .metric-value {
+  position: static;
+  transform: none;
+  text-shadow: none;
+}
+
+.metric-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #d1d5fe, #f5f3ff);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  color: #4c1d95;
+}
+
+.metric-subtext {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #818cf8;
+}
+
+.financial-panels-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 18px;
+}
+
+.financial-panel {
+  background: #fff;
+  border-radius: 22px;
+  border: 1px solid #e2e8f0;
+  padding: 20px;
+  box-shadow: 0 24px 45px rgba(15, 23, 42, 0.08);
+  display: flex;
+  flex-direction: column;
+  min-height: 220px;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.panel-eyebrow {
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  color: #94a3b8;
+  text-transform: uppercase;
+  margin: 0 0 4px;
+}
+
+.panel-header h4 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #0f172a;
+}
+
+.recent-activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 10px;
+}
+
+.recent-transaction-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #edf2f7;
+}
+
+.recent-transaction-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.recent-title {
+  font-weight: 600;
+  margin: 0 0 4px;
+  color: #0f172a;
+}
+
+.recent-meta {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #94a3b8;
+}
+
+.recent-amount {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.recent-amount .amount-text {
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.quick-action-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: auto;
+}
+
+.action-chip {
+  border-radius: 12px;
+  border: 1px solid #e4e4ff;
+  background: #f8f7ff;
+  padding: 10px 14px;
+  font-weight: 600;
+  color: #4c1d95;
+  cursor: pointer;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.action-chip.danger {
+  background: #fdf2f8;
+  border-color: #fed7e2;
+  color: #be123c;
+}
+
+.action-chip.ghost {
+  background: transparent;
+}
+
+.action-chip:hover {
+  transform: translateY(-2px);
+  border-color: #6366f1;
+}
+
+.snapshot-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.snapshot-item {
+  background: #f8fafc;
+  border-radius: 16px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.snapshot-item p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #94a3b8;
+}
+
+.snapshot-item span {
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.health-indicator {
+  margin-top: 16px;
+  border-radius: 16px;
+  padding: 12px 14px;
+  font-weight: 600;
+  background: #eff2ff;
+  color: #312e81;
+}
+
+.health-indicator.positive {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.health-indicator.negative {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.health-indicator.neutral {
+  background: #f5f3ff;
+  color: #4c1d95;
+}
+
+.financial-drawer,
+.financial-layer {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  display: none;
+  padding: clamp(20px, 4vw, 40px);
+  z-index: 1600;
+}
+
+.financial-drawer.active,
+.financial-layer.active {
+  display: flex;
+}
+
+.financial-drawer {
+  justify-content: flex-end;
+  align-items: stretch;
+}
+
+.financial-layer {
+  justify-content: center;
+  align-items: stretch;
+}
+
+.drawer-panel,
+.layer-panel {
+  background: #fff;
+  border-radius: 26px;
+  width: min(960px, 100%);
+  max-height: 100%;
+  overflow-y: auto;
+  padding: clamp(20px, 3vw, 34px);
+  box-shadow: 0 40px 60px rgba(15, 23, 42, 0.22);
+}
+
+.layer-panel {
+  width: min(1100px, 100%);
+}
+
+.drawer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.drawer-header h3 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.financial-drawer .form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.financial-drawer .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.financial-drawer .form-label {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.financial-drawer .form-input,
+.financial-drawer .form-select,
+.financial-drawer .form-textarea {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: #fff;
+}
+
+.financial-drawer .form-textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.financial-drawer .form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.recent-activity-panel .empty-text,
+.financial-panel .empty-text {
+  margin: 0;
+  color: #94a3b8;
+}
+
+.financial-layer .filters-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.financial-layer .filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.financial-layer .filter-group label {
+  font-size: 0.9rem;
+  color: #475569;
+}
+
+.financial-layer .filter-group .form-input,
+.financial-layer .filter-group .form-select {
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  padding: 8px 12px;
+}
+
+.financial-layer .table-container {
+  border-radius: 20px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.08);
+  overflow: hidden;
+}
+
+.financial-newest .status-badge.positive {
+  background: rgba(34, 197, 94, 0.15);
+  color: #15803d;
+}
+
+.financial-newest .status-badge.negative {
+  background: rgba(239, 68, 68, 0.15);
+  color: #b91c1c;
+}
+
+@media (max-width: 768px) {
+  .financial-hero {
+    flex-direction: column;
+  }
+
+  .financial-drawer,
+  .financial-layer {
+    padding: 12px;
+  }
+
+  .drawer-panel,
+  .layer-panel {
+    border-radius: 14px;
+  }
+}
+
 .action-btn {
   display: flex;
   align-items: center;
