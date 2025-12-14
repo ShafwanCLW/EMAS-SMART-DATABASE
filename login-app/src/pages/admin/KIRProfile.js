@@ -4,6 +4,7 @@ import { AIRService } from '../../services/backend/AIRService.js';
 import { PasanganService } from '../../services/backend/PasanganService.js';
 import { ProgramService } from '../../services/backend/ProgramService.js';
 import { DokumenService } from '../../services/backend/DokumenService.js';
+import { ProfilePhotoService } from '../../services/backend/ProfilePhotoService.js';
 
 // Import extracted tab components
 import { KAFATab, PendidikanTab, PekerjaanTab } from './KIRProfile/components/tabs/index.js';
@@ -72,6 +73,7 @@ export class KIRProfile {
     this.beforeUnloadHandler = null;
     this.currentHash = window.location.hash || '';
     this.isHandlingPopstate = false;
+    this.profilePhotoState = { uploading: false };
   }
 
   applyOptions(options = {}) {
@@ -420,9 +422,7 @@ export class KIRProfile {
         <div class="header-main-modern">
           <div class="profile-section">
             <div class="profile-avatar-modern">
-              <div class="avatar-circle-modern">
-                <span class="avatar-initials">${initials}</span>
-              </div>
+              ${this.renderProfileAvatar(initials)}
               <div class="avatar-status-indicator ${this.getStatusClass(this.kirData?.status_rekod)}"></div>
             </div>
             
@@ -449,6 +449,8 @@ export class KIRProfile {
       </div>
     `;
   }
+
+  
 
   // Create status action buttons
   createStatusActions() {
@@ -486,6 +488,24 @@ export class KIRProfile {
     }
     
     return actions.join('');
+  }
+
+  renderProfileAvatar(initials) {
+    const photoUrl = this.kirData?.gambar_profil_url;
+    if (photoUrl) {
+      const safeUrl = this.escapeHtml(photoUrl);
+      const alt = this.escapeHtml(this.kirData?.nama_penuh || 'Gambar Profil');
+      return `
+        <div class="avatar-circle-modern has-photo">
+          <img src="${safeUrl}" alt="${alt}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.remove();">
+        </div>
+      `;
+    }
+    return `
+      <div class="avatar-circle-modern">
+        <span class="avatar-initials">${initials}</span>
+      </div>
+    `;
   }
 
   // Create sidebar navigation
@@ -565,6 +585,8 @@ export class KIRProfile {
   // Create Maklumat Asas tab
   createMaklumatAsasTab() {
     const data = this.kirData || {};
+    const photoUrl = data.gambar_profil_url || '';
+    const hasPhoto = Boolean(photoUrl);
     
     console.log('=== Maklumat Asas Tab Render Debug ===');
     console.log('kirData for Maklumat Asas:', this.kirData);
@@ -575,9 +597,23 @@ export class KIRProfile {
     return `
       <div class="info-card">
         <form class="kir-form" data-tab="maklumat-asas">
-          <div class="form-group">
+          <div class="form-group profile-photo-group">
             <label for="gambar_profil">Gambar Profil (Opsional)</label>
-            <input type="file" id="gambar_profil" name="gambar_profil" accept="image/*">
+            <div class="profile-photo-field">
+              <div class="profile-photo-preview" id="gambar_profil_preview" style="width:8rem;height:8rem;margin-bottom:0.75rem;">
+                ${hasPhoto
+                  ? `<img src="${this.escapeHtml(photoUrl)}" alt="Gambar Profil" style="width:100%;height:100%;object-fit:cover;border-radius:1rem;">`
+                  : this.getProfilePhotoPlaceholderHTML()}
+              </div>
+              <div class="profile-photo-controls">
+                <input type="file" id="gambar_profil" name="gambar_profil" accept="image/*" ${this.profilePhotoState.uploading ? 'disabled' : ''}>
+                <small class="form-help">PNG/JPG/WEBP sehingga 5MB.</small>
+                <button type="button" class="btn btn-link text-danger" data-action="remove-profile-photo" style="${hasPhoto ? '' : 'display:none;'}">
+                  Padam Foto
+                </button>
+                <div class="form-message" id="gambar_profil_status" style="display:none;"></div>
+              </div>
+            </div>
           </div>
           
           <div class="form-row">
@@ -2117,6 +2153,9 @@ export class KIRProfile {
     this.setupMaritalStatusListener();
     // Track form changes for dirty state
     document.addEventListener('input', (e) => {
+      if (e.target && e.target.id === 'gambar_profil') {
+        return;
+      }
       if (e.target.closest('.kir-form')) {
         const form = e.target.closest('.kir-form');
         const tabId = form.dataset.tab;
@@ -2131,11 +2170,22 @@ export class KIRProfile {
         this.render();
       }
     });
-    
-    // Handle form validation
+
+     // Handle form validation
     document.addEventListener('change', (e) => {
+      if (e.target && e.target.id === 'gambar_profil') {
+        this.handleProfilePhotoInput(e.target);
+        return;
+      }
       if (e.target.closest('.kir-form')) {
         this.validateField(e.target);
+      }
+    });
+    document.addEventListener('click', (e) => {
+      const removeBtn = e.target.closest('[data-action="remove-profile-photo"]');
+      if (removeBtn) {
+        e.preventDefault();
+        this.handleRemoveProfilePhoto();
       }
     });
 
