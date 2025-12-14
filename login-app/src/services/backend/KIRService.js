@@ -1012,6 +1012,57 @@ export class KIRService {
         console.log('❌ No Kesihatan data found');
       }
 
+      // Get Pendapatan (profile) data
+      console.log('Querying Pendapatan collection (profile)...');
+      const pendapatanProfileQuery = query(
+        collection(db, COLLECTIONS.KIR_PENDAPATAN),
+        where('kir_id', '==', kirId),
+        createEnvFilter()
+      );
+      const pendapatanProfileSnapshot = await getDocs(pendapatanProfileQuery);
+      console.log(`Pendapatan profile query result: ${pendapatanProfileSnapshot.size} documents found`);
+      if (!pendapatanProfileSnapshot.empty) {
+        const pendapatanData = pendapatanProfileSnapshot.docs[0].data();
+        relatedData.pendapatan = normalizeFieldNames('kir_pendapatan', pendapatanData);
+        console.log('✅ Pendapatan profile data loaded and normalized');
+      } else {
+        console.log('❌ No Pendapatan profile data found');
+      }
+
+      // Get Perbelanjaan data
+      console.log('Querying Perbelanjaan collection (profile)...');
+      const perbelanjaanProfileQuery = query(
+        collection(db, COLLECTIONS.KIR_PERBELANJAAN),
+        where('kir_id', '==', kirId),
+        createEnvFilter()
+      );
+      const perbelanjaanProfileSnapshot = await getDocs(perbelanjaanProfileQuery);
+      console.log(`Perbelanjaan profile query result: ${perbelanjaanProfileSnapshot.size} documents found`);
+      if (!perbelanjaanProfileSnapshot.empty) {
+        const perbelanjaanData = perbelanjaanProfileSnapshot.docs[0].data();
+        relatedData.perbelanjaan = normalizeFieldNames('kir_perbelanjaan', perbelanjaanData);
+        console.log('✅ Perbelanjaan profile data loaded and normalized');
+      } else {
+        console.log('❌ No Perbelanjaan profile data found');
+      }
+
+      // Get Bantuan Bulanan data
+      console.log('Querying Bantuan Bulanan collection (profile)...');
+      const bantuanProfileQuery = query(
+        collection(db, COLLECTIONS.KIR_BANTUAN_BULANAN),
+        where('kir_id', '==', kirId),
+        createEnvFilter()
+      );
+      const bantuanProfileSnapshot = await getDocs(bantuanProfileQuery);
+      console.log(`Bantuan Bulanan profile query result: ${bantuanProfileSnapshot.size} documents found`);
+      if (!bantuanProfileSnapshot.empty) {
+        const bantuanData = bantuanProfileSnapshot.docs[0].data();
+        relatedData.bantuan_bulanan = normalizeFieldNames('kir_bantuan_bulanan', bantuanData);
+        console.log('✅ Bantuan Bulanan data loaded and normalized');
+      } else {
+        console.log('❌ No Bantuan Bulanan data found');
+      }
+
       // Note: Keluarga (family) data is handled differently:
       // - Basic family status is stored in main KIR record
       // - Detailed spouse data is managed via PasanganService (KIR_PASANGAN collection)

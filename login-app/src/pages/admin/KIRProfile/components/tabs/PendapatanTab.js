@@ -82,11 +82,8 @@ export class PendapatanTab extends BaseTab {
       // Save via KIRService
       await this.kirProfile.kirService.updateRelatedDocument(this.kirProfile.kirId, 'pendapatan', formData);
       
-      // Update local data
-      if (!this.kirProfile.relatedData) {
-        this.kirProfile.relatedData = {};
-      }
-      this.kirProfile.relatedData.pendapatan = { ...this.kirProfile.relatedData.pendapatan, ...formData };
+      // Update local cache
+      this.updateRelatedDataCache(formData);
       
       // Clear dirty state
       this.clearDirty();

@@ -84,11 +84,8 @@ export class BantuanBulananTab extends BaseTab {
       // Save via KIRService
       await this.kirProfile.kirService.updateRelatedDocument(this.kirProfile.kirId, 'bantuan_bulanan', formData);
       
-      // Update local data
-      if (!this.kirProfile.relatedData) {
-        this.kirProfile.relatedData = {};
-      }
-      this.kirProfile.relatedData[this.tabId] = { ...(this.kirProfile.relatedData[this.tabId] || {}), ...formData };
+      // Update local cache
+      this.updateRelatedDataCache(formData);
       
       // Clear dirty state
       this.clearDirty();

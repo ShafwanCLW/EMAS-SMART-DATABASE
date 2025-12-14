@@ -201,6 +201,7 @@ export class KIRProfile {
         kekeluargaan: kirDataWithRelated.kekeluargaan || {},
         pendapatan: kirDataWithRelated.pendapatan || {},
         perbelanjaan: kirDataWithRelated.perbelanjaan || {},
+        'bantuan_bulanan': kirDataWithRelated.bantuan_bulanan || {},
         air: kirDataWithRelated.air || {},
         pkir: kirDataWithRelated.pkir || {},
         program: kirDataWithRelated.program || {}

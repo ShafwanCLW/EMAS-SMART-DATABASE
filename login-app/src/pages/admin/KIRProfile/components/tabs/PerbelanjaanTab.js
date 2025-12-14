@@ -115,11 +115,8 @@ export class PerbelanjaanTab extends BaseTab {
       // Save via KIRService
       await this.kirProfile.kirService.updateRelatedDocument(this.kirProfile.kirId, 'perbelanjaan', formData);
       
-      // Update local data
-      if (!this.kirProfile.relatedData) {
-        this.kirProfile.relatedData = {};
-      }
-      this.kirProfile.relatedData.perbelanjaan = { ...this.kirProfile.relatedData.perbelanjaan, ...formData };
+      // Update local cache
+      this.updateRelatedDataCache(formData);
       
       // Clear dirty state
       this.clearDirty();
