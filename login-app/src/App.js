@@ -1,5 +1,5 @@
 // Main application controller
-import { createLoginForm, handleTabSwitch, handleDemoLogin, showError, handleAuthToggle, handleRegistration, showRegistrationSuccess, showRegistrationError, handleGoogleSignIn, setupForgotPasswordHandlers } from './pages/auth/LoginForm.js';
+import { createLoginForm, handleTabSwitch, handleDemoLogin, showError, setupForgotPasswordHandlers } from './pages/auth/LoginForm.js';
 import { createAdminDashboard, initializeDashboardStats, setupUserManagementListeners, setupKIRManagementListeners, setupCiptaKIRListeners, setupProgramKehadiranListeners, setupProgramKehadiranNewListeners, setupProgramKehadiranNewestListeners, setupSenariKIRListeners, setupReportsListeners, setupSettingsListeners, setupFinancialTrackingListeners, setupFinancialTrackingNewestListeners } from './pages/admin/AdminDashboard.js';
 import { createUserDashboard, setupUserDashboardFeatures } from './pages/user/UserDashboard.js';
 import { FirebaseAuthService, handleFirebaseLogin, handleFirebaseLogout } from './services/frontend/FirebaseAuthService.js';
@@ -25,10 +25,6 @@ export class App {
     
     this.appElement.innerHTML = createLoginForm();
     
-    // Setup authentication mode toggle (login/register)
-    const authToggleContainer = document.querySelector('.auth-toggle');
-    authToggleContainer.addEventListener('click', handleAuthToggle);
-    
     // Setup login form event listener for Firebase authentication
     const loginForm = document.getElementById('loginForm');
     loginForm.addEventListener('submit', (event) => {
@@ -38,36 +34,6 @@ export class App {
         (error) => showError(error)
       );
     });
-    
-    // Setup registration form event listener
-    const registerForm = document.getElementById('registerForm');
-    registerForm.addEventListener('submit', (event) => {
-      handleRegistration(
-        event,
-        (userData) => this.onRegistrationSuccess(userData),
-        (error) => showRegistrationError(error)
-      );
-    });
-    
-    // Set up Google Sign-In buttons
-    const googleLoginBtn = document.getElementById('google-login-btn');
-    const googleRegisterBtn = document.getElementById('google-register-btn');
-    
-    if (googleLoginBtn) {
-      googleLoginBtn.addEventListener('click', (event) => {
-        handleGoogleSignIn(event, this.onLoginSuccess.bind(this), (error) => {
-          console.error('Google login error:', error);
-        });
-      });
-    }
-    
-    if (googleRegisterBtn) {
-      googleRegisterBtn.addEventListener('click', (event) => {
-        handleGoogleSignIn(event, this.onLoginSuccess.bind(this), (error) => {
-          console.error('Google registration error:', error);
-        });
-      });
-    }
     
     // Setup tab switching functionality
     const tabContainer = document.querySelector('.role-tabs');
@@ -413,37 +379,6 @@ export class App {
       AuthService.setCurrentUser(user);
       saveUserSession(user);
       this.renderDashboard();
-    }
-  }
-
-  // Handle successful registration
-  async onRegistrationSuccess(userData) {
-    try {
-      // Register user with Firebase
-      const newUser = await FirebaseAuthService.register(
-        userData.email,
-        userData.password,
-        userData.name,
-        userData.role
-      );
-      
-      // Show success message with email verification info
-      showRegistrationSuccess('Account created successfully!', true);
-      
-      // Clear the registration form
-      document.getElementById('registerForm').reset();
-      
-      // Switch back to login mode after a short delay
-      setTimeout(() => {
-        const loginToggle = document.querySelector('[data-mode="login"]');
-        if (loginToggle) {
-          loginToggle.click();
-        }
-      }, 2000);
-      
-    } catch (error) {
-      console.error('Registration error:', error);
-      showRegistrationError(error.message || 'Registration failed. Please try again.');
     }
   }
 

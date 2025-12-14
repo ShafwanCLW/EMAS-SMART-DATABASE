@@ -48,6 +48,10 @@ const KIR_SCHEMA = {
   ic_document_url: 'string',
   ic_document_name: 'string',
   ic_document_doc_id: 'string',
+  gambar_profil_url: 'string',
+  gambar_profil_name: 'string',
+  gambar_profil_storage_path: 'string',
+  gambar_profil_updated_at: 'timestamp',
   
   // System fields
   status_rekod: 'string',
