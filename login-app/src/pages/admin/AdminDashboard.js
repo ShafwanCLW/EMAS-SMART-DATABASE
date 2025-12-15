@@ -699,6 +699,233 @@ export function createAdminMainContent() {
       gap: 20px;
     }
 
+    .household-summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .family-viewer-card {
+      border-radius: 20px;
+      border: 1px solid #e2e8f0;
+      background: linear-gradient(135deg, #f8f7ff 0%, #ffffff 100%);
+      padding: 20px;
+      box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.05);
+      animation: fadeIn 0.4s ease;
+    }
+
+    .family-viewer-header {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+
+    .family-viewer-label {
+      margin: 0 0 6px;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #94a3b8;
+    }
+
+    .family-select-wrap {
+      min-width: 240px;
+    }
+
+    .family-viewer-select {
+      width: 100%;
+      border-radius: 14px;
+      padding: 10px 14px;
+      border: 1px solid #dbeafe;
+      background: #fff;
+      font-size: 0.95rem;
+      color: #0f172a;
+      box-shadow: 0 10px 25px rgba(99, 102, 241, 0.08);
+      transition: border-color 0.2s ease, box-shadow 0.2s;
+    }
+
+    .family-viewer-select:focus {
+      outline: none;
+      border-color: #7c3aed;
+      box-shadow: 0 12px 30px rgba(124, 58, 237, 0.18);
+    }
+
+    .family-income-pill {
+      background: #ede9fe;
+      color: #4c1d95;
+      border-radius: 16px;
+      padding: 12px 16px;
+      min-width: 220px;
+      text-align: right;
+      box-shadow: inset 0 0 0 1px rgba(76, 29, 149, 0.08);
+    }
+
+    .family-income-pill span {
+      display: block;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 4px;
+    }
+
+    .family-income-pill strong {
+      display: block;
+      font-size: 1.4rem;
+      font-weight: 700;
+    }
+
+    .family-viewer-notice {
+      margin-top: 16px;
+      padding: 12px 16px;
+      border-radius: 14px;
+      background: #f1f5f9;
+      color: #475569;
+      font-size: 0.95rem;
+    }
+
+    .family-viewer-notice.error {
+      background: #fee2e2;
+      color: #b91c1c;
+    }
+
+    .family-tree {
+      margin-top: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .family-tree-layer {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .family-tree-connector {
+      width: 100%;
+      height: 24px;
+      position: relative;
+    }
+
+    .family-tree-connector::before {
+      content: '';
+      position: absolute;
+      left: 50%;
+      width: 1px;
+      height: 100%;
+      background: rgba(124, 58, 237, 0.25);
+    }
+
+    .family-tree-layer.air-layer {
+      justify-content: flex-start;
+    }
+
+    .family-node {
+      min-width: 220px;
+      padding: 16px;
+      border-radius: 18px;
+      background: #fff;
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      box-shadow: 0 12px 24px rgba(15, 23, 42, 0.12);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .family-node::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 18px;
+      pointer-events: none;
+      border: 1px solid transparent;
+    }
+
+    .family-node.kir::after {
+      border-color: rgba(124, 58, 237, 0.4);
+    }
+
+    .family-node.pkir::after {
+      border-color: rgba(34, 197, 94, 0.35);
+    }
+
+    .family-node.air::after {
+      border-color: rgba(14, 165, 233, 0.3);
+    }
+
+    .family-node h5 {
+      margin: 0 0 6px;
+      font-size: 1rem;
+      color: #0f172a;
+    }
+
+    .family-node small {
+      display: block;
+      color: #94a3b8;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 600;
+    }
+
+    .family-meta-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.9rem;
+      color: #475569;
+      margin-bottom: 4px;
+    }
+
+    .family-income-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 10px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: #eef2ff;
+      color: #4338ca;
+      font-weight: 600;
+      font-size: 0.85rem;
+    }
+
+    .family-callout {
+      font-size: 0.85rem;
+      color: #94a3b8;
+    }
+
+    @media (max-width: 768px) {
+      .family-viewer-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .family-income-pill {
+        width: 100%;
+        text-align: left;
+      }
+
+      .family-tree-layer,
+      .family-tree-layer.air-layer {
+        justify-content: center;
+      }
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(12px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
     .subtle-stat-card {
       background: #f8f7ff;
       border: 1px dashed #ddd6fe;
@@ -1444,7 +1671,7 @@ export function createAdminMainContent() {
             </div>
             <span class="layer-chip">Data Terkini</span>
           </div>
-          <div class="layer-card-body">
+          <div class="household-summary-grid">
             <div class="stat-card subtle-stat-card">
               <div class="stat-label">Jumlah KIR</div>
               <div class="stat-value" id="dashboard-total-kir">-</div>
@@ -1459,6 +1686,34 @@ export function createAdminMainContent() {
               <div class="stat-label">Jumlah AIR</div>
               <div class="stat-value" id="dashboard-total-air">-</div>
               <div class="stat-helper-text">Ahli Isi Rumah</div>
+            </div>
+          </div>
+          <div class="family-viewer-card">
+            <div class="family-viewer-header">
+              <div>
+                <p class="family-viewer-label">Lihat pokok keluarga</p>
+                <div class="family-select-wrap">
+                  <select id="family-viewer-select" class="family-viewer-select">
+                    <option value="">Pilih Ketua Isi Rumah</option>
+                  </select>
+                </div>
+              </div>
+              <div class="family-income-pill">
+                <span>Jumlah Pendapatan Isi Rumah</span>
+                <strong id="family-income-total">RM 0.00</strong>
+              </div>
+            </div>
+            <div id="family-viewer-loading" class="family-viewer-notice" hidden>Memuatkan maklumat keluarga...</div>
+            <div id="family-viewer-empty" class="family-viewer-notice">Pilih ketua isi rumah untuk melihat butiran keluarga.</div>
+            <div id="family-viewer-error" class="family-viewer-notice error" hidden>Ralat memuatkan data keluarga. Cuba lagi.</div>
+            <div id="family-tree" class="family-tree" hidden>
+              <div class="family-tree-layer">
+                <div class="family-node" id="family-kir-slot"></div>
+              </div>
+              <div class="family-tree-connector" id="family-kir-connector"></div>
+              <div class="family-tree-layer" id="family-pkir-layer"></div>
+              <div class="family-tree-connector" id="family-pkir-connector"></div>
+              <div class="family-tree-layer air-layer" id="family-air-layer"></div>
             </div>
           </div>
         </div>
@@ -3291,10 +3546,18 @@ let attendanceLeaderLoadingPromise = null;
 let chartModulePromise = null;
 let financialTrendChartInstance = null;
 let programStatusChartInstance = null;
+const familyViewerState = {
+  initialized: false,
+  options: [],
+  cache: new Map(),
+  currentId: '',
+  loadingList: false
+};
 
 export function initializeDashboardStats() {
   loadDashboardStats();
   loadFinancialTrendChart();
+  initializeFamilyQuickViewer();
   
   const dashboardNavItem = document.querySelector('.nav-item[data-section="dashboard"]');
   if (dashboardNavItem && !dashboardNavItem.dataset.dashboardStatsBound) {
@@ -3302,6 +3565,7 @@ export function initializeDashboardStats() {
     dashboardNavItem.addEventListener('click', () => {
       loadDashboardStats();
       loadFinancialTrendChart();
+      initializeFamilyQuickViewer();
       loadAttendanceLeaderList();
     });
   }
@@ -5503,37 +5767,16 @@ function initializeMoneyOut() {
 
 async function fetchFinancialTotals() {
   try {
-    const { collection, getDocs, query } = await import('firebase/firestore');
-    const { db } = await import('../../services/database/firebase.js');
-    const { COLLECTIONS, createEnvFilter } = await import('../../services/database/collections.js');
-    
-    let totalIncome = 0;
-    let totalExpenses = 0;
-    
-    const incomeQuery = query(
-      collection(db, COLLECTIONS.FINANCIAL_INCOME),
-      createEnvFilter()
-    );
-    const incomeSnapshot = await getDocs(incomeQuery);
-    totalIncome = incomeSnapshot.docs.reduce((sum, doc) => {
-      const data = doc.data();
-      return sum + (parseFloat(data.amount) || 0);
-    }, 0);
-    
-    const expenseQuery = query(
-      collection(db, COLLECTIONS.FINANCIAL_EXPENSES),
-      createEnvFilter()
-    );
-    const expenseSnapshot = await getDocs(expenseQuery);
-    totalExpenses = expenseSnapshot.docs.reduce((sum, doc) => {
-      const data = doc.data();
-      return sum + (parseFloat(data.amount) || 0);
-    }, 0);
-    
+    const summary = await fetchFinancialSummaryData();
+    const totalIncome = Number(summary?.totalIncome) || 0;
+    const totalExpenses = Number(summary?.totalExpenses) || 0;
+    const inferredBalance = Number.isFinite(summary?.netBalance)
+      ? summary.netBalance
+      : totalIncome - totalExpenses;
     return {
       totalIncome,
       totalExpenses,
-      currentBalance: totalIncome - totalExpenses
+      currentBalance: inferredBalance
     };
   } catch (error) {
     console.error('Error fetching financial totals:', error);
@@ -5824,7 +6067,12 @@ async function loadFinancialTrendChart(monthCount = 6) {
       const { db } = await import('../../services/database/firebase.js');
       const { COLLECTIONS, createEnvFilter } = await import('../../services/database/collections.js');
       
-      const [incomeSnapshot, expenseSnapshot] = await Promise.all([
+      const [
+        transactionSnapshot,
+        legacyIncomeSnapshot,
+        legacyExpenseSnapshot
+      ] = await Promise.all([
+        getDocs(query(collection(db, COLLECTIONS.FINANCIAL_TRANSACTIONS), createEnvFilter())),
         getDocs(query(collection(db, COLLECTIONS.FINANCIAL_INCOME), createEnvFilter())),
         getDocs(query(collection(db, COLLECTIONS.FINANCIAL_EXPENSES), createEnvFilter()))
       ]);
@@ -5832,25 +6080,47 @@ async function loadFinancialTrendChart(monthCount = 6) {
       const monthBuckets = createMonthBuckets(monthCount);
       const bucketMap = new Map(monthBuckets.map(bucket => [bucket.key, bucket]));
       
-      const accumulateRecords = (snapshot, type) => {
-        snapshot.docs.forEach(doc => {
-          const data = doc.data();
-          const amount = parseFloat(data.amount);
-          if (!Number.isFinite(amount) || amount === 0) {
-            return;
-          }
-          const entryDate = normalizeToDate(data.date || data.tarikh || data.tarikh_cipta || data.tarikh_transaksi);
-          if (!entryDate) return;
-          const key = formatMonthKey(entryDate);
-          const bucket = bucketMap.get(key);
-          if (bucket) {
-            bucket[type] += amount;
-          }
-        });
+      const addToBucket = (entryDate, type, amount) => {
+        if (!Number.isFinite(amount) || amount === 0) return false;
+        const key = formatMonthKey(entryDate);
+        const bucket = bucketMap.get(key);
+        if (!bucket) return false;
+        bucket[type] += amount;
+        return true;
       };
       
-      accumulateRecords(incomeSnapshot, 'income');
-      accumulateRecords(expenseSnapshot, 'expenses');
+      let hasGrantData = false;
+      transactionSnapshot.docs.forEach(doc => {
+        const data = doc.data() || {};
+        const amount = Number(data.amount) || 0;
+        if (!Number.isFinite(amount) || amount === 0) {
+          return;
+        }
+        const entryDate = normalizeToDate(data.createdAt || data.date || data.updatedAt);
+        if (!entryDate) return;
+        const typeKey = data.type === 'deduction' ? 'expenses' : 'income';
+        if (addToBucket(entryDate, typeKey, Math.abs(amount))) {
+          hasGrantData = true;
+        }
+      });
+      
+      if (!hasGrantData) {
+        const accumulateLegacyRecords = (snapshot, type) => {
+          snapshot.docs.forEach(doc => {
+            const data = doc.data() || {};
+            const amount = parseFloat(data.amount ?? data.jumlah ?? data.value);
+            if (!Number.isFinite(amount) || amount === 0) return;
+            const entryDate = normalizeToDate(
+              data.date || data.tarikh || data.tarikh_cipta || data.tarikh_transaksi
+            );
+            if (!entryDate) return;
+            addToBucket(entryDate, type, Math.abs(amount));
+          });
+        };
+        
+        accumulateLegacyRecords(legacyIncomeSnapshot, 'income');
+        accumulateLegacyRecords(legacyExpenseSnapshot, 'expenses');
+      }
       
       await renderFinancialTrendChart(monthBuckets);
     } catch (error) {
@@ -5936,6 +6206,326 @@ async function loadAttendanceLeaderList(limit = 3) {
   
   attendanceLeaderLoadingPromise = pendingLoad;
   return pendingLoad;
+}
+
+function initializeFamilyQuickViewer() {
+  const select = document.getElementById('family-viewer-select');
+  if (!select) {
+    return;
+  }
+  if (!familyViewerState.initialized) {
+    select.addEventListener('change', event => {
+      const kirId = event.target.value;
+      familyViewerState.currentId = kirId;
+      if (!kirId) {
+        updateFamilyIncomeTotal(0);
+        resetFamilyTree();
+        setFamilyViewerState('empty');
+        return;
+      }
+      renderFamilyViewer(kirId);
+    });
+    familyViewerState.initialized = true;
+  }
+  loadFamilyViewerKIRList();
+}
+
+async function loadFamilyViewerKIRList() {
+  const select = document.getElementById('family-viewer-select');
+  if (!select || familyViewerState.loadingList) {
+    return;
+  }
+  if (familyViewerState.options.length) {
+    if (familyViewerState.currentId) {
+      select.value = familyViewerState.currentId;
+      renderFamilyViewer(familyViewerState.currentId);
+    }
+    return;
+  }
+  familyViewerState.loadingList = true;
+  const previousValue = select.value;
+  select.disabled = true;
+  try {
+    const response = await KIRService.getKIRList({ status: 'all', pageSize: 200 });
+    const items = (response?.items || []).map(item => ({
+      id: item.id,
+      name: item.nama_penuh || item.nama || 'Tanpa Nama',
+      noKp: item.no_kp || item.no_kp_display || ''
+    }));
+    items.sort((a, b) => a.name.localeCompare(b.name));
+    familyViewerState.options = items;
+    select.innerHTML = ['<option value="">Pilih Ketua Isi Rumah</option>', ...items.map(item => {
+      const display = item.noKp ? `${item.name} (${item.noKp})` : item.name;
+      return `<option value="${escapeHtml(item.id)}">${escapeHtml(display)}</option>`;
+    })].join('');
+    select.disabled = false;
+    const nextValue = previousValue && items.some(item => item.id === previousValue)
+      ? previousValue
+      : items.length ? items[0].id : '';
+    if (nextValue) {
+      select.value = nextValue;
+      familyViewerState.currentId = nextValue;
+      renderFamilyViewer(nextValue);
+    } else {
+      setFamilyViewerState('empty');
+    }
+  } catch (error) {
+    console.error('Error loading family viewer KIR list:', error);
+    select.disabled = false;
+    setFamilyViewerState('error');
+  } finally {
+    familyViewerState.loadingList = false;
+  }
+}
+
+async function renderFamilyViewer(kirId) {
+  if (!kirId) {
+    return;
+  }
+  setFamilyViewerState('loading');
+  try {
+    const bundle = await getFamilyBundle(kirId);
+    if (!bundle) {
+      resetFamilyTree();
+      updateFamilyIncomeTotal(0);
+      setFamilyViewerState('empty');
+      return;
+    }
+    const kirSlot = document.getElementById('family-kir-slot');
+    const pkirLayer = document.getElementById('family-pkir-layer');
+    const airLayer = document.getElementById('family-air-layer');
+    const kirConnector = document.getElementById('family-kir-connector');
+    const pkirConnector = document.getElementById('family-pkir-connector');
+    if (!kirSlot || !pkirLayer || !airLayer) {
+      return;
+    }
+    kirSlot.className = 'family-node kir';
+    kirSlot.innerHTML = buildFamilyNodeMarkup(bundle.kir, 'Ketua Isi Rumah');
+    if (bundle.pkir) {
+      pkirLayer.hidden = false;
+      pkirLayer.innerHTML = `<div class="family-node pkir">${buildFamilyNodeMarkup(bundle.pkir, 'Pasangan')}</div>`;
+    } else {
+      pkirLayer.hidden = true;
+      pkirLayer.innerHTML = '';
+    }
+    if (bundle.airMembers.length) {
+      airLayer.hidden = false;
+      airLayer.innerHTML = bundle.airMembers
+        .map(member => `<div class="family-node air">${buildFamilyNodeMarkup(member, 'Ahli Isi Rumah')}</div>`)
+        .join('');
+    } else {
+      airLayer.hidden = true;
+      airLayer.innerHTML = '';
+    }
+    if (kirConnector) {
+      kirConnector.hidden = !(bundle.pkir || bundle.airMembers.length);
+    }
+    if (pkirConnector) {
+      pkirConnector.hidden = !(bundle.pkir && bundle.airMembers.length);
+    }
+    updateFamilyIncomeTotal(bundle.totalIncome);
+    setFamilyViewerState('ready');
+  } catch (error) {
+    console.error('Error rendering family viewer:', error);
+    resetFamilyTree();
+    updateFamilyIncomeTotal(0);
+    setFamilyViewerState('error');
+  }
+}
+
+async function getFamilyBundle(kirId) {
+  if (familyViewerState.cache.has(kirId)) {
+    return familyViewerState.cache.get(kirId);
+  }
+  try {
+    const { PasanganService } = await import('../../services/backend/PasanganService.js');
+    const { AIRService } = await import('../../services/backend/AIRService.js');
+    const [kirData, pkirData, airList, pendapatanList] = await Promise.all([
+      KIRService.getKIRById(kirId),
+      PasanganService.getPKIRByKirId(kirId).catch(() => null),
+      AIRService.listAIR(kirId).catch(() => []),
+      KIRService.listPendapatan(kirId).catch(() => [])
+    ]);
+    if (!kirData) {
+      return null;
+    }
+    const bundle = formatFamilyBundle(kirData, pkirData, airList, pendapatanList);
+    familyViewerState.cache.set(kirId, bundle);
+    return bundle;
+  } catch (error) {
+    console.error('Error building family bundle:', error);
+    throw error;
+  }
+}
+
+function formatFamilyBundle(kirData, pkirData, airList = [], pendapatanList = []) {
+  if (!kirData) {
+    return null;
+  }
+  const kir = {
+    name: kirData.nama_penuh || kirData.nama || 'Tanpa Nama',
+    ic: kirData.no_kp || kirData.no_kp_display || '-',
+    phone: kirData.telefon_utama || kirData.no_telefon || kirData.telefon_kecemasan || '-',
+    relation: 'Ketua Isi Rumah',
+    income: calculatePersonIncome(kirData.pendapatan, pendapatanList, kirData)
+  };
+  let pkir = null;
+  if (pkirData) {
+    pkir = {
+      name: pkirData.asas?.nama || pkirData.nama || 'Pasangan',
+      ic: pkirData.asas?.no_kp || pkirData.no_kp || '-',
+      phone: pkirData.asas?.telefon || pkirData.telefon || '-',
+      relation: pkirData.asas?.status_pasangan ? `Pasangan (${pkirData.asas.status_pasangan})` : 'Pasangan',
+      income: calculatePersonIncome(pkirData.pekerjaan, [], pkirData)
+    };
+  }
+  const airMembers = Array.isArray(airList)
+    ? airList.map(member => ({
+        id: member.id,
+        name: member.nama || member.asas?.nama || 'Ahli Keluarga',
+        ic: member.no_kp || member.no_kp_display || '-',
+        phone: member.telefon || member.no_telefon || member.asas?.telefon || '-',
+        relation: member.hubungan || member.relation || 'Ahli Isi Rumah',
+        income: calculatePersonIncome(member.pendapatan || member, [], member)
+      }))
+    : [];
+  const totalIncome = [kir.income, pkir?.income || 0, ...airMembers.map(member => member.income || 0)]
+    .reduce((sum, value) => sum + (Number(value) || 0), 0);
+  return { kir, pkir, airMembers, totalIncome };
+}
+
+function calculatePersonIncome(profileData = {}, listEntries = [], fallbackData = {}) {
+  if (Array.isArray(listEntries) && listEntries.length) {
+    const listSum = listEntries.reduce((sum, entry) => sum + (Number(entry?.jumlah) || 0), 0);
+    if (listSum > 0) {
+      return listSum;
+    }
+  }
+  const profileIncome = extractIncomeFromObject(profileData);
+  if (profileIncome > 0) {
+    return profileIncome;
+  }
+  const fallbackIncome = extractIncomeFromObject(fallbackData);
+  return fallbackIncome > 0 ? fallbackIncome : 0;
+}
+
+function extractIncomeFromObject(data) {
+  if (!data || typeof data !== 'object') {
+    return 0;
+  }
+  const prioritizeKeys = [
+    'jumlah_keseluruhan_pendapatan',
+    'jumlah_pendapatan',
+    'pendapatan_bulanan',
+    'pendapatan',
+    'income',
+    'amount',
+    'gaji_bulanan',
+    'jumlah_gaji'
+  ];
+  for (const key of prioritizeKeys) {
+    const value = Number(data[key]);
+    if (Number.isFinite(value) && value > 0) {
+      return value;
+    }
+  }
+  const sumKeys = [
+    'jumlah_pendapatan_utama',
+    'jumlah_pendapatan_sampingan',
+    'jumlah_pendapatan_lain',
+    'pendapatan_tetap',
+    'pendapatan_tidak_tetap'
+  ];
+  const sum = sumKeys.reduce((acc, key) => acc + (Number(data[key]) || 0), 0);
+  if (sum > 0) {
+    return sum;
+  }
+  if (data.pekerjaan && data !== data.pekerjaan) {
+    return extractIncomeFromObject(data.pekerjaan);
+  }
+  return 0;
+}
+
+function buildFamilyNodeMarkup(person, defaultRelation) {
+  if (!person) {
+    return '';
+  }
+  const relation = person.relation || defaultRelation || '';
+  const icDisplay = person.ic || '-';
+  const phone = person.phone || '-';
+  const income = Number(person.income) || 0;
+  return `
+    <small>${escapeHtml(relation)}</small>
+    <h5>${escapeHtml(person.name || 'Tidak diketahui')}</h5>
+    <div class="family-meta-row">
+      <span>${escapeHtml(icDisplay)}</span>
+    </div>
+    <div class="family-meta-row">
+      <span>${escapeHtml(phone)}</span>
+    </div>
+    <div class="family-income-chip">
+      <span>${escapeHtml(formatCurrency(income))}</span>
+    </div>
+  `;
+}
+
+function setFamilyViewerState(state) {
+  const loadingEl = document.getElementById('family-viewer-loading');
+  const emptyEl = document.getElementById('family-viewer-empty');
+  const errorEl = document.getElementById('family-viewer-error');
+  const treeEl = document.getElementById('family-tree');
+  if (!loadingEl || !emptyEl || !errorEl || !treeEl) {
+    return;
+  }
+  loadingEl.hidden = state !== 'loading';
+  emptyEl.hidden = state !== 'empty';
+  errorEl.hidden = state !== 'error';
+  treeEl.hidden = state !== 'ready';
+}
+
+function updateFamilyIncomeTotal(amount) {
+  const target = document.getElementById('family-income-total');
+  if (target) {
+    target.textContent = formatCurrency(Number(amount) || 0);
+  }
+}
+
+function resetFamilyTree() {
+  const kirSlot = document.getElementById('family-kir-slot');
+  const pkirLayer = document.getElementById('family-pkir-layer');
+  const airLayer = document.getElementById('family-air-layer');
+  const kirConnector = document.getElementById('family-kir-connector');
+  const pkirConnector = document.getElementById('family-pkir-connector');
+  if (kirSlot) {
+    kirSlot.className = 'family-node';
+    kirSlot.innerHTML = '';
+  }
+  if (pkirLayer) {
+    pkirLayer.innerHTML = '';
+    pkirLayer.hidden = true;
+  }
+  if (airLayer) {
+    airLayer.innerHTML = '';
+    airLayer.hidden = true;
+  }
+  if (kirConnector) {
+    kirConnector.hidden = true;
+  }
+  if (pkirConnector) {
+    pkirConnector.hidden = true;
+  }
+}
+
+function escapeHtml(value) {
+  if (value === null || value === undefined) {
+    return '';
+  }
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
 function createMonthBuckets(monthCount) {
