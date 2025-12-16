@@ -827,6 +827,11 @@ export class KIRProfile {
             <input type="number" id="bilangan_anak" name="bilangan_anak" value="${data.bilangan_anak || ''}" min="0">
           </div>
 
+          <div class="form-group">
+            <label for="bilangan_anak_keseluruhan">Bilangan Anak Keseluruhan</label>
+            <input type="number" id="bilangan_anak_keseluruhan" name="bilangan_anak_keseluruhan" value="${data.bilangan_anak_keseluruhan || ''}" min="0">
+          </div>
+
           <div class="form-group" id="bilangan_isteri_group" style="${shouldShowSpouseSection ? '' : 'display: none;'}">
             <label for="bilangan_isteri">Bilangan Pasangan/Bekas Pasangan</label>
             <select id="bilangan_isteri" name="bilangan_isteri">
