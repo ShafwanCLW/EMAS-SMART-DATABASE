@@ -10,6 +10,30 @@ export function normalizeICDigits(icValue = '') {
 }
 
 /**
+ * Normalize identity numbers for NRIC or Passport depending on type
+ * @param {string} value
+ * @param {'nric'|'passport'} identityType
+ * @returns {string}
+ */
+export function normalizeIdentityValue(value = '', identityType = 'nric') {
+  const raw = (value || '').toString();
+  const looksPassport = /[A-Za-z]/.test(raw);
+  if (identityType === 'passport' || looksPassport) {
+    return raw.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 20);
+  }
+  return normalizeICDigits(raw);
+}
+
+/**
+ * Helper to detect passport identity type
+ * @param {string} identityType
+ * @returns {boolean}
+ */
+export function isPassportIdentity(identityType) {
+  return identityType === 'passport';
+}
+
+/**
  * Format an IC value using the standard xxxxxx-xx-xxxx structure
  * @param {string} icValue
  * @returns {string}
@@ -24,6 +48,22 @@ export function formatICWithDashes(icValue = '') {
     return `${digits.slice(0, 6)}-${digits.slice(6)}`;
   }
   return `${digits.slice(0, 6)}-${digits.slice(6, 8)}-${digits.slice(8)}`;
+}
+
+/**
+ * Format display for NRIC/Passport dynamically
+ * @param {string} value
+ * @param {'nric'|'passport'} identityType
+ * @returns {string}
+ */
+export function formatIdentityDisplay(value = '', identityType = 'nric') {
+  if (!value) return '';
+  const raw = value.toString();
+  const looksPassport = /[A-Za-z]/.test(raw);
+  if (isPassportIdentity(identityType) || looksPassport) {
+    return raw.toUpperCase();
+  }
+  return formatICWithDashes(raw) || raw;
 }
 
 /**

@@ -32,6 +32,7 @@ export class KIRService {
       const cleanedData = validateKIR(draft);
       
       // Normalize No. KP
+      const rawNoKP = (cleanedData.no_kp_raw || cleanedData.no_kp || '').toString();
       const normalizedNoKP = this.normalizeNoKP(cleanedData.no_kp || cleanedData.no_kp_raw);
       if (!normalizedNoKP) {
         throw new Error('No. KP is required for KIR creation');
@@ -54,7 +55,7 @@ export class KIRService {
       const kirId = kirRef.id;
       
       // Create No. KP index first (atomic uniqueness check)
-      await this.createNoKPIndex(normalizedNoKP, kirId, cleanedData.nama_penuh || '');
+      await this.createNoKPIndex(rawNoKP || normalizedNoKP, kirId, cleanedData.nama_penuh || '');
       
       try {
         // Build address using helper function
@@ -68,7 +69,7 @@ export class KIRService {
         const kirData = addStandardFields({
           id: kirId,
           no_kp: normalizedNoKP,
-          no_kp_raw: cleanedData.no_kp_raw || cleanedData.no_kp || '',
+          no_kp_raw: rawNoKP || normalizedNoKP,
           nama_penuh: cleanedData.nama_penuh || '',
           jantina: cleanedData.jantina || '',
           tarikh_lahir: cleanedData.tarikh_lahir || null,
@@ -146,17 +147,20 @@ export class KIRService {
 
       
       // Handle No. KP changes with index updates
+      const currentRawNoKP = currentData.no_kp_raw || currentData.no_kp || '';
+      const incomingRawNoKP = cleanedData.no_kp_raw || cleanedData.no_kp || '';
+
       if (cleanedData.no_kp && this.normalizeNoKP(cleanedData.no_kp) !== this.normalizeNoKP(currentData.no_kp)) {
         await this.updateNoKPIndex(
-          currentData.no_kp,
-          cleanedData.no_kp,
+          currentRawNoKP,
+          incomingRawNoKP,
           id,
           cleanedData.nama_penuh || currentData.nama_penuh || ''
         );
       } else if (cleanedData.nama_penuh && currentData.no_kp) {
         await this.updateNoKPIndex(
-          currentData.no_kp,
-          currentData.no_kp,
+          currentRawNoKP,
+          currentRawNoKP,
           id,
           cleanedData.nama_penuh
         );

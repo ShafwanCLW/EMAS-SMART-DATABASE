@@ -1,7 +1,10 @@
 // Import KIR Service
 import { KIRService } from '../../services/backend/KIRService.js';
 import { validateKIR } from '../../lib/validators.js';
-import { formatICWithDashes, normalizeICDigits } from './KIRProfile/components/shared/icUtils.js';
+import {
+    formatIdentityDisplay as sharedFormatIdentityDisplay,
+    isPassportIdentity
+} from './KIRProfile/components/shared/icUtils.js';
 
 export class SenaraiKIR {
     constructor() {
@@ -35,7 +38,7 @@ export class SenaraiKIR {
             <div class="filters-section">
                 <div class="filters-row">
                     <div class="search-group">
-                        <input type="text" id="kir-search-new" placeholder="Cari nama atau No. KP..." class="search-input">
+                        <input type="text" id="kir-search-new" placeholder="Cari nama atau No. Dokumen..." class="search-input">
                         <button id="search-btn-new" class="btn btn-primary">🔍 Cari</button>
                     </div>
                     <div class="filter-group">
@@ -85,7 +88,7 @@ export class SenaraiKIR {
                             <tr>
                                 <th>KIR ID</th>
                                 <th>NAMA</th>
-                                <th>IC NUMBER</th>
+                                <th>NO. DOKUMEN</th>
                                 <th>STATUS</th>
                                 <th>CREATED DATE</th>
                                 <th>ACTIONS</th>
@@ -269,6 +272,37 @@ export class SenaraiKIR {
              .user-email {
                  color: #64748b;
                  font-size: 0.75rem;
+             }
+             .identity-cell {
+                 display: flex;
+                 flex-direction: column;
+                 gap: 4px;
+             }
+             .identity-value {
+                 font-weight: 600;
+                 color: #1e293b;
+             }
+             .identity-type-chip {
+                 display: inline-flex;
+                 align-items: center;
+                 width: fit-content;
+                 padding: 2px 8px;
+                 border-radius: 999px;
+                 font-size: 0.65rem;
+                 font-weight: 600;
+                 letter-spacing: 0.05em;
+                 text-transform: uppercase;
+                 border: 1px solid transparent;
+             }
+             .identity-type-chip.nric {
+                 background-color: rgba(99, 102, 241, 0.12);
+                 color: #4338ca;
+                 border-color: rgba(99, 102, 241, 0.3);
+             }
+             .identity-type-chip.passport {
+                 background-color: rgba(16, 185, 129, 0.15);
+                 color: #047857;
+                 border-color: rgba(16, 185, 129, 0.3);
              }
 
              /* Status Badge Styles */
@@ -826,7 +860,14 @@ export class SenaraiKIR {
                         <span class="user-email">${kir.email || 'Tiada Email'}</span>
                     </div>
                 </td>
-                <td class="nokp">${this.formatICDisplay(kir.no_kp)}</td>
+                <td class="nokp">
+                    <div class="identity-cell">
+                        <span class="identity-value">${this.formatICDisplay(kir.no_kp, kir.identity_type, kir.no_kp_raw || kir.no_kp_display)}</span>
+                        <span class="identity-type-chip ${isPassportIdentity(kir.identity_type) ? 'passport' : 'nric'}">
+                            ${this.getIdentityLabel(kir.identity_type)}
+                        </span>
+                    </div>
+                </td>
                 <td><span class="status-badge ${this.mapDatabaseStatusToUI(kir.status_rekod)}">${this.getStatusText(kir.status_rekod)}</span></td>
                 <td class="date">${this.formatDate(kir.tarikh_cipta)}</td>
                 <td>
@@ -883,7 +924,7 @@ export class SenaraiKIR {
             return;
         }
 
-        const confirmMessage = `Adakah anda pasti ingin memadam KIR untuk:\n\nNama: ${kir.nama_penuh}\nNo. KP: ${this.formatICDisplay(kir.no_kp)}\n\nTindakan ini tidak boleh dibatalkan.`;
+        const confirmMessage = `Adakah anda pasti ingin memadam KIR untuk:\n\nNama: ${kir.nama_penuh}\n${this.getIdentityLabel(kir.identity_type)}: ${this.formatICDisplay(kir.no_kp, kir.identity_type, kir.no_kp_raw || kir.no_kp_display)}\n\nTindakan ini tidak boleh dibatalkan.`;
         
         if (!confirm(confirmMessage)) {
             return;
@@ -1180,12 +1221,20 @@ export class SenaraiKIR {
         return this.sanitizeIdentityValue(ic, type);
     }
 
-    formatICDisplay(ic) {
-        const formatted = formatICWithDashes(ic);
+    formatICDisplay(value, identityType = 'nric', rawValue = '') {
+        const effectiveType = identityType || (/[A-Za-z]/.test((rawValue || value || '').toString()) ? 'passport' : 'nric');
+        const displaySource = isPassportIdentity(effectiveType)
+            ? (rawValue || value)
+            : (value || rawValue);
+        const formatted = sharedFormatIdentityDisplay(displaySource, effectiveType);
         if (formatted) {
             return formatted;
         }
-        return ic || 'Tiada No. KP';
+        return displaySource || 'Tiada No. Dokumen';
+    }
+
+    getIdentityLabel(identityType = 'nric') {
+        return isPassportIdentity(identityType) ? 'Passport' : 'No. KP';
     }
 
     /**
@@ -1272,9 +1321,11 @@ export class SenaraiKIR {
         const icInput = document.getElementById('kir-ic');
         
         const identityType = this.getSelectedIdentityType();
+        const rawIdentity = icInput.value.trim();
         const formData = {
             nama_penuh: nameInput.value.trim(),
-            no_kp: this.formatICNumber(icInput.value.trim()),
+            no_kp: this.formatICNumber(rawIdentity),
+            no_kp_raw: rawIdentity,
             identity_type: identityType,
             status_rekod: 'Draf'
         };

@@ -1612,6 +1612,10 @@ export class AIRTab extends BaseTab {
     const ageInput = form.querySelector('[name="umur"]');
     if (!birthInput || !ageInput) return;
 
+    if (this.isPassportValue(icValue)) {
+      return;
+    }
+
     const birthInfo = deriveBirthInfoFromIC(icValue);
     if (!birthInfo) {
       if (clearOnInvalid) {
@@ -1815,19 +1819,27 @@ export class AIRTab extends BaseTab {
   }
 
   normalizeICValue(value = '') {
-    return (value || '')
-      .toString()
-      .replace(/\D/g, '')
-      .slice(0, 12);
+    const raw = (value || '').toString();
+    if (this.isPassportValue(raw)) {
+      return raw.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 20);
+    }
+    return raw.replace(/\D/g, '').slice(0, 12);
+  }
+
+  isPassportValue(value = '') {
+    return /[A-Za-z]/.test((value || '').toString());
   }
 
   formatICForInput(value = '') {
-    const digits = this.normalizeICValue(value);
-    if (!digits) return '';
+    const normalized = this.normalizeICValue(value);
+    if (!normalized) return '';
+    if (this.isPassportValue(normalized)) {
+      return normalized;
+    }
 
-    const part1 = digits.slice(0, 6);
-    const part2 = digits.slice(6, 8);
-    const part3 = digits.slice(8, 12);
+    const part1 = normalized.slice(0, 6);
+    const part2 = normalized.slice(6, 8);
+    const part3 = normalized.slice(8, 12);
     const segments = [];
 
     if (part1) segments.push(part1);
@@ -1856,12 +1868,18 @@ export class AIRTab extends BaseTab {
   attachICInputMask(input) {
     if (!input) return;
 
-    input.setAttribute('maxlength', '14');
+    input.setAttribute('maxlength', '20');
 
     const formatAndMaintainCursor = (event) => {
       const rawValue = event.target.value || '';
+      if (this.isPassportValue(rawValue)) {
+        const normalized = this.normalizeICValue(rawValue);
+        event.target.value = normalized;
+        return;
+      }
+
       const selectionStart = event.target.selectionStart || rawValue.length;
-      const digitsBeforeCursor = this.normalizeICValue(rawValue.slice(0, selectionStart)).length;
+      const digitsBeforeCursor = this.normalizeICValue(rawValue.slice(0, selectionStart)).replace(/\D/g, '').length;
       const formattedValue = this.formatICForInput(rawValue);
       event.target.value = formattedValue;
 
@@ -1873,7 +1891,7 @@ export class AIRTab extends BaseTab {
 
     input.addEventListener('input', formatAndMaintainCursor);
     input.addEventListener('blur', () => {
-      input.value = this.formatICForInput(input.value);
+        input.value = this.formatICForInput(input.value);
     });
   }
 

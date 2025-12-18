@@ -448,7 +448,21 @@ export class PKIRTab extends BaseTab {
     const icInput = form.querySelector('#no_kp_pasangan');
     if (!birthInput || !ageInput) return;
 
+    if (this.isPassportValue(icValue)) {
+      if (icInput) {
+        icInput.setCustomValidity('');
+      }
+      return;
+    }
+
     const digits = this.normalizeICValue(icValue);
+    if (this.isPassportValue(digits)) {
+      if (icInput) {
+        icInput.setCustomValidity('');
+      }
+      return;
+    }
+
     const info = deriveBirthInfoFromIC(digits);
     if (!info) {
       if (clearOnInvalid) {
@@ -474,15 +488,26 @@ export class PKIRTab extends BaseTab {
   }
 
   normalizeICValue(value = '') {
-    return (value || '').replace(/\D/g, '').slice(0, 12);
+    const raw = (value || '').toString();
+    if (this.isPassportValue(raw)) {
+      return raw.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 20);
+    }
+    return raw.replace(/\D/g, '').slice(0, 12);
+  }
+
+  isPassportValue(value = '') {
+    return /[A-Za-z]/.test((value || '').toString());
   }
 
   formatICForInput(value = '') {
-    const digits = this.normalizeICValue(value);
-    if (!digits) return '';
-    const seg1 = digits.slice(0, 6);
-    const seg2 = digits.slice(6, 8);
-    const seg3 = digits.slice(8, 12);
+    const normalized = this.normalizeICValue(value);
+    if (!normalized) return '';
+    if (this.isPassportValue(normalized)) {
+      return normalized;
+    }
+    const seg1 = normalized.slice(0, 6);
+    const seg2 = normalized.slice(6, 8);
+    const seg3 = normalized.slice(8, 12);
     return [seg1, seg2, seg3].filter(Boolean).join('-');
   }
 
@@ -500,12 +525,18 @@ export class PKIRTab extends BaseTab {
 
   attachICInputMask(input) {
     if (!input) return;
-    input.setAttribute('maxlength', '14');
+    input.setAttribute('maxlength', '20');
 
     const formatAndMaintainCursor = (event) => {
       const rawValue = event.target.value || '';
+      if (this.isPassportValue(rawValue)) {
+        const normalized = this.normalizeICValue(rawValue);
+        event.target.value = normalized;
+        return;
+      }
+
       const selectionStart = event.target.selectionStart || rawValue.length;
-      const digitsBeforeCursor = this.normalizeICValue(rawValue.slice(0, selectionStart)).length;
+      const digitsBeforeCursor = this.normalizeICValue(rawValue.slice(0, selectionStart)).replace(/\D/g, '').length;
       const formattedValue = this.formatICForInput(rawValue);
       event.target.value = formattedValue;
 

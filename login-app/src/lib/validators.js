@@ -300,9 +300,10 @@ export function validateKIR(data) {
   
   // Special handling for no_kp normalization
   if (cleaned.no_kp_raw) {
+    cleaned.no_kp_raw = cleaned.no_kp_raw.toString().trim();
     cleaned.no_kp = normalizeNoKP(cleaned.no_kp_raw);
   } else if (cleaned.no_kp) {
-    cleaned.no_kp_raw = cleaned.no_kp;
+    cleaned.no_kp_raw = cleaned.no_kp.toString().trim();
     cleaned.no_kp = normalizeNoKP(cleaned.no_kp);
   }
   

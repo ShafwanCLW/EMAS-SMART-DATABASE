@@ -3,7 +3,7 @@ import { FirebaseAuthService } from '../../services/frontend/FirebaseAuthService
 import { createRegistrationFormMarkup } from '../auth/LoginForm.js';
 import { normalizeNoKP } from '../../services/database/collections.js';
 import { KIRService } from '../../services/backend/KIRService.js';
-import { formatICWithDashes } from './KIRProfile/components/shared/icUtils.js';
+import { formatICWithDashes, formatIdentityDisplay, normalizeIdentityValue } from './KIRProfile/components/shared/icUtils.js';
 
 let currentAddUserContext = null;
 let currentEditingUser = null;
@@ -12,8 +12,61 @@ let userManagementToastTimer = null;
 
 function formatDisplayNoKP(noKp) {
   if (!noKp) return '-';
-  const formatted = formatICWithDashes(noKp);
+  const formatted = formatIdentityDisplay(noKp);
   return formatted || noKp;
+}
+
+function sanitizeIdentityInput(value, identityType = 'nric') {
+  return normalizeIdentityValue(value, identityType);
+}
+
+function formatIdentityInputDisplay(value, identityType = 'nric') {
+  if (!value) return '';
+  if (identityType === 'passport') {
+    return sanitizeIdentityInput(value, 'passport');
+  }
+  const digits = sanitizeIdentityInput(value, 'nric');
+  return formatICWithDashes(digits);
+}
+
+function getAddUserIdentityType(modal) {
+  return modal?.querySelector('input[name="admin_identity_type"]:checked')?.value || 'nric';
+}
+
+function applyAddUserIdentityRules(modal, type) {
+  const input = modal?.querySelector('#adminNoKPInput');
+  if (!input) return;
+  if (type === 'passport') {
+    input.removeAttribute('maxlength');
+    input.placeholder = 'Contoh: A1234567';
+    input.inputMode = 'text';
+    return;
+  }
+  input.setAttribute('maxlength', '14');
+  input.placeholder = '123456-12-1234';
+  input.inputMode = 'numeric';
+}
+
+function setupAddUserIdentityControls(modal) {
+  if (!modal) return;
+  const identityRadios = modal.querySelectorAll('input[name="admin_identity_type"]');
+  const input = modal.querySelector('#adminNoKPInput');
+  if (!identityRadios.length || !input) return;
+
+  identityRadios.forEach(radio => {
+    radio.addEventListener('change', () => {
+      if (!radio.checked) return;
+      applyAddUserIdentityRules(modal, radio.value);
+      input.value = formatIdentityInputDisplay(input.value, radio.value);
+    });
+  });
+
+  input.addEventListener('input', event => {
+    const type = getAddUserIdentityType(modal);
+    event.target.value = formatIdentityInputDisplay(event.target.value, type);
+  });
+
+  applyAddUserIdentityRules(modal, getAddUserIdentityType(modal));
 }
 // Note: Firebase functions are dynamically imported in the code
 
@@ -301,6 +354,38 @@ export function createAdminMainContent() {
       background: #fef2f2;
       color: #b91c1c;
       border: 1px solid #fecaca;
+    }
+
+    .identity-type-group {
+      margin-top: 10px;
+    }
+
+    .identity-type-options {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .identity-type-option {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 999px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      background: #fff;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .identity-type-option input {
+      margin: 0;
+    }
+
+    .identity-type-option:hover {
+      border-color: #c7d2fe;
+      box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.15);
     }
     
     .admin-add-user-step {
@@ -3778,12 +3863,16 @@ function openAddUserModal(prefill = {}) {
   const noKpInput = modal.querySelector('#adminNoKPInput');
   if (noKpInput) {
     if (prefill.noKp) {
-      noKpInput.value = formatICWithDashes(prefill.noKp);
+      const type = prefill.identityType || 'nric';
+      const radio = modal.querySelector(`input[name="admin_identity_type"][value="${type}"]`);
+      if (radio) {
+        radio.checked = true;
+      }
+      noKpInput.value = formatIdentityInputDisplay(prefill.noKp, type);
     }
-    noKpInput.addEventListener('input', (event) => {
-      event.target.value = formatICWithDashes(event.target.value);
-    });
   }
+
+  setupAddUserIdentityControls(modal);
 }
 
 function closeAddUserModal() {
@@ -3831,20 +3920,31 @@ function getAddUserModalTemplate() {
           <h3>Langkah 1: Sahkan No. Kad Pengenalan</h3>
           <form id="adminNoKPCheckForm">
             <div class="form-group">
-              <label for="adminNoKPInput">No. Kad Pengenalan</label>
+              <label for="adminNoKPInput">No. Dokumen</label>
               <input 
                 type="text" 
                 id="adminNoKPInput" 
                 name="no_kp" 
                 required 
-                maxlength="14" 
-                inputmode="numeric" 
-                pattern="\\d{6}-\\d{2}-\\d{4}"
                 placeholder="123456-12-1234">
-              <small class="form-help">Gunakan format standard: 123456-12-1234</small>
+              <small class="form-help">Masukkan No. Kad Pengenalan atau nombor Passport.</small>
+            </div>
+            <div class="form-group identity-type-group">
+              <label>Jenis Dokumen</label>
+              <div class="identity-type-options">
+                <label class="identity-type-option">
+                  <input type="radio" name="admin_identity_type" value="nric" checked>
+                  <span>No. Kad Pengenalan</span>
+                </label>
+                <label class="identity-type-option">
+                  <input type="radio" name="admin_identity_type" value="passport">
+                  <span>Passport</span>
+                </label>
+              </div>
+              <small class="form-help">Pilih "Passport" untuk nombor alfanumerik sehingga 20 aksara.</small>
             </div>
             <div class="modal-actions">
-              <button type="submit" class="btn btn-primary">Semak No. KP</button>
+              <button type="submit" class="btn btn-primary">Semak No. Dokumen</button>
             </div>
           </form>
           <div class="admin-add-user-hint">
@@ -3855,7 +3955,7 @@ function getAddUserModalTemplate() {
         <div id="adminUserFormStep" class="admin-add-user-step" style="display: none;">
           <h3>Langkah 2: Cipta Akaun Pengguna</h3>
           <div class="admin-verified-info">
-            <p>No. KP disahkan: <span id="adminVerifiedNoKP">-</span></p>
+            <p>No. Dokumen disahkan: <span id="adminVerifiedNoKP">-</span></p>
             <p>Nama KIR: <span id="adminVerifiedName">-</span></p>
           </div>
           ${formMarkup}
@@ -3952,24 +4052,34 @@ async function handleAdminNoKPCheck(event) {
   
   const noKpInput = modal.querySelector('#adminNoKPInput');
   if (!noKpInput) return;
+  const identityType = getAddUserIdentityType(modal);
   
   const rawValue = noKpInput.value.trim();
-  const normalizedNoKP = normalizeNoKP(rawValue);
-  
-  if (!normalizedNoKP || normalizedNoKP.length !== 12) {
+  const normalizedNoKP = sanitizeIdentityInput(rawValue, identityType);
+
+  if (!normalizedNoKP) {
+    setAddUserStatus(`Sila masukkan ${identityType === 'passport' ? 'nombor passport yang sah.' : 'No. KP yang sah.'}`, 'error');
+    return;
+  }
+
+  if (identityType === 'nric' && normalizedNoKP.length !== 12) {
     setAddUserStatus('Sila masukkan No. KP yang sah (12 digit).', 'error');
     return;
   }
+
+  const normalizedLookupValue = normalizeNoKP(normalizedNoKP);
+  const displayValue = formatIdentityInputDisplay(rawValue || normalizedNoKP, identityType);
   
   try {
     setAddUserStatus('Menyemak No. KP dengan index...', 'info');
-    let indexRecord = await KIRService.getNoKPIndex(normalizedNoKP);
+    let indexRecord = await KIRService.getNoKPIndex(normalizedLookupValue);
     
     if (indexRecord && (indexRecord.kir_id || indexRecord.owner_id)) {
       showUserFormStep({
         indexRecord,
-        normalizedNoKP,
-        displayNoKP: indexRecord.no_kp_display || formatDisplayNoKP(rawValue || normalizedNoKP)
+        normalizedNoKP: normalizedLookupValue,
+        displayNoKP: indexRecord.no_kp_display || displayValue,
+        identityType: indexRecord.identity_type || identityType
       });
       setAddUserStatus('No. KP disahkan. Sila lengkapkan maklumat pengguna.', 'success');
       return;
@@ -3977,15 +4087,17 @@ async function handleAdminNoKPCheck(event) {
     
     setAddUserStatus('No. KP tidak dijumpai. Membuka borang KIR baharu...', 'info');
     const createdRecord = await openQuickKIRCreationModal({
-      prefillNoKP: normalizedNoKP
+      prefillNoKP: normalizedNoKP,
+      identityType
     });
     
     if (createdRecord && createdRecord.indexRecord) {
       showUserFormStep({
         indexRecord: createdRecord.indexRecord,
-        normalizedNoKP: createdRecord.indexRecord.no_kp || normalizedNoKP,
-        displayNoKP: createdRecord.indexRecord.no_kp_display || formatDisplayNoKP(normalizedNoKP),
-        fallbackName: createdRecord.kirName
+        normalizedNoKP: createdRecord.indexRecord.no_kp || normalizedLookupValue,
+        displayNoKP: createdRecord.indexRecord.no_kp_display || displayValue,
+        fallbackName: createdRecord.kirName,
+        identityType: identityType
       });
       setAddUserStatus('KIR baharu berjaya dicipta. Sila lengkapkan maklumat pengguna.', 'success');
     } else {
@@ -3998,7 +4110,7 @@ async function handleAdminNoKPCheck(event) {
   }
 }
 
-function showUserFormStep({ indexRecord, normalizedNoKP, displayNoKP, fallbackName = '' }) {
+function showUserFormStep({ indexRecord, normalizedNoKP, displayNoKP, fallbackName = '', identityType = 'nric' }) {
   const modal = document.getElementById('add-user-modal');
   if (!modal) return;
   
@@ -4026,13 +4138,14 @@ function showUserFormStep({ indexRecord, normalizedNoKP, displayNoKP, fallbackNa
   if (emailInput) {
     setTimeout(() => emailInput.focus(), 150);
   }
-  
+
   currentAddUserContext = {
     normalizedNoKP,
     displayNoKP: displayNoKP || normalizedNoKP,
     indexRecord: indexRecord || null,
     kirId: indexRecord?.kir_id || indexRecord?.owner_id || '',
-    inferredName: nameValue
+    inferredName: nameValue,
+    identityType: identityType || indexRecord?.identity_type || 'nric'
   };
 }
 
@@ -4074,6 +4187,7 @@ async function handleAdminAddUser(event) {
     let indexRecord = currentAddUserContext.indexRecord;
     const normalizedNoKP = currentAddUserContext.normalizedNoKP;
     const displayNoKP = currentAddUserContext.displayNoKP;
+    const identityType = currentAddUserContext.identityType || indexRecord?.identity_type || 'nric';
     
     setAddUserStatus('Mencipta akaun pengguna dan memautkan KIR...', 'info');
     
@@ -4084,6 +4198,7 @@ async function handleAdminAddUser(event) {
       createdByEmail: adminUser?.email || '',
       no_kp: normalizedNoKP,
       no_kp_display: displayNoKP,
+      identity_type: identityType,
       kir_id: currentAddUserContext.kirId || indexRecord?.kir_id || indexRecord?.owner_id || '',
       linked_kir_name: name,
       index_owner_type: indexRecord?.owner_type || 'KIR',
@@ -4110,7 +4225,7 @@ async function handleAdminAddUser(event) {
   }
 }
 
-async function openQuickKIRCreationModal({ prefillName = '', prefillNoKP = '' } = {}) {
+async function openQuickKIRCreationModal({ prefillName = '', prefillNoKP = '', identityType = 'nric' } = {}) {
   if (document.getElementById('quick-kir-modal')) {
     return null;
   }
@@ -4161,7 +4276,9 @@ async function openQuickKIRCreationModal({ prefillName = '', prefillNoKP = '' } 
     
     if (nameInput && prefillName) nameInput.value = prefillName;
     if (icInput) {
-      if (prefillNoKP) icInput.value = prefillNoKP;
+      if (prefillNoKP) {
+        icInput.value = formatIdentityInputDisplay(prefillNoKP, identityType);
+      }
       icInput.addEventListener('input', (event) => {
         const type = getQuickIdentityType();
         if (type === 'passport') {
@@ -4173,6 +4290,9 @@ async function openQuickKIRCreationModal({ prefillName = '', prefillNoKP = '' } 
     }
     
     identityRadios.forEach(radio => {
+      if (radio.value === identityType) {
+        radio.checked = true;
+      }
       radio.addEventListener('change', (event) => {
         if (!event.target.checked) return;
         applyQuickIdentityRules(event.target.value);
@@ -4183,7 +4303,7 @@ async function openQuickKIRCreationModal({ prefillName = '', prefillNoKP = '' } 
         }
       });
     });
-    applyQuickIdentityRules();
+    applyQuickIdentityRules(identityType);
     
     const setStatus = (message, type = 'info') => {
       statusElement.textContent = message;
@@ -4239,6 +4359,7 @@ async function openQuickKIRCreationModal({ prefillName = '', prefillNoKP = '' } 
           const result = await KIRService.createKIR({
             nama_penuh: kirName,
             no_kp: kirNoKp,
+            no_kp_raw: kirNoKpRaw,
             identity_type: identityType,
             status_rekod: 'Draf'
           });
@@ -10190,6 +10311,10 @@ function initializeBasicWizard() {
       
       if (!hasRequiredData) {
         throw new Error('Maklumat asas diperlukan untuk mencipta KIR');
+      }
+      
+      if (!data.no_kp_raw && data.no_kp) {
+        data.no_kp_raw = data.no_kp;
       }
       
       data.status_rekod = 'Draf';

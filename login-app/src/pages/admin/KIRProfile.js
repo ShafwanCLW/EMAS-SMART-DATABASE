@@ -15,7 +15,11 @@ import { BantuanBulananTab } from './KIRProfile/components/tabs/BantuanBulananTa
 import { AIRTab } from './KIRProfile/components/tabs/AIRTab.js';
 import { PKIRTab } from './KIRProfile/components/tabs/PKIRTab.js';
 import { ProgramParticipationTab } from './KIRProfile/components/tabs/ProgramParticipationTab.js';
-import { deriveBirthInfoFromIC, formatICWithDashes } from './KIRProfile/components/shared/icUtils.js';
+import {
+  deriveBirthInfoFromIC,
+  formatIdentityDisplay,
+  isPassportIdentity
+} from './KIRProfile/components/shared/icUtils.js';
 
 export class KIRProfile {
   constructor() {
@@ -456,6 +460,9 @@ export class KIRProfile {
 
   updateBirthInfoFieldsFromIC(icValue, birthInput, ageInput, clearOnInvalid = false) {
     if (!birthInput || !ageInput) return;
+    if (isPassportIdentity(this.kirData?.identity_type)) {
+      return;
+    }
     const info = deriveBirthInfoFromIC(icValue);
     if (!info) {
       if (clearOnInvalid) {
@@ -541,7 +548,10 @@ export class KIRProfile {
               </div>
               
               <div class="profile-details-grid">
-                ${this.createDetailCard('fas fa-id-card', 'No. KP', this.formatNoKP(this.kirData?.no_kp))}
+                ${this.createDetailCard('fas fa-id-card', this.getIdentityLabel(), this.formatNoKP(this.kirData?.no_kp, {
+                  identityType: this.kirData?.identity_type,
+                  originalValue: this.kirData?.no_kp_raw || this.kirData?.no_kp_display
+                }))}
                 ${this.createDetailCard('fas fa-map-marker-alt', 'Negeri', this.kirData?.negeri || 'Tiada')}
                 ${this.createDetailCard('fas fa-phone', 'Telefon', this.kirData?.telefon_utama || this.kirData?.telefon || 'Tiada')}
               </div>
@@ -740,8 +750,12 @@ export class KIRProfile {
             </div>
             
             <div class="form-group">
-              <label for="no_kp">No. KP</label>
-              <input type="text" id="no_kp" name="no_kp" value="${this.formatNoKP(data.no_kp, { fallback: '' })}" readonly>
+              <label for="no_kp">${this.getIdentityLabel()}</label>
+              <input type="text" id="no_kp" name="no_kp" value="${this.formatNoKP(data.no_kp, {
+                fallback: '',
+                identityType: data.identity_type || this.kirData?.identity_type,
+                originalValue: data.no_kp_raw || this.kirData?.no_kp_raw || this.kirData?.no_kp_display
+              })}" readonly>
             </div>
           </div>
           
@@ -2930,7 +2944,7 @@ export class KIRProfile {
             <div class="summary-row">
               <div>
                 <strong>${air.nama || 'Tiada Nama'}</strong>
-                <p style="margin:0;color:#64748b;">${air.hubungan || 'Tidak dinyatakan'} &bull; ${formatICWithDashes(air.no_kp) || 'Tiada No. KP'}</p>
+                <p style="margin:0;color:#64748b;">${air.hubungan || 'Tidak dinyatakan'} &bull; ${formatIdentityDisplay(air.no_kp, air.identity_type || air.asas?.identity_type) || 'Tiada No. Dokumen'}</p>
               </div>
               <div class="summary-row-actions">
                 <button type="button" class="btn btn-outline btn-sm" onclick="kirProfile.launchAirWizard('${air.id}')">
@@ -3061,7 +3075,11 @@ export class KIRProfile {
     if (stepIndex === 0) {
       fields.push(
         { label: 'Nama', value: pkir.nama_pasangan || '-' },
-        { label: 'No. KP', value: this.formatNoKP(pkir.no_kp_pasangan, { fallback: '-' }) },
+        { label: this.getIdentityLabel(pkir.identity_type || pkir.asas?.identity_type, pkir.no_kp_pasangan_raw || pkir.asas?.no_kp || pkir.no_kp_pasangan), value: this.formatNoKP(pkir.no_kp_pasangan, {
+          fallback: '-',
+          identityType: pkir.identity_type || pkir.asas?.identity_type,
+          originalValue: pkir.no_kp_pasangan_raw || pkir.asas?.no_kp
+        }) },
         { label: 'Tarikh Lahir', value: pkir.tarikh_lahir_pasangan || '-' },
         { label: 'Umur', value: pkir.umur_pasangan ? `${pkir.umur_pasangan} tahun` : '-' },
         { label: 'Jantina', value: pkir.jantina_pasangan || '-' },
@@ -3163,9 +3181,11 @@ export class KIRProfile {
       return `${this.kirData.umur} tahun`;
     }
     
-    const icInfo = deriveBirthInfoFromIC(this.kirData?.no_kp || '');
-    if (icInfo?.age) {
-      return `${icInfo.age} tahun (anggaran)`;
+    if (!isPassportIdentity(this.kirData?.identity_type)) {
+      const icInfo = deriveBirthInfoFromIC(this.kirData?.no_kp || '');
+      if (icInfo?.age) {
+        return `${icInfo.age} tahun (anggaran)`;
+      }
     }
     
     return 'Tidak diketahui';
@@ -3182,9 +3202,21 @@ export class KIRProfile {
 
   formatNoKP(noKp, options = {}) {
     const fallback = options.fallback ?? 'Tiada';
-    if (!noKp) return fallback;
-    const formatted = formatICWithDashes(noKp);
-    return formatted || noKp || fallback;
+    const identityType = options.identityType || this.kirData?.identity_type || 'nric';
+    const rawValue = options.originalValue ?? this.kirData?.no_kp_raw ?? this.kirData?.no_kp_display;
+    const displaySource = isPassportIdentity(identityType)
+      ? (rawValue || noKp)
+      : (noKp || rawValue);
+    if (!displaySource) {
+      return fallback;
+    }
+    const formatted = formatIdentityDisplay(displaySource, identityType);
+    return formatted || fallback;
+  }
+
+  getIdentityLabel(identityType = this.kirData?.identity_type, rawValue = this.kirData?.no_kp_raw || this.kirData?.no_kp_display || this.kirData?.no_kp) {
+    const effectiveType = identityType || (/[A-Za-z]/.test((rawValue || '').toString()) ? 'passport' : 'nric');
+    return isPassportIdentity(effectiveType) ? 'Passport' : 'No. KP';
   }
 
   escapeHtml(value) {
