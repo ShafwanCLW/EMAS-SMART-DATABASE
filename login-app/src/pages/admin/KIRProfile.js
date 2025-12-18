@@ -28,6 +28,7 @@ export class KIRProfile {
     this.relatedData = null;
     this.currentTab = 'maklumat-asas';
     this.dirtyTabs = new Set();
+    this.tabSnapshots = new Map();
     this.isLoading = false;
     this.validTabs = ['maklumat-asas', 'kafa', 'pendidikan', 'pekerjaan', 'kesihatan', 'pendapatan', 'perbelanjaan', 'bantuan-bulanan', 'air', 'pkir', 'kehadiran-program'];
     
@@ -333,6 +334,7 @@ export class KIRProfile {
   // Main render method
   render() {
     if (!this.kirData) return;
+    this.tabSnapshots.clear();
     
     const container = this.getContainer();
     if (container) {
@@ -353,6 +355,8 @@ export class KIRProfile {
           activeTabComponent.setupEventListeners();
         }, 0);
       }
+      
+      setTimeout(() => this.captureTabSnapshot(this.currentTab), 0);
     }
   }
 
@@ -870,6 +874,11 @@ export class KIRProfile {
               <label for="telefon_kecemasan">Telefon Kecemasan</label>
               <input type="tel" id="telefon_kecemasan" name="telefon_kecemasan" value="${data.telefon_kecemasan || ''}">
             </div>
+          </div>
+
+          <div class="form-group">
+            <label for="minat">Minat</label>
+            <textarea id="minat" name="minat" rows="2" placeholder="Contoh: Berkebun, menjahit, kerja sukarelawan">${this.escapeHtml(data.minat || '')}</textarea>
           </div>
           
           <div class="form-group">
@@ -3315,7 +3324,7 @@ export class KIRProfile {
       if (e.target.closest('.kir-form')) {
         const form = e.target.closest('.kir-form');
         const tabId = form.dataset.tab;
-        this.markTabDirty(tabId);
+        this.refreshDirtyStateFromForm(tabId, form);
       }
       
       // Track AIR drawer form changes (only for drawer forms that have data-drawer-tab)
@@ -3503,6 +3512,41 @@ export class KIRProfile {
     this.updateTabNavigation();
   }
 
+  serializeFormState(form) {
+    if (!form) return '';
+    const formData = new FormData(form);
+    const entries = [];
+    for (const [key, value] of formData.entries()) {
+      if (value instanceof File) continue;
+      entries.push(`${key}=${value ?? ''}`);
+    }
+    return entries.sort().join('&');
+  }
+
+  captureTabSnapshot(tabId) {
+    if (!tabId) return;
+    const form = document.querySelector(`form[data-tab="${tabId}"]`);
+    if (!form) return;
+    const snapshot = this.serializeFormState(form);
+    this.tabSnapshots.set(tabId, snapshot);
+  }
+
+  refreshDirtyStateFromForm(tabId, form) {
+    if (!tabId || !form) return;
+    const currentState = this.serializeFormState(form);
+    const previousState = this.tabSnapshots.get(tabId);
+    if (previousState === undefined) {
+      this.tabSnapshots.set(tabId, currentState);
+      this.clearTabDirty(tabId);
+      return;
+    }
+    if (currentState === previousState) {
+      this.clearTabDirty(tabId);
+    } else {
+      this.markTabDirty(tabId);
+    }
+  }
+
   // Check for unsaved changes across different scopes
   hasUnsavedChanges(options = {}) {
     const { scope, tabId, drawerTabId, pkirSection, kesihatanSection } = options;
@@ -3614,6 +3658,8 @@ export class KIRProfile {
         this.tabComponents[tabId].setupEventListeners();
       }, 0);
     }
+    
+    setTimeout(() => this.captureTabSnapshot(tabId), 0);
 
     // Load financial data for financial tabs
     if (tabId === 'pendapatan') {
@@ -3648,6 +3694,8 @@ export class KIRProfile {
       if (this.tabComponents[tabId]) {
         const success = await this.tabComponents[tabId].save();
         if (success) {
+          this.clearTabDirty(tabId);
+          this.captureTabSnapshot(tabId);
           // Refresh header data
           await this.refreshHeaderData();
         }
@@ -3682,6 +3730,7 @@ export class KIRProfile {
       // Success feedback
       this.clearTabDirty(tabId);
       this.showToast('Data berjaya disimpan.', 'success');
+      this.captureTabSnapshot(tabId);
       
       // Refresh header data
       await this.refreshHeaderData();

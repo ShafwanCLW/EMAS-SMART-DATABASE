@@ -31,6 +31,7 @@ const KIR_SCHEMA = {
   negeri: 'string',
   tempat_lahir: 'string',
   identity_type: 'string',
+  minat: 'string',
   
   // Family
   status_perkahwinan: 'string',

@@ -288,6 +288,12 @@ export class PKIRTab extends BaseTab {
 
     if (!forceClear && this.pkirData) {
       this.populateForm(this.pkirData);
+    } else {
+      this.isDirty = false;
+      if (this.kirProfile?.captureTabSnapshot) {
+        setTimeout(() => this.kirProfile.captureTabSnapshot(this.tabId), 0);
+        this.kirProfile.clearTabDirty(this.tabId);
+      }
     }
   }
 
@@ -331,6 +337,11 @@ export class PKIRTab extends BaseTab {
     }
 
     this.currentEditingId = pkir.id || null;
+    this.isDirty = false;
+    if (this.kirProfile?.captureTabSnapshot) {
+      setTimeout(() => this.kirProfile.captureTabSnapshot(this.tabId), 0);
+      this.kirProfile.clearTabDirty(this.tabId);
+    }
   }
 
   async savePKIR(formData) {

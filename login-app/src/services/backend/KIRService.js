@@ -85,6 +85,7 @@ export class KIRService {
           bandar: cleanedData.bandar || '',
           negeri: cleanedData.negeri || '',
           tempat_lahir: cleanedData.tempat_lahir || '',
+          minat: cleanedData.minat || '',
           ayah_nama: cleanedData.ayah_nama || '',
           ibu_nama: cleanedData.ibu_nama || '',
           no_kwsp: cleanedData.no_kwsp || '',
