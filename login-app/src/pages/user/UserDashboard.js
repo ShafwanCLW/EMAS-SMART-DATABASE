@@ -5,6 +5,9 @@ import { AIRService } from '../../services/backend/AIRService.js';
 import { PasanganService } from '../../services/backend/PasanganService.js';
 import { ProgramService } from '../../services/backend/ProgramService.js';
 import { normalizeNoKP } from '../../services/database/collections.js';
+import { NotificationCenter } from '../../components/notifications/NotificationCenter.js';
+
+let userNotificationCenter = null;
 
 // User dashboard component
 export function createUserSidebar(user) {
@@ -25,8 +28,13 @@ export function createUserSidebar(user) {
           Dashboard
         </a>
 
+        <a href="#" class="nav-item" data-section="notifikasi">
+          <span class="nav-icon">🔔</span>
+          Notifikasi
+        </a>
+
         <a href="#" class="nav-item" data-section="kir-profile">
-          <span class="nav-icon">🏠</span>
+          <span class="nav-icon">dY?ÿ</span>
           My KIR Profile
         </a>
         
@@ -489,6 +497,17 @@ export function createUserMainContent() {
         </div>
       </div>
     </div>
+    <div id="notifikasi-content" class="content-section">
+      <div class="layer-card">
+        <div id="user-notification-root" class="notification-center-root">
+          <div class="notification-empty-state">
+            <div class="empty-icon"><i class="fas fa-bell"></i></div>
+            <h4>Notifikasi belum dimuatkan</h4>
+            <p>Pilih tab ini untuk melihat amaran.</p>
+          </div>
+        </div>
+      </div>
+    </div>
     <div id="kir-profile-content" class="content-section">
       <div class="quick-actions">
         <h3 class="section-title">My Household (KIR)</h3>
@@ -619,6 +638,35 @@ export function setupUserDashboardFeatures(user) {
   initializeUserDashboardStats(user);
   setupParticipationSwitcher();
   initializeUserChangePasswordForm();
+  setupUserNotificationCenter(user);
+}
+
+export function setupUserNotificationCenter(user) {
+  const container = document.getElementById('user-notification-root');
+  if (!container) return;
+
+  if (!userNotificationCenter) {
+    userNotificationCenter = new NotificationCenter({
+      mode: 'user',
+      containerId: 'user-notification-root',
+      kirId: user?.kir_id || null
+    });
+    userNotificationCenter.mount();
+  } else if (user?.kir_id && userNotificationCenter.kirId !== user.kir_id) {
+    userNotificationCenter.kirId = user.kir_id;
+  }
+
+  if (user?.kir_id) {
+    userNotificationCenter.refresh();
+  }
+
+  const nav = document.querySelector('.nav-item[data-section=\"notifikasi\"]');
+  if (nav && !nav.dataset.userNotifBound) {
+    nav.dataset.userNotifBound = 'true';
+    nav.addEventListener('click', () => {
+      userNotificationCenter?.refresh();
+    });
+  }
 }
 
 

@@ -98,6 +98,11 @@ export class KIRProfile {
     if (options.disableURLSync !== undefined) this.disableURLSync = options.disableURLSync;
   }
 
+  isPKIRAllowed() {
+    const status = (this.kirData?.status_perkahwinan || '').toString().trim().toLowerCase();
+    return status === 'berkahwin';
+  }
+
   getContainer() {
     const targetId = this.containerId || 'kir-profile-container';
     return document.getElementById(targetId);
@@ -651,11 +656,12 @@ export class KIRProfile {
       // Handle regular tabs
       const isActive = tab.id === this.currentTab;
       const isDirty = this.dirtyTabs.has(tab.id);
-      
+      const isDisabled = tab.id === 'pkir' && !this.isPKIRAllowed();
+
       return `
-        <button class="tab-btn ${isActive ? 'active' : ''}" 
-                data-tab="${tab.id}" 
-                onclick="kirProfile.switchTab('${tab.id}')">
+        <button class="tab-btn ${isActive ? 'active' : ''} ${isDisabled ? 'tab-btn-disabled' : ''}"
+                data-tab="${tab.id}"
+                onclick="kirProfile.handleTabNavigation('${tab.id}', ${isDisabled ? 'true' : 'false'})">
           <div class="tab-icon">
             <i class="${tab.icon}"></i>
           </div>
@@ -2736,13 +2742,15 @@ export class KIRProfile {
   getHeroInsightData() {
     const maritalStatus = this.kirData?.status_perkahwinan || 'Tidak diketahui';
     const householdCount = Array.isArray(this.airData) ? this.airData.length : 0;
-    const pkirStatus = this.pkirData ? 'Berdaftar' : 'Belum Ada';
+    const pkirStatus = this.isPKIRAllowed()
+      ? (this.pkirData ? 'Berdaftar' : 'Belum Ada')
+      : 'Tidak Diperlukan';
     
     return [
       { label: 'Umur', value: this.getAgeDisplay(), icon: 'fas fa-user-clock' },
       { label: 'Status Perkahwinan', value: maritalStatus, icon: 'fas fa-ring' },
       { label: 'Ahli Isi Rumah', value: `${householdCount} orang`, icon: 'fas fa-users', action: 'air-summary' },
-      { label: 'PKIR', value: pkirStatus, icon: 'fas fa-heart', action: this.pkirData ? 'pkir-summary' : null }
+      { label: 'PKIR', value: pkirStatus, icon: 'fas fa-heart', action: this.isPKIRAllowed() && this.pkirData ? 'pkir-summary' : null }
     ].filter(stat => stat.value && stat.value !== 'Tidak diketahui');
   }
 
@@ -3016,6 +3024,10 @@ export class KIRProfile {
   }
 
   openPKIRSummaryModal() {
+    if (!this.isPKIRAllowed()) {
+      this.showToast('PKIR hanya tersedia apabila status perkahwinan adalah "Berkahwin".', 'info');
+      return;
+    }
     if (!this.pkirData) {
       this.showToast('Tiada maklumat PKIR untuk dipaparkan.', 'info');
       return;
@@ -3179,6 +3191,10 @@ export class KIRProfile {
   }
 
   async launchPKIRWizard() {
+    if (!this.isPKIRAllowed()) {
+      this.showToast('PKIR hanya tersedia apabila status perkahwinan adalah "Berkahwin".', 'info');
+      return;
+    }
     this.closeQuickModal('pkirSummaryModal');
     if (this.currentTab !== 'pkir') {
       await this.switchTab('pkir');
@@ -3621,6 +3637,11 @@ export class KIRProfile {
     console.log('Switching from:', this.currentTab, 'to:', tabId);
     console.log('Current kirData:', this.kirData);
     console.log('Current relatedData:', this.relatedData);
+
+    if (tabId === 'pkir' && !this.isPKIRAllowed()) {
+      this.showToast('PKIR hanya tersedia apabila status perkahwinan adalah "Berkahwin".', 'info');
+      return;
+    }
     
     if (tabId === this.currentTab) return;
     
@@ -3683,6 +3704,14 @@ export class KIRProfile {
       await this.loadProgramData();
       this.bindProgramEventListeners();
     }
+  }
+
+  handleTabNavigation(tabId, isDisabled = false) {
+    if (isDisabled) {
+      this.showToast('PKIR hanya tersedia apabila status perkahwinan adalah "Berkahwin".', 'info');
+      return;
+    }
+    this.switchTab(tabId);
   }
 
   // Removed confirm dialog for unsaved changes

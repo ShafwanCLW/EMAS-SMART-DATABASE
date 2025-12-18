@@ -4,11 +4,13 @@ import { createRegistrationFormMarkup } from '../auth/LoginForm.js';
 import { normalizeNoKP } from '../../services/database/collections.js';
 import { KIRService } from '../../services/backend/KIRService.js';
 import { formatICWithDashes, formatIdentityDisplay, normalizeIdentityValue } from './KIRProfile/components/shared/icUtils.js';
+import { NotificationCenter } from '../../components/notifications/NotificationCenter.js';
 
 let currentAddUserContext = null;
 let currentEditingUser = null;
 let cachedUserList = [];
 let userManagementToastTimer = null;
+let adminNotificationCenter = null;
 
 function formatDisplayNoKP(noKp) {
   if (!noKp) return '-';
@@ -88,6 +90,10 @@ export function createAdminSidebar(user) {
           <a href="#" class="nav-item active" data-section="dashboard">
             <span class="nav-icon">📊</span>
             Dashboard
+          </a>
+          <a href="#" class="nav-item" data-section="notifikasi">
+            <span class="nav-icon">🔔</span>
+            Notifikasi
           </a>
           <a href="#" class="nav-item" data-section="user-management">
             <span class="nav-icon">👥</span>
@@ -1839,6 +1845,17 @@ export function createAdminMainContent() {
       </div>
     </div>
     
+    <div id="notifikasi-content" class="content-section">
+      <div class="layer-card">
+        <div id="admin-notification-root" class="notification-center-root">
+          <div class="notification-empty-state">
+            <div class="empty-icon"><i class="fas fa-bell"></i></div>
+            <h4>Memuatkan notifikasi...</h4>
+            <p>Sila tunggu sebentar.</p>
+          </div>
+        </div>
+      </div>
+    </div>
     <div id="user-management-content" class="content-section">
       <div class="section-header">
         <h3 class="section-title">Pengurusan Pengguna</h3>
@@ -3675,8 +3692,33 @@ export function initializeDashboardStats() {
       loadAttendanceLeaderList();
     });
   }
-  
+
   loadAttendanceLeaderList();
+}
+
+export function setupAdminNotificationCenter() {
+  const container = document.getElementById('admin-notification-root');
+  if (!container) {
+    return;
+  }
+
+  if (!adminNotificationCenter) {
+    adminNotificationCenter = new NotificationCenter({
+      mode: 'admin',
+      containerId: 'admin-notification-root',
+      limit: 50
+    });
+    adminNotificationCenter.mount();
+    adminNotificationCenter.refresh();
+  }
+
+  const notifNav = document.querySelector('.nav-item[data-section="notifikasi"]');
+  if (notifNav && !notifNav.dataset.notifikasiBound) {
+    notifNav.dataset.notifikasiBound = 'true';
+    notifNav.addEventListener('click', () => {
+      adminNotificationCenter?.refresh();
+    });
+  }
 }
 
 // User Management functionality

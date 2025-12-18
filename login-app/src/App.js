@@ -1,6 +1,6 @@
 // Main application controller
 import { createLoginForm, handleTabSwitch, handleDemoLogin, showError, setupForgotPasswordHandlers } from './pages/auth/LoginForm.js';
-import { createAdminDashboard, initializeDashboardStats, setupUserManagementListeners, setupKIRManagementListeners, setupCiptaKIRListeners, setupProgramKehadiranListeners, setupProgramKehadiranNewListeners, setupProgramKehadiranNewestListeners, setupSenariKIRListeners, setupReportsListeners, setupSettingsListeners, setupFinancialTrackingListeners, setupFinancialTrackingNewestListeners } from './pages/admin/AdminDashboard.js';
+import { createAdminDashboard, initializeDashboardStats, setupUserManagementListeners, setupKIRManagementListeners, setupCiptaKIRListeners, setupProgramKehadiranListeners, setupProgramKehadiranNewListeners, setupProgramKehadiranNewestListeners, setupSenariKIRListeners, setupReportsListeners, setupSettingsListeners, setupFinancialTrackingListeners, setupFinancialTrackingNewestListeners, setupAdminNotificationCenter } from './pages/admin/AdminDashboard.js';
 import { createUserDashboard, setupUserDashboardFeatures } from './pages/user/UserDashboard.js';
 import { FirebaseAuthService, handleFirebaseLogin, handleFirebaseLogout } from './services/frontend/FirebaseAuthService.js';
 import { AuthService, handleLogin, handleLogout } from './services/frontend/AuthService.js'; // Keep for demo functionality
@@ -88,6 +88,7 @@ export class App {
     if (userData.role === 'admin') {
       this.appElement.innerHTML = createAdminDashboard(userData);
       initializeDashboardStats();
+      setupAdminNotificationCenter();
       // Setup user management listeners for admin dashboard
       setupUserManagementListeners();
       // Setup KIR management listeners for admin dashboard

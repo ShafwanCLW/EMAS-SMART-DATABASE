@@ -481,6 +481,11 @@ body.kir-profile-active #app {
   font-weight: 600;
 }
 
+.kir-profile-header-modern .pill-label {
+  color: rgba(255,255,255,0.95);
+  text-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
 .pill-value {
   font-size: 1rem;
   font-weight: 600;
@@ -811,6 +816,13 @@ body.kir-profile-active #app {
   box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
   border-left: 4px solid #3b82f6;
   padding-left: 0.75rem;
+}
+
+.kir-profile .sidebar-navigation .tab-btn.tab-btn-disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  background: rgba(241, 245, 249, 0.6);
+  color: #94a3b8;
 }
 
 /* Content Area */
