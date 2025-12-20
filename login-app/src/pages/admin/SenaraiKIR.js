@@ -39,7 +39,7 @@ export class SenaraiKIR {
                 <div class="filters-row">
                     <div class="search-group">
                         <input type="text" id="kir-search-new" placeholder="Cari nama atau No. Dokumen..." class="search-input">
-                        <button id="search-btn-new" class="btn btn-primary">🔍 Cari</button>
+                        <button id="search-btn-new" class="btn btn-primary" style="margin-top: 10px; margin-bottom: 10px;">🔍 Cari</button>
                     </div>
                     <div class="filter-group">
                         <select id="status-filter-new" class="filter-select">
@@ -250,6 +250,22 @@ export class SenaraiKIR {
                  font-weight: 600;
                  font-size: 1rem;
              }
+
+            .user-avatar.has-photo {
+                background: transparent;
+                padding: 0;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                border: 2px solid #e2e8f0;
+                overflow: hidden;
+            }
+
+            .user-avatar.has-photo img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                border-radius: 50%;
+                display: block;
+            }
 
              .user-details {
                  display: flex;
@@ -848,7 +864,7 @@ export class SenaraiKIR {
             <tr class="kir-row">
                 <td>
                     <div class="user-info">
-                        <div class="user-avatar">${(kir.nama_penuh || 'N').charAt(0).toUpperCase()}</div>
+                        ${this.renderKIRAvatar(kir)}
                         <div class="user-details">
                             <span class="kir-id">${kir.id || 'N/A'}</span>
                         </div>
@@ -1235,6 +1251,40 @@ export class SenaraiKIR {
 
     getIdentityLabel(identityType = 'nric') {
         return isPassportIdentity(identityType) ? 'Passport' : 'No. KP';
+    }
+
+    renderKIRAvatar(kir = {}) {
+        const photoUrl = kir.gambar_profil_url || '';
+        if (photoUrl) {
+            const safeUrl = this.escapeHtml(photoUrl);
+            const alt = this.escapeHtml(kir.nama_penuh || 'Gambar Profil');
+            return `
+                <div class="user-avatar has-photo">
+                    <img src="${safeUrl}" alt="${alt}" loading="lazy">
+                </div>
+            `;
+        }
+        const initials = this.getInitials(kir.nama_penuh);
+        return `<div class="user-avatar">${initials}</div>`;
+    }
+
+    getInitials(name = '') {
+        const value = name.trim();
+        if (!value) return 'N';
+        const parts = value.split(/\s+/).filter(Boolean);
+        if (!parts.length) return value.charAt(0).toUpperCase();
+        if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+        return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+    }
+
+    escapeHtml(value) {
+        if (value === null || value === undefined) return '';
+        return String(value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
     }
 
     /**
