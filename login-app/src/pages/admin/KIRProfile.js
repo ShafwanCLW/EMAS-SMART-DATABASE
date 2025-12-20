@@ -546,10 +546,7 @@ export class KIRProfile {
               ${this.renderProfileAvatar(initials)}
               <div class="avatar-status-indicator ${this.getStatusClass(this.kirData?.status_rekod)}"></div>
               <div class="avatar-edit-bar">
-                <button type="button" class="avatar-edit-trigger" data-action="open-avatar-adjust" ${hasProfilePhoto ? '' : 'disabled'}>
-                  <i class="fas fa-pencil-alt"></i>
-                  Edit Foto
-                </button>
+                
               </div>
             </div>
             
@@ -2919,7 +2916,7 @@ export class KIRProfile {
     if (!stats.length) return '';
     
     return `
-      <div class="hero-quick-insights">
+      <div class="hero-quick-insights  ">
         ${stats.map(stat => `
       <div class="hero-insight-pill ${stat.action ? 'hero-pill-clickable' : ''}" ${stat.action ? `data-action="${stat.action}"` : ''}>
         <div class="pill-body">

@@ -1,5 +1,5 @@
 // Main application controller
-import { createLoginForm, handleTabSwitch, handleDemoLogin, showError, setupForgotPasswordHandlers, setupTermsModal } from './pages/auth/LoginForm.js';
+import { createLoginForm, handleTabSwitch, handleDemoLogin, showError, setupForgotPasswordHandlers } from './pages/auth/LoginForm.js';
 import { createAdminDashboard, initializeDashboardStats, setupUserManagementListeners, setupKIRManagementListeners, setupCiptaKIRListeners, setupProgramKehadiranListeners, setupProgramKehadiranNewListeners, setupProgramKehadiranNewestListeners, setupSenariKIRListeners, setupReportsListeners, setupSettingsListeners, setupFinancialTrackingListeners, setupFinancialTrackingNewestListeners, setupAdminNotificationCenter } from './pages/admin/AdminDashboard.js';
 import { createUserDashboard, setupUserDashboardFeatures } from './pages/user/UserDashboard.js';
 import { FirebaseAuthService, handleFirebaseLogin, handleFirebaseLogout } from './services/frontend/FirebaseAuthService.js';
@@ -50,7 +50,6 @@ export class App {
     });
     
     setupForgotPasswordHandlers();
-    setupTermsModal();
   }
 
   // Render dashboard based on user role and route

@@ -24,7 +24,7 @@ export function createUserSidebar(user) {
       
       <nav class="sidebar-nav">
         
-        <a href="#" class="nav-item" data-section="kir-profile">
+        <a href="#" class="nav-item active" data-section="kir-profile">
           <span class="nav-icon">📊</span>
           My KIR Profile
         </a>
@@ -375,7 +375,7 @@ export function createUserMainContent() {
         border: 1px solid #fecaca;
       }
     </style>
-    <div id="dashboard-content" class="content-section active">
+    <div id="dashboard-content" class="content-section">
       <div class="dashboard-hero">
         <div class="hero-card">
           <p class="hero-eyebrow">Isi Rumah</p>
@@ -505,8 +505,8 @@ export function createUserMainContent() {
         </div>
       </div>
     </div>
-    <div id="kir-profile-content" class="content-section">
-      <div class="quick-actions">
+    <div id="kir-profile-content" class="content-section active">
+      <div class="quick-actions" style="margin-bottom: 2.5rem;">
         <h3 class="section-title">My Household (KIR)</h3>
         <p style="color: #64748b; margin-bottom: 1.5rem;">Kemaskini maklumat keluarga anda. Semua perubahan akan dikongsi dengan pentadbir.</p>
       </div>
@@ -623,6 +623,71 @@ export function createUserDashboard(user) {
         ${mainContent}
       </main>
     </div>
+    
+    <div id="userTermsModal" class="user-terms-modal" aria-hidden="true">
+      <div class="user-terms-modal-content">
+        <div class="user-terms-modal-header">
+          <div>
+            <p class="layer-eyebrow" style="margin-bottom: 0.35rem;">Perlu Tindakan</p>
+            <h3>Terma &amp; Syarat Penggunaan</h3>
+            <p class="terms-status-text" id="userTermsStatus">Sila baca terma di bawah dan tandakan persetujuan untuk meneruskan.</p>
+          </div>
+        </div>
+        <div class="user-terms-modal-body">
+          <div class="terms-panel-body">
+            <ol>
+              <li>
+                <strong>Acceptance of Terms</strong>
+                <p>By accessing, registering, or logging into this website and its related systems, you acknowledge that you have read, understood, and agreed to be bound by these Terms and Conditions. If you do not agree with any part of these terms, you must not use the system.</p>
+              </li>
+              <li>
+                <strong>Collection and Use of Data</strong>
+                <p>By logging into and using this system, you consent to the collection, storage, and processing of your data for system functionality, service improvement, usage analysis, performance monitoring, bug fixing, testing, and feature enhancement. The data collected may include account information, usage activity, system interactions, and other relevant operational information.</p>
+              </li>
+              <li>
+                <strong>Purpose Limitation</strong>
+                <p>All collected data will be used strictly for program operation, analysis, research, and improvement purposes. The data will not be used for illegal activities or purposes beyond the scope of system enhancement.</p>
+              </li>
+              <li>
+                <strong>Data Security</strong>
+                <p>Reasonable technical and organizational measures are taken to protect user data against unauthorized access, loss, misuse, or disclosure. However, no system is completely secure, and users acknowledge this risk when using the platform.</p>
+              </li>
+              <li>
+                <strong>Data Sharing</strong>
+                <p>User data will not be sold or shared with third parties without consent, except when required by law or for essential system services such as authentication or hosting providers.</p>
+              </li>
+              <li>
+                <strong>User Responsibility</strong>
+                <p>Users are responsible for maintaining the confidentiality of their login credentials and all activities performed under their account.</p>
+              </li>
+              <li>
+                <strong>System Changes</strong>
+                <p>The system owner reserves the right to modify, update, or discontinue any part of the system at any time, including these Terms and Conditions. Continued use of the system after changes indicates acceptance of the updated terms.</p>
+              </li>
+              <li>
+                <strong>Limitation of Liability</strong>
+                <p>The system is provided on an "as-is" basis. The system owner shall not be held liable for any direct or indirect damages arising from the use or inability to use the system.</p>
+              </li>
+              <li>
+                <strong>Termination</strong>
+                <p>Access may be suspended or terminated if a user violates these Terms and Conditions or misuses the system.</p>
+              </li>
+              <li>
+                <strong>Contact</strong>
+                <p>For questions regarding these Terms and Conditions or data usage, users may contact the system administrator through the provided contact channels.</p>
+              </li>
+            </ol>
+          </div>
+        </div>
+        <div class="user-terms-modal-footer">
+          <label class="terms-acknowledge" for="userTermsCheckbox">
+            <input type="checkbox" id="userTermsCheckbox">
+            <span>Saya telah membaca &amp; bersetuju</span>
+          </label>
+          <button type="button" id="userTermsAcceptBtn" class="auth-btn" disabled>Setuju &amp; Teruskan</button>
+        </div>
+      </div>
+    </div>
   `;
 }
 
@@ -636,6 +701,7 @@ export function setupUserDashboardFeatures(user) {
   setupParticipationSwitcher();
   initializeUserChangePasswordForm();
   setupUserNotificationCenter(user);
+  setupUserTermsAcknowledgement();
 }
 
 export function setupUserNotificationCenter(user) {
@@ -664,6 +730,63 @@ export function setupUserNotificationCenter(user) {
       userNotificationCenter?.refresh();
     });
   }
+}
+
+const USER_TERMS_STORAGE_KEY = 'emasa_login_terms_accepted';
+
+export function setupUserTermsAcknowledgement() {
+  const modal = document.getElementById('userTermsModal');
+  const checkbox = document.getElementById('userTermsCheckbox');
+  const statusText = document.getElementById('userTermsStatus');
+  const acceptButton = document.getElementById('userTermsAcceptBtn');
+
+  if (!modal || !checkbox || !statusText || !acceptButton) return;
+
+  const showModal = () => {
+    modal.classList.add('visible');
+    modal.setAttribute('aria-hidden', 'false');
+  };
+
+  const hideModal = () => {
+    modal.classList.remove('visible');
+    modal.setAttribute('aria-hidden', 'true');
+  };
+
+  const hasAccepted = (() => {
+    try {
+      return localStorage.getItem(USER_TERMS_STORAGE_KEY) === 'true';
+    } catch {
+      return false;
+    }
+  })();
+
+  if (hasAccepted) {
+    checkbox.checked = true;
+    acceptButton.disabled = true;
+    statusText.textContent = 'Terima kasih. Persetujuan anda telah direkodkan.';
+    hideModal();
+    return;
+  }
+
+  checkbox.checked = false;
+  acceptButton.disabled = true;
+  statusText.textContent = 'Sila baca terma di bawah dan tandakan persetujuan untuk meneruskan.';
+  showModal();
+
+  checkbox.addEventListener('change', () => {
+    acceptButton.disabled = !checkbox.checked;
+  });
+
+  acceptButton.addEventListener('click', () => {
+    if (!checkbox.checked) return;
+    try {
+      localStorage.setItem(USER_TERMS_STORAGE_KEY, 'true');
+    } catch (error) {
+      console.warn('Unable to store terms acknowledgement:', error);
+    }
+    statusText.textContent = 'Terima kasih. Persetujuan anda telah direkodkan.';
+    hideModal();
+  });
 }
 
 
@@ -1452,3 +1575,4 @@ function setUserFormStatus(element, message, type = '') {
     element.classList.add(type);
   }
 }
+

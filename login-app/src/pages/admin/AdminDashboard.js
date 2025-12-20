@@ -3746,8 +3746,11 @@ export async function initializeUserManagement() {
       status: user.status || 'active',
       lastLogin: user.lastLogin ? formatLastLogin(user.lastLogin) : 'Never',
       noKp: user.no_kp || user.noKp || '',
-      noKpDisplay: user.no_kp_display || user.no_kp || user.noKpDisplay || ''
+      noKpDisplay: user.no_kp_display || user.no_kp || user.noKpDisplay || '',
+      kirId: user.kir_id || user.kirId || '',
+      photoUrl: user.profilePhotoUrl || user.photoUrl || user.photoURL || ''
     }));
+    users = await attachKirPhotos(users);
     cachedUserList = users;
   } catch (error) {
     console.error('Error loading users:', error);
@@ -3793,21 +3796,75 @@ export async function initializeUserManagement() {
     }
   }
   
+  async function attachKirPhotos(userList = []) {
+    const uniqueKirIds = Array.from(new Set(userList.map(user => user.kirId).filter(Boolean)));
+    if (!uniqueKirIds.length) return userList;
+    const photoMap = new Map();
+    await Promise.all(uniqueKirIds.map(async (kirId) => {
+      try {
+        const kirData = await KIRService.getKIRById(kirId);
+        if (kirData?.gambar_profil_url) {
+          photoMap.set(kirId, kirData.gambar_profil_url);
+        }
+      } catch (error) {
+        console.warn('initializeUserManagement: gagal mengambil gambar KIR untuk', kirId, error);
+      }
+    }));
+    return userList.map(user => ({
+      ...user,
+      photoUrl: user.photoUrl || (user.kirId ? photoMap.get(user.kirId) : '') || ''
+    }));
+  }
+  
+  function renderUserAvatar(user) {
+    const photoUrl = user?.photoUrl;
+    if (photoUrl) {
+      return `
+        <div class="user-avatar has-photo">
+          <img src="${escapeHtml(photoUrl)}" alt="${escapeHtml(user?.name || 'Pengguna')}" loading="lazy">
+        </div>
+      `;
+    }
+    return `<div class="user-avatar">${getInitials(user?.name)}</div>`;
+  }
+  
+  function getInitials(name = '') {
+    const value = (name || '').trim();
+    if (!value) return 'U';
+    const parts = value.split(/\s+/).filter(Boolean);
+    if (!parts.length) return value.charAt(0).toUpperCase();
+    if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+    return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+  }
+  
+  function escapeHtml(value) {
+    if (value === null || value === undefined) return '';
+    return String(value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+  
   function renderUsers(filteredUsers = users) {
     if (!usersTableBody) return;
     
-    usersTableBody.innerHTML = filteredUsers.map(user => `
+    usersTableBody.innerHTML = filteredUsers.map(user => {
+      const roleLabel = user.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'User';
+      const statusLabel = user.status ? user.status.charAt(0).toUpperCase() + user.status.slice(1) : '';
+      return `
       <tr class="user-row">
         <td>
           <div class="user-info">
-            <div class="user-avatar">${user.name.charAt(0).toUpperCase()}</div>
-            <span class="user-name">${user.name}</span>
+            ${renderUserAvatar(user)}
+            <span class="user-name">${escapeHtml(user.name)}</span>
           </div>
         </td>
-        <td class="user-email">${user.email}</td>
-        <td><span class="role-badge ${user.role}">${user.role.charAt(0).toUpperCase() + user.role.slice(1)}</span></td>
-        <td><span class="status-badge ${user.status}">${user.status.charAt(0).toUpperCase() + user.status.slice(1)}</span></td>
-        <td class="last-login">${user.lastLogin}</td>
+        <td class="user-email">${escapeHtml(user.email)}</td>
+        <td><span class="role-badge ${escapeHtml(user.role)}">${escapeHtml(roleLabel)}</span></td>
+        <td><span class="status-badge ${escapeHtml(user.status)}">${escapeHtml(statusLabel)}</span></td>
+        <td class="last-login">${escapeHtml(user.lastLogin)}</td>
         <td>
           <div class="action-menu">
             <button class="action-menu-btn" title="Edit User" data-action="edit" data-id="${user.id}">Edit</button>
@@ -3816,7 +3873,8 @@ export async function initializeUserManagement() {
           </div>
         </td>
       </tr>
-    `).join('');
+    `;
+    }).join('');
     
     // Update table info
     const tableInfo = document.querySelector('.table-info');

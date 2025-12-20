@@ -5,6 +5,8 @@ import {
     formatIdentityDisplay as sharedFormatIdentityDisplay,
     isPassportIdentity
 } from './KIRProfile/components/shared/icUtils.js';
+import { collection, getDocs, query, where } from 'firebase/firestore';
+import { db } from '../../services/database/firebase.js';
 
 export class SenaraiKIR {
     constructor() {
@@ -86,8 +88,9 @@ export class SenaraiKIR {
                     <table class="kir-table">
                         <thead>
                             <tr>
+                                
+                                <th>NAMA / EMAIL</th>
                                 <th>KIR ID</th>
-                                <th>NAMA</th>
                                 <th>NO. DOKUMEN</th>
                                 <th>STATUS</th>
                                 <th>CREATED DATE</th>
@@ -808,9 +811,9 @@ export class SenaraiKIR {
         });
     }
 
-    async loadKIRData() {
-        try {
-            this.showLoadingState();
+  async loadKIRData() {
+    try {
+      this.showLoadingState();
             
             const params = {
                 search: this.currentFilters.search,
@@ -822,8 +825,9 @@ export class SenaraiKIR {
 
             console.log('Loading KIR data with params:', params);
             const result = await KIRService.getKIRList(params);
+            const enrichedItems = await this.attachAccountDetails(result.items || []);
             
-            this.currentKIRData = result.items || [];
+            this.currentKIRData = enrichedItems;
             this.hasMore = !!result.hasMore;
             const nextCursor = result.nextCursor || null;
             if (nextCursor) {
@@ -833,9 +837,9 @@ export class SenaraiKIR {
             }
             this.totalRecords = (this.currentPage - 1) * this.pageSize + this.currentKIRData.length;
             
-            this.renderKIRTable();
-            this.updateTableInfo();
-            this.updatePagination();
+      this.renderKIRTable();
+      this.updateTableInfo();
+      this.updatePagination();
             
         } catch (error) {
             console.error('Error loading KIR data:', error);
@@ -866,14 +870,15 @@ export class SenaraiKIR {
                     <div class="user-info">
                         ${this.renderKIRAvatar(kir)}
                         <div class="user-details">
-                            <span class="kir-id">${kir.id || 'N/A'}</span>
+                            
+                            <span class="user-name">${kir.nama_penuh || 'Tiada Nama'}</span>
+                        <span class="user-email">${kir.email || 'Tiada Email'}</span>
                         </div>
                     </div>
                 </td>
                 <td>
                     <div class="user-details">
-                        <span class="user-name">${kir.nama_penuh || 'Tiada Nama'}</span>
-                        <span class="user-email">${kir.email || 'Tiada Email'}</span>
+                        <span class="kir-id">${kir.id || 'N/A'}</span>
                     </div>
                 </td>
                 <td class="nokp">
@@ -1134,11 +1139,20 @@ export class SenaraiKIR {
         return statusMap[status] || status || 'Tidak Diketahui';
     }
 
-    formatDate(dateString) {
-        if (!dateString) return 'Tiada Tarikh';
-        
+    formatDate(value) {
+        if (!value) return 'Tiada Tarikh';
+        let date = value;
         try {
-            const date = new Date(dateString);
+            if (typeof value?.toDate === 'function') {
+                date = value.toDate();
+            } else if (typeof value?.seconds === 'number') {
+                date = new Date(value.seconds * 1000);
+            } else if (!(value instanceof Date)) {
+                date = new Date(value);
+            }
+            if (!(date instanceof Date) || Number.isNaN(date.getTime())) {
+                return 'Tarikh Tidak Sah';
+            }
             return date.toLocaleDateString('ms-MY', {
                 day: '2-digit',
                 month: '2-digit',
@@ -1419,6 +1433,44 @@ export class SenaraiKIR {
         btnText.style.display = 'inline';
         btnLoading.style.display = 'none';
     }
+  }
+
+  async attachAccountDetails(items = []) {
+    if (!Array.isArray(items) || !items.length || !db) {
+      return items;
+    }
+    const kirIds = Array.from(new Set(items.map(item => item.id).filter(Boolean)));
+    if (!kirIds.length) return items;
+
+    const accountMap = new Map();
+    const chunkSize = 10;
+    for (let i = 0; i < kirIds.length; i += chunkSize) {
+      const batch = kirIds.slice(i, i + chunkSize);
+      try {
+        const usersRef = collection(db, 'users');
+        const q = query(usersRef, where('kir_id', 'in', batch));
+        const snapshot = await getDocs(q);
+        snapshot.forEach(userDoc => {
+          const data = userDoc.data() || {};
+          if (!data.kir_id) return;
+          accountMap.set(data.kir_id, {
+            email: data.email || data.username || '',
+            createdAt: data.createdAt || data.created_at || data.tarikh_dicipta || data.tarikh_cipta || null
+          });
+        });
+      } catch (error) {
+        console.warn('SenaraiKIR: gagal memuatkan akaun pengguna untuk batch', batch, error);
+      }
+    }
+
+    return items.map(item => {
+      const account = accountMap.get(item.id);
+      return {
+        ...item,
+        email: item.email || account?.email || item.contact_email || '',
+        tarikh_cipta: item.tarikh_cipta || item.created_at || item.createdAt || account?.createdAt || item.tarikh_dicipta || null
+      };
+    });
   }
 
     getSelectedIdentityType() {
