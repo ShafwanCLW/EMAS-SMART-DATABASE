@@ -23,20 +23,17 @@ export function createUserSidebar(user) {
       </div>
       
       <nav class="sidebar-nav">
-        <a href="#" class="nav-item active" data-section="dashboard">
+        
+        <a href="#" class="nav-item" data-section="kir-profile">
           <span class="nav-icon">📊</span>
-          Dashboard
+          My KIR Profile
         </a>
-
         <a href="#" class="nav-item" data-section="notifikasi">
           <span class="nav-icon">🔔</span>
           Notifikasi
         </a>
 
-        <a href="#" class="nav-item" data-section="kir-profile">
-          <span class="nav-icon">dY?ÿ</span>
-          My KIR Profile
-        </a>
+        
         
         <a href="#" class="nav-item" data-section="settings">
           <span class="nav-icon">⚙️</span>
@@ -1390,6 +1387,11 @@ function setupUserKIRProfileSection(user) {
   navItem.addEventListener('click', () => {
     setTimeout(() => initializeProfile(), 150);
   });
+  
+  const profileSection = document.getElementById('kir-profile-content');
+  if (profileSection && profileSection.classList.contains('active')) {
+    setTimeout(() => initializeProfile(), 0);
+  }
 }
 
 function initializeUserChangePasswordForm() {

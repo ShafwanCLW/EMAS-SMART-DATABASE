@@ -123,8 +123,8 @@ export class ProgramKehadiranNewest {
             <table class="data-table">
               <thead>
                 <tr>
+                  <th></th>
                   <th>Nama Program</th>
-                  <th>Gambar</th>
                   <th>Kod Program</th>
                   <th>Penerangan</th>
                   <th>Tarikh Mula</th>
@@ -905,7 +905,6 @@ export class ProgramKehadiranNewest {
 
     return `
       <tr data-program-id="${program.id}">
-        <td>${programName}</td>
         <td>
           <div class="program-photo-cell">
             ${
@@ -915,6 +914,7 @@ export class ProgramKehadiranNewest {
             }
           </div>
         </td>
+        <td>${programName}</td>
         <td>${program.program_code || program.programCode || '-'}</td>
         <td>${program.penerangan || program.deskripsi || '-'}</td>
         <td>${startDate}</td>

@@ -1,4 +1,5 @@
 // Navigation utilities
+const LAST_SECTION_STORAGE_KEY = 'dashboard_last_section';
 
 // Handle sidebar navigation
 export function handleSidebarNavigation(event) {
@@ -7,53 +8,7 @@ export function handleSidebarNavigation(event) {
   if (!navItem) return;
   
   const section = navItem.dataset.section;
-  const currentActiveNav = document.querySelector('.nav-item.active, .nav-subitem.active');
-  const currentSection = currentActiveNav ? currentActiveNav.dataset.section : null;
-  
-  // Check if leaving Cipta KIR section with unsaved data
-  if (currentSection === 'cipta-kir' && section !== 'cipta-kir') {
-    const hasUnsavedData = checkForUnsavedCiptaKIRData();
-    if (hasUnsavedData) {
-      // Removed confirm dialog - always allow navigation
-      // Clear the draft data when leaving
-      clearCiptaKIRDraft();
-    }
-  }
-  
-  // Reset Cipta KIR form when entering the section
-  if (section === 'cipta-kir') {
-    // Clear any existing draft data to start fresh
-    clearCiptaKIRDraft();
-  }
-  
-  // Update active nav item (handle both nav-item and nav-subitem)
-  document.querySelectorAll('.nav-item, .nav-subitem').forEach(item => {
-    item.classList.remove('active');
-  });
-  navItem.classList.add('active');
-  
-  // Show corresponding content section
-  document.querySelectorAll('.content-section').forEach(content => {
-    content.classList.remove('active');
-  });
-  
-  const targetContent = document.getElementById(`${section}-content`);
-  if (targetContent) {
-    targetContent.classList.add('active');
-    
-    // Initialize specific sections when they are activated
-    if (section === 'program-kehadiran') {
-      console.log('Program & Kehadiran section activated, initializing...');
-      // Import and call the initialization function
-      import('../pages/admin/AdminDashboard.js')
-        .then(module => {
-          if (typeof module.initializeProgramKehadiran === 'function') {
-            setTimeout(() => module.initializeProgramKehadiran(), 100);
-          }
-        })
-        .catch(err => console.error('Error initializing Program & Kehadiran:', err));
-    }
-  }
+  activateSidebarSection(section, { navItem });
 }
 
 // Check if there's unsaved data in Cipta KIR
@@ -157,4 +112,95 @@ export function setupNavigationListeners(onLogout) {
       }
     });
   }
+  
+  restoreLastActiveSection();
+}
+
+function activateSidebarSection(section, { navItem, skipRemember } = {}) {
+  if (!section) return;
+  const targetNav = navItem || document.querySelector(`.nav-item[data-section="${section}"], .nav-subitem[data-section="${section}"]`);
+  if (!targetNav) return;
+  
+  const currentActiveNav = document.querySelector('.nav-item.active, .nav-subitem.active');
+  const currentSection = currentActiveNav ? currentActiveNav.dataset.section : null;
+  
+  // Check if leaving Cipta KIR section with unsaved data
+  if (currentSection === 'cipta-kir' && section !== 'cipta-kir') {
+    const hasUnsavedData = checkForUnsavedCiptaKIRData();
+    if (hasUnsavedData) {
+      clearCiptaKIRDraft();
+    }
+  }
+  
+  // Reset Cipta KIR form when entering the section
+  if (section === 'cipta-kir') {
+    clearCiptaKIRDraft();
+  }
+  
+  // Update active nav item (handle both nav-item and nav-subitem)
+  document.querySelectorAll('.nav-item, .nav-subitem').forEach(item => {
+    item.classList.remove('active');
+  });
+  targetNav.classList.add('active');
+  
+  // Show corresponding content section
+  document.querySelectorAll('.content-section').forEach(content => {
+    content.classList.remove('active');
+  });
+  
+  const targetContent = document.getElementById(`${section}-content`);
+  if (targetContent) {
+    targetContent.classList.add('active');
+    
+    // Initialize specific sections when they are activated
+    if (section === 'program-kehadiran') {
+      console.log('Program & Kehadiran section activated, initializing...');
+      import('../pages/admin/AdminDashboard.js')
+        .then(module => {
+          if (typeof module.initializeProgramKehadiran === 'function') {
+            setTimeout(() => module.initializeProgramKehadiran(), 100);
+          }
+        })
+        .catch(err => console.error('Error initializing Program & Kehadiran:', err));
+    }
+  }
+  
+  if (!skipRemember) {
+    setLastActiveSection(section);
+  }
+}
+
+function setLastActiveSection(section) {
+  try {
+    localStorage.setItem(LAST_SECTION_STORAGE_KEY, section);
+  } catch (error) {
+    console.warn('Unable to store last section:', error);
+  }
+}
+
+function getLastActiveSection() {
+  try {
+    return localStorage.getItem(LAST_SECTION_STORAGE_KEY);
+  } catch (error) {
+    console.warn('Unable to read last section:', error);
+    return null;
+  }
+}
+
+function getDefaultSection() {
+  const sidebarTitle = document.querySelector('.sidebar-title');
+  const isUserPanel = sidebarTitle && sidebarTitle.textContent && sidebarTitle.textContent.toLowerCase().includes('user panel');
+  if (isUserPanel && document.getElementById('kir-profile-content')) {
+    return 'kir-profile';
+  }
+  return null;
+}
+
+export function restoreLastActiveSection() {
+  const sidebarNav = document.querySelector('.sidebar-nav');
+  if (!sidebarNav) return;
+  const storedSection = getLastActiveSection();
+  const fallbackSection = storedSection || getDefaultSection();
+  if (!fallbackSection) return;
+  activateSidebarSection(fallbackSection, { skipRemember: Boolean(storedSection) });
 }

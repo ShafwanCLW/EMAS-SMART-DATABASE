@@ -33,6 +33,15 @@ export function createLoginForm() {
             <input type="password" id="loginPassword" name="password" required placeholder="Enter your password">
           </div>
           
+          <div class="form-group checkbox-group">
+            <label for="loginTerms">
+              <input type="checkbox" id="loginTerms" name="acceptTerms" required>
+              <span>
+                I agree to the <a href="#" class="terms-link" id="termsLink">Terms & Conditions</a>
+              </span>
+            </label>
+          </div>
+          
           <button type="submit" class="auth-btn" id="login-btn">Sign In</button>
           
           <div class="auth-links" style="text-align: center; margin-top: 0.75rem;">
@@ -83,6 +92,59 @@ export function createLoginForm() {
               <button type="submit" class="auth-btn" id="forgotPasswordSubmit">Send Reset Link</button>
             </div>
           </form>
+        </div>
+      </div>
+
+      <div id="termsModal" class="terms-modal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.55); backdrop-filter: blur(2px); z-index: 1100; align-items: center; justify-content: center;">
+        <div class="terms-modal-content" style="background: #fff; width: 90%; max-width: 540px; border-radius: 20px; padding: 24px 28px; box-shadow: 0 20px 55px rgba(15,23,42,0.35); max-height: 85vh; overflow-y: auto;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h3 style="margin: 0; font-size: 1.4rem;">Terms and Conditions</h3>
+            <button type="button" id="closeTermsModal" style="background: none; border: none; font-size: 1.75rem; line-height: 1; cursor: pointer;">&times;</button>
+          </div>
+          <div class="terms-modal-body" style="color: #475569; font-size: 0.95rem; line-height: 1.6;">
+            <ol style="padding-left: 1.25rem; margin: 0;">
+              <li style="margin-bottom: 0.75rem;">
+                <strong>Acceptance of Terms</strong>
+                <p style="margin: 0.35rem 0 0;">By accessing, registering, or logging into this website and its related systems, you acknowledge that you have read, understood, and agreed to be bound by these Terms and Conditions. If you do not agree with any part of these terms, you must not use the system.</p>
+              </li>
+              <li style="margin-bottom: 0.75rem;">
+                <strong>Collection and Use of Data</strong>
+                <p style="margin: 0.35rem 0 0;">By logging into and using this system, you consent to the collection, storage, and processing of your data for system functionality, service improvement, usage analysis, performance monitoring, bug fixing, testing, and feature enhancement. The data collected may include account information, usage activity, system interactions, and other relevant operational information.</p>
+              </li>
+              <li style="margin-bottom: 0.75rem;">
+                <strong>Purpose Limitation</strong>
+                <p style="margin: 0.35rem 0 0;">All collected data will be used strictly for program operation, analysis, research, and improvement purposes. The data will not be used for illegal activities or purposes beyond the scope of system enhancement.</p>
+              </li>
+              <li style="margin-bottom: 0.75rem;">
+                <strong>Data Security</strong>
+                <p style="margin: 0.35rem 0 0;">Reasonable technical and organizational measures are taken to protect user data against unauthorized access, loss, misuse, or disclosure. However, no system is completely secure, and users acknowledge this risk when using the platform.</p>
+              </li>
+              <li style="margin-bottom: 0.75rem;">
+                <strong>Data Sharing</strong>
+                <p style="margin: 0.35rem 0 0;">User data will not be sold or shared with third parties without consent, except when required by law or for essential system services such as authentication or hosting providers.</p>
+              </li>
+              <li style="margin-bottom: 0.75rem;">
+                <strong>User Responsibility</strong>
+                <p style="margin: 0.35rem 0 0;">Users are responsible for maintaining the confidentiality of their login credentials and all activities performed under their account.</p>
+              </li>
+              <li style="margin-bottom: 0.75rem;">
+                <strong>System Changes</strong>
+                <p style="margin: 0.35rem 0 0;">The system owner reserves the right to modify, update, or discontinue any part of the system at any time, including these Terms and Conditions. Continued use of the system after changes indicates acceptance of the updated terms.</p>
+              </li>
+              <li style="margin-bottom: 0.75rem;">
+                <strong>Limitation of Liability</strong>
+                <p style="margin: 0.35rem 0 0;">The system is provided on an “as-is” basis. The system owner shall not be held liable for any direct or indirect damages arising from the use or inability to use the system.</p>
+              </li>
+              <li style="margin-bottom: 0.75rem;">
+                <strong>Termination</strong>
+                <p style="margin: 0.35rem 0 0;">Access may be suspended or terminated if a user violates these Terms and Conditions or misuses the system.</p>
+              </li>
+              <li>
+                <strong>Contact</strong>
+                <p style="margin: 0.35rem 0 0;">For questions regarding these Terms and Conditions or data usage, users may contact the system administrator through the provided contact channels.</p>
+              </li>
+            </ol>
+          </div>
         </div>
       </div>
     </div>
@@ -255,6 +317,31 @@ export function setupForgotPasswordHandlers() {
         submitBtn.disabled = false;
         submitBtn.textContent = 'Send Reset Link';
       }
+    }
+  });
+}
+
+export function setupTermsModal() {
+  const termsLink = document.getElementById('termsLink');
+  const termsModal = document.getElementById('termsModal');
+  const closeBtn = document.getElementById('closeTermsModal');
+  
+  if (!termsLink || !termsModal) return;
+  
+  const closeModal = () => {
+    termsModal.style.display = 'none';
+  };
+  
+  termsLink.addEventListener('click', (event) => {
+    event.preventDefault();
+    termsModal.style.display = 'flex';
+  });
+  
+  closeBtn?.addEventListener('click', closeModal);
+  
+  termsModal.addEventListener('click', (event) => {
+    if (event.target === termsModal) {
+      closeModal();
     }
   });
 }

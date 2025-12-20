@@ -545,6 +545,30 @@ export class NotificationCenter {
         gap: 1rem;
         flex-wrap: wrap;
       }
+      .notification-header-meta .btn,
+      .notification-header-meta button {
+        border: none;
+        border-radius: 14px;
+        background: linear-gradient(135deg, #818cf8, #6366f1);
+        color: #fff;
+        font-weight: 600;
+        padding: 0.85rem 1.35rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        cursor: pointer;
+        box-shadow: 0 12px 24px rgba(99, 102, 241, 0.25);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+      .notification-header-meta .btn i,
+      .notification-header-meta button i {
+        font-size: 0.9rem;
+      }
+      .notification-header-meta .btn:hover,
+      .notification-header-meta button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 16px 30px rgba(99, 102, 241, 0.3);
+      }
       .notification-pill {
         border: 1px solid #e0e7ff;
         border-radius: 16px;
@@ -675,6 +699,23 @@ export class NotificationCenter {
       .notification-actions {
         display: flex;
         justify-content: flex-end;
+      }
+      .notification-actions .btn,
+      .notification-actions button {
+        border: none;
+        border-radius: 12px;
+        padding: 0.65rem 1.25rem;
+        background: linear-gradient(135deg, #f97316, #fb923c);
+        color: #fff;
+        font-weight: 600;
+        cursor: pointer;
+        box-shadow: 0 12px 22px rgba(249, 115, 22, 0.25);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+      .notification-actions .btn:hover,
+      .notification-actions button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 16px 26px rgba(249, 115, 22, 0.3);
       }
       .notification-card.loading .loading-line {
         height: 10px;

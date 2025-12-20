@@ -250,6 +250,11 @@ export function createAdminMainContent() {
       max-width: 560px;
     }
     
+    .add-admin-modal .modal-content {
+      width: 100%;
+      max-width: 500px;
+    }
+    
     .admin-add-user-status {
       padding: 10px 14px;
       border-radius: 6px;
@@ -1225,10 +1230,16 @@ export function createAdminMainContent() {
     
     .report-sections-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      grid-template-columns: minmax(0, 2fr) minmax(0, 2fr) minmax(0, 1fr);
       gap: 20px;
       grid-auto-flow: row dense;
       align-items: stretch;
+    }
+    
+    @media (max-width: 1200px) {
+      .report-sections-grid {
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      }
     }
     
     .report-section-card {
@@ -1243,20 +1254,10 @@ export function createAdminMainContent() {
       min-height: 280px;
     }
 
-    .report-section-card.span-2 {
-      grid-column: span 2;
-    }
-
     .report-section-card.span-full {
       grid-column: 1 / -1;
     }
 
-    @media (max-width: 1400px) {
-      .report-section-card.span-2 {
-        grid-column: span 1;
-      }
-    }
-    
     .report-section-card header {
       display: flex;
       justify-content: space-between;
@@ -1859,10 +1860,17 @@ export function createAdminMainContent() {
     <div id="user-management-content" class="content-section">
       <div class="section-header">
         <h3 class="section-title">Pengurusan Pengguna</h3>
-        <button class="btn btn-primary" id="addUserBtn">
+        <div class="section-actions">
+          <button class="btn btn-secondary" id="addAdminBtn" style="margin-top: 16px;">
           <span class="btn-icon">➕</span>
-          Tambah Pengguna
-        </button>
+          Tambah Admin
+          </button>
+
+          <button class="btn btn-primary" id="addUserBtn">
+            <span class="btn-icon">➕</span>
+            Tambah Pengguna
+          </button>
+        </div>
       </div>
       
       <div class="table-container">
@@ -2987,7 +2995,7 @@ export function createAdminMainContent() {
         </div>
         
         <div class="report-sections-grid">
-          <section class="report-section-card span-2">
+          <section class="report-section-card">
             <header>
               <h4>Program Performance</h4>
               <span id="report-program-summary" class="helper"></span>
@@ -3850,6 +3858,7 @@ export async function initializeUserManagement() {
   // Initialize
   renderUsers();
   setupAddUserButton();
+  setupAddAdminButton();
 }
 
 function setupAddUserButton() {
@@ -3857,6 +3866,191 @@ function setupAddUserButton() {
   if (addUserBtn && !addUserBtn.dataset.listenerAttached) {
     addUserBtn.dataset.listenerAttached = 'true';
     addUserBtn.addEventListener('click', () => openAddUserModal());
+  }
+}
+
+function setupAddAdminButton() {
+  const addAdminBtn = document.getElementById('addAdminBtn');
+  if (addAdminBtn && !addAdminBtn.dataset.listenerAttached) {
+    addAdminBtn.dataset.listenerAttached = 'true';
+    addAdminBtn.addEventListener('click', () => openAddAdminModal());
+  }
+}
+
+function openAddAdminModal() {
+  closeAddAdminModal();
+  const modal = document.createElement('div');
+  modal.className = 'modal add-admin-modal';
+  modal.id = 'add-admin-modal';
+  modal.innerHTML = getAddAdminModalTemplate();
+  document.body.appendChild(modal);
+  modal.style.display = 'flex';
+  
+  const closeBtn = modal.querySelector('#close-add-admin-modal');
+  closeBtn?.addEventListener('click', closeAddAdminModal);
+  
+  const cancelBtn = modal.querySelector('#cancel-add-admin');
+  cancelBtn?.addEventListener('click', closeAddAdminModal);
+  
+  modal.addEventListener('click', (event) => {
+    if (event.target === modal) {
+      closeAddAdminModal();
+    }
+  });
+  
+  const form = modal.querySelector('#createAdminForm');
+  form?.addEventListener('submit', handleCreateAdminSubmit);
+  
+  const nameInput = modal.querySelector('#adminCreateName');
+  if (nameInput) {
+    setTimeout(() => nameInput.focus(), 150);
+  }
+}
+
+function closeAddAdminModal() {
+  const modal = document.getElementById('add-admin-modal');
+  if (modal) {
+    modal.remove();
+  }
+  setAddAdminStatus('');
+}
+
+function getAddAdminModalTemplate() {
+  return `
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Tambah Akaun Admin</h2>
+        <span class="close-modal" id="close-add-admin-modal">&times;</span>
+      </div>
+      <div class="modal-body">
+        <div class="admin-add-user-hint">
+          <p>Cipta akaun admin baharu dengan memasukkan nama penuh, emel dan kata laluan sementara. Admin yang dicipta boleh log masuk serta-merta dan disyorkan untuk menukar kata laluan selepas log masuk.</p>
+        </div>
+        <div id="add-admin-status" class="admin-add-user-status"></div>
+        <form id="createAdminForm" class="admin-create-form">
+          <div class="form-group">
+            <label for="adminCreateName">Nama Penuh</label>
+            <input type="text" id="adminCreateName" name="name" required placeholder="Nama admin">
+          </div>
+          <div class="form-group">
+            <label for="adminCreateEmail">Alamat Emel</label>
+            <input type="email" id="adminCreateEmail" name="email" required placeholder="admin@contoh.com">
+          </div>
+          <div class="form-group">
+            <label for="adminCreatePassword">Kata Laluan Sementara</label>
+            <input type="password" id="adminCreatePassword" name="password" required minlength="6" placeholder="Kata laluan">
+          </div>
+          <div class="form-group">
+            <label for="adminCreateConfirmPassword">Sahkan Kata Laluan</label>
+            <input type="password" id="adminCreateConfirmPassword" name="confirmPassword" required minlength="6" placeholder="Sahkan kata laluan">
+          </div>
+          <div class="form-group" style="margin-bottom: 0;">
+            <small style="color: #475569;">Sistem akan menghantar emel pengesahan secara automatik. Admin boleh log masuk walaupun belum mengesahkan emel.</small>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-secondary" id="cancel-add-admin">Batal</button>
+            <button type="submit" class="btn btn-primary" id="add-admin-submit">Cipta Admin</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  `;
+}
+
+function setAddAdminStatus(message, type = 'info') {
+  const statusElement = document.getElementById('add-admin-status');
+  if (!statusElement) return;
+  
+  if (!message) {
+    statusElement.style.display = 'none';
+    statusElement.textContent = '';
+    statusElement.className = 'admin-add-user-status';
+    statusElement.style.background = '';
+    statusElement.style.color = '';
+    statusElement.style.border = '';
+    return;
+  }
+  
+  statusElement.textContent = message;
+  statusElement.style.display = 'block';
+  statusElement.className = 'admin-add-user-status';
+  statusElement.style.background = '';
+  statusElement.style.color = '';
+  statusElement.style.border = '';
+  
+  if (type === 'success') {
+    statusElement.classList.add('success');
+  } else if (type === 'error') {
+    statusElement.classList.add('error');
+  } else {
+    statusElement.style.background = '#eef2ff';
+    statusElement.style.color = '#4338ca';
+    statusElement.style.border = '1px solid #c7d2fe';
+  }
+}
+
+async function handleCreateAdminSubmit(event) {
+  event.preventDefault();
+  const form = event.target;
+  const submitButton = form.querySelector('#add-admin-submit');
+  const originalText = submitButton?.innerHTML;
+  
+  const formData = new FormData(form);
+  const name = (formData.get('name') || '').trim();
+  const email = (formData.get('email') || '').trim();
+  const password = formData.get('password') || '';
+  const confirmPassword = formData.get('confirmPassword') || '';
+  
+  if (!name || !email || !password || !confirmPassword) {
+    setAddAdminStatus('Sila lengkapkan semua medan yang diperlukan.', 'error');
+    return;
+  }
+  
+  if (password.length < 6) {
+    setAddAdminStatus('Kata laluan mesti mempunyai sekurang-kurangnya 6 aksara.', 'error');
+    return;
+  }
+  
+  if (password !== confirmPassword) {
+    setAddAdminStatus('Kata laluan dan pengesahan tidak sepadan.', 'error');
+    return;
+  }
+  
+  try {
+    if (submitButton) {
+      submitButton.disabled = true;
+      submitButton.innerHTML = '<div class="loading-spinner white"></div>Mencipta Admin...';
+    }
+    
+    setAddAdminStatus('Mencipta akaun admin baharu...', 'info');
+    
+    const currentAdmin = FirebaseAuthService.getCurrentUser();
+    const extraProfile = {
+      createdBy: 'admin_panel',
+      createdByUid: currentAdmin?.uid || '',
+      createdByEmail: currentAdmin?.email || '',
+      createdFrom: 'user_management',
+      roleAssignedBy: currentAdmin?.email || '',
+      roleAssignedAt: new Date(),
+      status: 'active'
+    };
+    
+    await FirebaseAuthService.register(email, password, name, 'admin', extraProfile);
+    
+    setAddAdminStatus('Admin baharu berjaya dicipta.', 'success');
+    
+    setTimeout(() => {
+      closeAddAdminModal();
+      initializeUserManagement();
+    }, 1200);
+  } catch (error) {
+    console.error('Error creating admin account:', error);
+    setAddAdminStatus(error.message || 'Gagal mencipta admin baharu.', 'error');
+  } finally {
+    if (submitButton) {
+      submitButton.disabled = false;
+      submitButton.innerHTML = originalText || 'Cipta Admin';
+    }
   }
 }
 
