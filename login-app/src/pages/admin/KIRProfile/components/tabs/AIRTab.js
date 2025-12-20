@@ -174,6 +174,8 @@ export class AIRTab extends BaseTab {
                     <option value="Tadika">Tadika</option>
                     <option value="Sekolah Rendah">Sekolah Rendah</option>
                     <option value="Sekolah Menengah">Sekolah Menengah</option>
+                    <option value="SPM">SPM</option>
+                    <option value="SPTM">SPTM</option>
                     <option value="Sijil/Diploma">Sijil/Diploma</option>
                     <option value="Ijazah Sarjana Muda">Ijazah Sarjana Muda</option>
                     <option value="Ijazah Sarjana">Ijazah Sarjana</option>
@@ -1295,6 +1297,8 @@ export class AIRTab extends BaseTab {
                 <option value="Tadika" ${data.tahap_semasa === 'Tadika' ? 'selected' : ''}>Tadika</option>
                 <option value="Sekolah Rendah" ${data.tahap_semasa === 'Sekolah Rendah' ? 'selected' : ''}>Sekolah Rendah</option>
                 <option value="Sekolah Menengah" ${data.tahap_semasa === 'Sekolah Menengah' ? 'selected' : ''}>Sekolah Menengah</option>
+                <option value="SPM" ${data.tahap_semasa === 'SPM' ? 'selected' : ''}>SPM</option>
+                <option value="SPTM" ${data.tahap_semasa === 'SPTM' ? 'selected' : ''}>SPTM</option>
                 <option value="Sijil/Diploma" ${data.tahap_semasa === 'Sijil/Diploma' ? 'selected' : ''}>Sijil/Diploma</option>
                 <option value="Ijazah" ${data.tahap_semasa === 'Ijazah' ? 'selected' : ''}>Ijazah</option>
                 <option value="Pascasiswazah" ${data.tahap_semasa === 'Pascasiswazah' ? 'selected' : ''}>Pascasiswazah</option>
