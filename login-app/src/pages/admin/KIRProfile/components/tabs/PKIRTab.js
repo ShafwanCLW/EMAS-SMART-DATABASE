@@ -93,6 +93,21 @@ export class PKIRTab extends BaseTab {
 
           <div class="form-row">
             <div class="form-group">
+              <label for="kemahiran_mengaji">Kemahiran Mengaji</label>
+              <select id="kemahiran_mengaji" name="kemahiran_mengaji">
+                <option value="">Pilih Kemahiran</option>
+                <option value="Boleh Mengaji">Boleh Mengaji</option>
+                <option value="Tidak Boleh Mengaji">Tidak Boleh Mengaji</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="minat">Minat</label>
+              <input type="text" id="minat" name="minat" placeholder="Contoh: Sukan, Kesenian">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
               <label for="status_bantuan_pasangan">Bantuan</label>
               <select id="status_bantuan_pasangan" name="status_bantuan_pasangan">
                 <option value="">Pilih Status</option>
@@ -186,7 +201,7 @@ export class PKIRTab extends BaseTab {
               <select id="status_pekerjaan" name="status_pekerjaan">
                 <option value="">Pilih Status</option>
                 <option value="Bekerja">Bekerja</option>
-                <option value="Menganggur">Menganggur</option>
+                <option value="Tidak Bekerja">Tidak Bekerja</option>
                 <option value="Pelajar">Pelajar</option>
                 <option value="Pesara">Pesara</option>
                 <option value="Suri Rumah">Suri Rumah</option>
@@ -194,7 +209,7 @@ export class PKIRTab extends BaseTab {
               </select>
             </div>
             
-            <div class="form-group">
+            <div class="form-group pkir-pekerjaan-fields">
               <label for="jenis_pekerjaan">Jenis Pekerjaan</label>
               <select id="jenis_pekerjaan" name="jenis_pekerjaan">
                 <option value="">Pilih Jenis</option>
@@ -203,14 +218,14 @@ export class PKIRTab extends BaseTab {
               </select>
             </div>
 
-            <div class="form-group">
+            <div class="form-group pkir-pekerjaan-fields">
               <label for="nama_jenis_pekerjaan">Nama Jenis Pekerjaan</label>
               <input type="text" id="nama_jenis_pekerjaan" name="nama_jenis_pekerjaan">
             </div>
           </div>
           
           <div class="form-row">
-            <div class="form-group pekerjaan-sendiri" style="display:none;">
+            <div class="form-group pekerjaan-sendiri pkir-pekerjaan-fields" style="display:none;">
               <label for="jenis_pekerjaan_sendiri">Jenis Pekerjaan Sendiri</label>
               <select id="jenis_pekerjaan_sendiri" name="jenis_pekerjaan_sendiri">
                 <option value="">Pilih Jenis</option>
@@ -220,12 +235,12 @@ export class PKIRTab extends BaseTab {
                 <option value="Berasaskan Rumah">Berasaskan Rumah</option>
               </select>
             </div>
-            <div class="form-group">
+            <div class="form-group pkir-pekerjaan-fields">
               <label for="nama_majikan">Nama Majikan</label>
               <input type="text" id="nama_majikan" name="nama_majikan">
             </div>
             
-            <div class="form-group">
+            <div class="form-group pkir-pekerjaan-fields">
               <label for="pendapatan_bulanan">Pendapatan Bulanan (RM)</label>
               <input type="number" id="pendapatan_bulanan" name="pendapatan_bulanan" min="0" step="0.01">
             </div>
@@ -430,6 +445,22 @@ export class PKIRTab extends BaseTab {
     }
   }
 
+  togglePekerjaanFields(statusValue) {
+    const fields = document.querySelectorAll('.pkir-pekerjaan-fields');
+    const shouldHide = statusValue === 'Tidak Bekerja';
+    fields.forEach(field => {
+      field.style.display = shouldHide ? 'none' : '';
+    });
+    if (shouldHide) {
+      this.togglePekerjaanSendiri('');
+    } else {
+      const jenisSelect = document.querySelector('#jenis_pekerjaan');
+      if (jenisSelect) {
+        this.togglePekerjaanSendiri(jenisSelect.value);
+      }
+    }
+  }
+
   toggleKenderaanAnsuran(value) {
     const group = document.querySelector('.pkir-kenderaan-ansuran');
     if (group) {
@@ -628,6 +659,9 @@ export class PKIRTab extends BaseTab {
           this.populateForm(this.pkirData);
         } else {
           this.resetForm(true);
+          if (this.kirProfile?.prefillPKIRFormFromPending) {
+            this.kirProfile.prefillPKIRFormFromPending({ onlyIfEmpty: true });
+          }
         }
       })
       .catch(error => console.error('PKIR initial load failed:', error));
@@ -678,12 +712,31 @@ export class PKIRTab extends BaseTab {
         });
       }
 
+      const statusPekerjaanSelect = form.querySelector('#status_pekerjaan');
+      if (statusPekerjaanSelect) {
+        statusPekerjaanSelect.addEventListener('change', (e) => {
+          this.togglePekerjaanFields(e.target.value);
+        });
+        this.togglePekerjaanFields(statusPekerjaanSelect.value);
+      }
+
       const icInput = form.querySelector('#no_kp_pasangan');
       if (icInput) {
         this.attachICInputMask(icInput);
+        const handleIcChange = (value) => {
+          window.requestAnimationFrame(() => {
+            this.applyBirthInfoFromIC(value, true);
+          });
+        };
         icInput.addEventListener('input', (e) => {
-          this.applyBirthInfoFromIC(e.target.value, true);
+          handleIcChange(e.target.value);
         });
+        icInput.addEventListener('blur', (e) => {
+          handleIcChange(e.target.value);
+        });
+        if (icInput.value) {
+          handleIcChange(icInput.value);
+        }
       }
 
       const jenisKenderaanSelect = form.querySelector('#jenis_kenderaan_pasangan');
@@ -756,6 +809,8 @@ export class PKIRTab extends BaseTab {
       bangsa_pasangan: normalize(formData.bangsa_pasangan),
       agama_pasangan: normalize(formData.agama_pasangan),
       telefon_pasangan: normalize(formData.telefon_pasangan),
+      kemahiran_mengaji: normalize(formData.kemahiran_mengaji),
+      minat: normalize(formData.minat),
       status_bantuan_pasangan: bantuanStatus,
       jenis_bantuan_pasangan: bantuanJenis,
       jumlah_bantuan_pasangan: bantuanJumlah,
@@ -791,7 +846,9 @@ export class PKIRTab extends BaseTab {
         telefon: normalize(formData.telefon_pasangan),
         jantina: normalize(formData.jantina_pasangan),
         bangsa: normalize(formData.bangsa_pasangan),
-        agama: normalize(formData.agama_pasangan)
+        agama: normalize(formData.agama_pasangan),
+        kemahiran_mengaji: normalize(formData.kemahiran_mengaji),
+        minat: normalize(formData.minat)
       },
       pendidikan: {
         tahap: normalize(formData.tahap_pendidikan),
@@ -860,6 +917,8 @@ export class PKIRTab extends BaseTab {
       bangsa_pasangan: asas.bangsa || record.bangsa_pasangan || '',
       agama_pasangan: asas.agama || record.agama_pasangan || '',
       telefon_pasangan: asas.telefon || record.telefon_pasangan || '',
+      kemahiran_mengaji: asas.kemahiran_mengaji || record.kemahiran_mengaji || '',
+      minat: asas.minat || record.minat || '',
       status_bantuan_pasangan: record.status_bantuan_pasangan || record.bantuan?.status || '',
       jenis_bantuan_pasangan: record.jenis_bantuan_pasangan || record.bantuan?.jenis || '',
       jumlah_bantuan_pasangan: record.jumlah_bantuan_pasangan ?? record.bantuan?.jumlah ?? '',
@@ -868,7 +927,9 @@ export class PKIRTab extends BaseTab {
       institusi_pendidikan: pendidikan.institusi || record.institusi_pendidikan || '',
       bidang_pengajian: pendidikan.bidang || record.bidang_pengajian || '',
       tahun_tamat: pendidikan.tahun_tamat || record.tahun_tamat || '',
-      status_pekerjaan: pekerjaan.status || record.status_pekerjaan || '',
+      status_pekerjaan: (pekerjaan.status || record.status_pekerjaan) === 'Menganggur'
+        ? 'Tidak Bekerja'
+        : (pekerjaan.status || record.status_pekerjaan || ''),
       jenis_pekerjaan: pekerjaan.jenis || record.jenis_pekerjaan || '',
       nama_jenis_pekerjaan: pekerjaan.nama_jenis_pekerjaan || record.nama_jenis_pekerjaan || '',
       jenis_pekerjaan_sendiri: pekerjaan.jenis_pekerjaan_sendiri || record.jenis_pekerjaan_sendiri || '',

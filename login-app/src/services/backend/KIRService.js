@@ -175,12 +175,24 @@ export class KIRService {
       
       // Handle address concatenation if address parts are provided
       if (cleanedData.alamat || cleanedData.poskod || cleanedData.bandar || cleanedData.negeri) {
-        const alamat = this.joinNonEmpty([
-          cleanedData.alamat || currentData.alamat,
-          this.joinNonEmpty([cleanedData.poskod || currentData.poskod, cleanedData.bandar || currentData.bandar], ' '),
-          cleanedData.negeri || currentData.negeri
-        ], ', ');
-        updateData.alamat = alamat;
+        const addressBase = cleanedData.alamat || currentData.alamat || '';
+        const poskodValue = cleanedData.poskod || currentData.poskod;
+        const bandarValue = cleanedData.bandar || currentData.bandar;
+        const negeriValue = cleanedData.negeri || currentData.negeri;
+        const tail = this.joinNonEmpty([this.joinNonEmpty([poskodValue, bandarValue], ' '), negeriValue], ', ');
+        const normalizeAddress = (value = '') => value
+          .toString()
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, ' ')
+          .replace(/\s+/g, ' ')
+          .trim();
+        const normalizedBase = normalizeAddress(addressBase);
+        const normalizedTail = normalizeAddress(tail);
+        if (tail && normalizedTail && normalizedBase.includes(normalizedTail)) {
+          updateData.alamat = addressBase;
+        } else {
+          updateData.alamat = this.joinNonEmpty([addressBase, tail], ', ');
+        }
       }
       
       // Normalize No. KP if provided
@@ -551,6 +563,7 @@ export class KIRService {
           kafa_fatihah: draft.kafa_fatihah || '',
           kafa_solat: draft.kafa_solat || '',
           kafa_puasa: draft.kafa_puasa || '',
+          kafa_kemahiran_mengaji: draft.kafa_kemahiran_mengaji || '',
           kafa_skor: draft.kafa_skor || 0,
           tarikh_cipta: serverTimestamp(),
           tarikh_kemas_kini: serverTimestamp()
@@ -1174,12 +1187,13 @@ export class KIRService {
       kafa_fatihah: draft.kafa_fatihah,
       kafa_solat: draft.kafa_solat,
       kafa_puasa: draft.kafa_puasa,
+      kafa_kemahiran_mengaji: draft.kafa_kemahiran_mengaji,
       kafa_skor: draft.kafa_skor
     };
     console.log('KAFA fields check:', kafaFields);
     const hasData = draft.kafa_sumber || draft.kafa_iman || draft.kafa_islam || 
            draft.kafa_fatihah || draft.kafa_solat || draft.kafa_puasa || 
-           draft.kafa_skor;
+           draft.kafa_kemahiran_mengaji || draft.kafa_skor;
     console.log('Has KAFA data result:', hasData);
     return hasData;
   }

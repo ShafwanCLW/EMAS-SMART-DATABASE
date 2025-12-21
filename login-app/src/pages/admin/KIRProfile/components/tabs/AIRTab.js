@@ -130,6 +130,18 @@ export class AIRTab extends BaseTab {
                   <input type="text" id="penjaga" name="penjaga" placeholder="Nama penjaga utama">
                 </div>
                 <div class="form-group">
+                  <label for="kemahiran_mengaji">Kemahiran Mengaji</label>
+                  <select id="kemahiran_mengaji" name="kemahiran_mengaji">
+                    <option value="">Pilih Kemahiran</option>
+                    <option value="Boleh Mengaji">Boleh Mengaji</option>
+                    <option value="Tidak Boleh Mengaji">Tidak Boleh Mengaji</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="minat">Minat</label>
+                  <input type="text" id="minat" name="minat" placeholder="Contoh: Sukan, Kesenian">
+                </div>
+                <div class="form-group">
                   <label for="status_pekerjaan_asas">Status Pekerjaan</label>
                   <select id="status_pekerjaan_asas" name="status">
                     <option value="">Pilih Status</option>
@@ -162,6 +174,8 @@ export class AIRTab extends BaseTab {
                     <option value="Tadika">Tadika</option>
                     <option value="Sekolah Rendah">Sekolah Rendah</option>
                     <option value="Sekolah Menengah">Sekolah Menengah</option>
+                    <option value="SPM">SPM</option>
+                    <option value="SPTM">SPTM</option>
                     <option value="Sijil/Diploma">Sijil/Diploma</option>
                     <option value="Ijazah Sarjana Muda">Ijazah Sarjana Muda</option>
                     <option value="Ijazah Sarjana">Ijazah Sarjana</option>
@@ -548,6 +562,8 @@ export class AIRTab extends BaseTab {
     setValue('jantina', data.jantina || '');
     setValue('hubungan', data.hubungan || '');
     setValue('penjaga', data.penjaga || '');
+    setValue('kemahiran_mengaji', data.kemahiran_mengaji || '');
+    setValue('minat', data.minat || '');
 
     if (!data.tarikh_lahir && data.no_kp) {
       this.applyBirthInfoFromIC(data.no_kp, true);
@@ -1261,6 +1277,21 @@ export class AIRTab extends BaseTab {
               <input type="text" id="air_penjaga" name="penjaga" value="${data.penjaga || ''}" placeholder="Nama penjaga utama">
             </div>
           </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="air_kemahiran_mengaji">Kemahiran Mengaji</label>
+              <select id="air_kemahiran_mengaji" name="kemahiran_mengaji">
+                <option value="">Pilih Kemahiran</option>
+                <option value="Boleh Mengaji" ${data.kemahiran_mengaji === 'Boleh Mengaji' ? 'selected' : ''}>Boleh Mengaji</option>
+                <option value="Tidak Boleh Mengaji" ${data.kemahiran_mengaji === 'Tidak Boleh Mengaji' ? 'selected' : ''}>Tidak Boleh Mengaji</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="air_minat">Minat</label>
+              <input type="text" id="air_minat" name="minat" value="${data.minat || ''}" placeholder="Contoh: Sukan, Kesenian">
+            </div>
+          </div>
         </div>
         
         <div class="form-actions">
@@ -1297,6 +1328,8 @@ export class AIRTab extends BaseTab {
                 <option value="Tadika" ${data.tahap_semasa === 'Tadika' ? 'selected' : ''}>Tadika</option>
                 <option value="Sekolah Rendah" ${data.tahap_semasa === 'Sekolah Rendah' ? 'selected' : ''}>Sekolah Rendah</option>
                 <option value="Sekolah Menengah" ${data.tahap_semasa === 'Sekolah Menengah' ? 'selected' : ''}>Sekolah Menengah</option>
+                <option value="SPM" ${data.tahap_semasa === 'SPM' ? 'selected' : ''}>SPM</option>
+                <option value="SPTM" ${data.tahap_semasa === 'SPTM' ? 'selected' : ''}>SPTM</option>
                 <option value="Sijil/Diploma" ${data.tahap_semasa === 'Sijil/Diploma' ? 'selected' : ''}>Sijil/Diploma</option>
                 <option value="Ijazah" ${data.tahap_semasa === 'Ijazah' ? 'selected' : ''}>Ijazah</option>
                 <option value="Pascasiswazah" ${data.tahap_semasa === 'Pascasiswazah' ? 'selected' : ''}>Pascasiswazah</option>
