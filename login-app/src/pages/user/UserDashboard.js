@@ -494,6 +494,11 @@ export function setupUserNotificationCenter(user) {
     userNotificationCenter.mount();
   } else if (user?.kir_id && userNotificationCenter.kirId !== user.kir_id) {
     userNotificationCenter.kirId = user.kir_id;
+    userNotificationCenter.destroy();
+    userNotificationCenter.mount();
+  } else {
+    userNotificationCenter.destroy();
+    userNotificationCenter.mount();
   }
 
   if (user?.kir_id) {

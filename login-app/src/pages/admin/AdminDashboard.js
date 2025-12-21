@@ -3936,8 +3936,11 @@ export function setupAdminNotificationCenter() {
       limit: 50
     });
     adminNotificationCenter.mount();
-    adminNotificationCenter.refresh();
+  } else {
+    adminNotificationCenter.destroy();
+    adminNotificationCenter.mount();
   }
+  adminNotificationCenter.refresh();
 
   const notifNav = document.querySelector('.nav-item[data-section="notifikasi"]');
   if (notifNav && !notifNav.dataset.notifikasiBound) {
