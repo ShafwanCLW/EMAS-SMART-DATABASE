@@ -320,7 +320,7 @@ export function createUserDashboard(user) {
         
         ${mainContent}
         <footer class="app-footer">
-          Developed by SBZ Technology, Contact us on Whatsapp for more details : +60178361213
+          Developed by SBZ Technology | Email: sbztechnology@outlook.com | Phone: +60178361213, +60195881387
         </footer>
       </main>
     </div>
