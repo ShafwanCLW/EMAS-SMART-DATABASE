@@ -37,17 +37,21 @@ export class App {
     
     // Setup tab switching functionality
     const tabContainer = document.querySelector('.role-tabs');
-    tabContainer.addEventListener('click', handleTabSwitch);
+    if (tabContainer) {
+      tabContainer.addEventListener('click', handleTabSwitch);
+    }
     
     // Setup demo login functionality (still uses mock data for demo purposes)
     const demoContainer = document.querySelector('.demo-buttons');
-    demoContainer.addEventListener('click', (event) => {
-      handleDemoLogin(
-        event,
-        AuthService.getUsers(),
-        (user) => this.onLoginSuccess(user)
-      );
-    });
+    if (demoContainer) {
+      demoContainer.addEventListener('click', (event) => {
+        handleDemoLogin(
+          event,
+          AuthService.getUsers(),
+          (user) => this.onLoginSuccess(user)
+        );
+      });
+    }
     
     setupForgotPasswordHandlers();
   }
